@@ -3,9 +3,9 @@
 ## Phase 1: Immersive Layout & Styling
 This phase focuses on the core reading environment, implementing the dual-column layout and the paper-like aesthetic.
 
-- [~] Task: Create a new `ReaderLayout` component to handle single vs dual column logic.
-- [ ] Task: Update `MobiBookPage.tsx` to use the `ReaderLayout`.
-- [ ] Task: Define and apply global CSS variables for paper textures and refined line heights.
+- [x] Task: Create a new `ReaderLayout` component to handle single vs dual column logic. 49c07dc
+- [x] Task: Update `MobiBookPage.tsx` to use the `ReaderLayout`. 49c07dc
+- [x] Task: Define and apply global CSS variables for paper textures and refined line heights. 49c07dc
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Immersive Layout & Styling' (Protocol in workflow.md)
 
 ## Phase 2: Appearance Customization Panel
