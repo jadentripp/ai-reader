@@ -325,6 +325,22 @@ body {
   padding: 8px;
 }
 
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--glass-border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  margin: 16px 0;
+}
+
+.emptyStateTitle {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  color: var(--color-text-light);
+}
+
 .bookGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
