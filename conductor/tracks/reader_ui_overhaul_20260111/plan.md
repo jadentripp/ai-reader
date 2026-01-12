@@ -1,0 +1,25 @@
+# Track Plan: Reader UI Overhaul
+
+## Phase 1: Immersive Layout & Styling
+This phase focuses on the core reading environment, implementing the dual-column layout and the paper-like aesthetic.
+
+- [~] Task: Create a new `ReaderLayout` component to handle single vs dual column logic.
+- [ ] Task: Update `MobiBookPage.tsx` to use the `ReaderLayout`.
+- [ ] Task: Define and apply global CSS variables for paper textures and refined line heights.
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Immersive Layout & Styling' (Protocol in workflow.md)
+
+## Phase 2: Appearance Customization Panel
+Implementing the pop-over menu for user-controlled typography and spacing.
+
+- [ ] Task: Create an `AppearancePanel` component with font selection and margin/line-height sliders.
+- [ ] Task: Implement state management for reader appearance settings (persisted in local storage).
+- [ ] Task: Update the reader iframe to reactively apply style changes from the panel.
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Appearance Customization Panel' (Protocol in workflow.md)
+
+## Phase 3: Hierarchical Table of Contents
+Redesigning the sidebar into a structured, position-aware Act/Scene navigator.
+
+- [ ] Task: Refactor `parseSceneLinks` to extract a nested Act > Scene hierarchy.
+- [ ] Task: Redesign the sidebar UI to display the new hierarchy with refined sans-serif styles.
+- [ ] Task: Implement "active" item tracking based on the current page/cfi.
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Hierarchical Table of Contents' (Protocol in workflow.md)

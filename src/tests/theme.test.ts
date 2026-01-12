@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
+// @ts-ignore
 import fs from 'fs';
+// @ts-ignore
 import path from 'path';
 
 describe('Global Theme Variables', () => {
   it('should define classic academic typography variables in App.css', () => {
-    const cssPath = path.resolve(__dirname, '../App.css');
+    // @ts-ignore
+    const cssPath = path.resolve(process.cwd(), 'src/App.css');
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
     
     expect(cssContent).toContain("--font-serif: 'EB Garamond', serif;");
@@ -13,7 +16,8 @@ describe('Global Theme Variables', () => {
   });
 
   it('should define classic academic color palette variables in App.css', () => {
-    const cssPath = path.resolve(__dirname, '../App.css');
+    // @ts-ignore
+    const cssPath = path.resolve(process.cwd(), 'src/App.css');
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
 
     expect(cssContent).toContain('--color-bg-light: #f8f5f2;');
@@ -24,7 +28,8 @@ describe('Global Theme Variables', () => {
   });
 
   it('should apply the new variables to global selectors', () => {
-    const cssPath = path.resolve(__dirname, '../App.css');
+    // @ts-ignore
+    const cssPath = path.resolve(process.cwd(), 'src/App.css');
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
 
     // Check application of variables
