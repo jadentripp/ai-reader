@@ -22,4 +22,16 @@ describe('Global Theme Variables', () => {
     expect(cssContent).toContain('--color-text-dark: #cbd5e0;');
     expect(cssContent).toContain('--color-accent: #c0392b;');
   });
+
+  it('should apply the new variables to global selectors', () => {
+    const cssPath = path.resolve(__dirname, '../App.css');
+    const cssContent = fs.readFileSync(cssPath, 'utf-8');
+
+    // Check application of variables
+    // We expect the default font to be sans-serif (UI)
+    // and the background/color to use the light mode variables by default
+    expect(cssContent).toContain('font-family: var(--font-sans)');
+    expect(cssContent).toContain('background-color: var(--color-bg-light)');
+    expect(cssContent).toContain('color: var(--color-text-light)');
+  });
 });
