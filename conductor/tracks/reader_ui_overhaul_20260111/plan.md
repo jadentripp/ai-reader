@@ -11,7 +11,7 @@ This phase focuses on the core reading environment, implementing the dual-column
 ## Phase 2: Appearance Customization Panel
 Implementing the pop-over menu for user-controlled typography and spacing.
 
-- [ ] Task: Create an `AppearancePanel` component with font selection and margin/line-height sliders.
+- [~] Task: Create an `AppearancePanel` component with font selection and margin/line-height sliders.
 - [ ] Task: Implement state management for reader appearance settings (persisted in local storage).
 - [ ] Task: Update the reader iframe to reactively apply style changes from the panel.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Appearance Customization Panel' (Protocol in workflow.md)
