@@ -1,0 +1,26 @@
+# Track Plan: Refine the Reader UI and Library Management
+
+## Phase 1: Foundation & Styling
+This phase focuses on setting up the global styles and typography that will define the app's aesthetic.
+
+- [ ] Task: Integrate Google Fonts (EB Garamond and Inter) into the project.
+- [ ] Task: Define global CSS variables for the "Classic Academic" color palette and typography.
+- [ ] Task: Update global styles to apply the new typography and background colors.
+- [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Styling' (Protocol in workflow.md)
+
+## Phase 2: Library Page Refinement
+Improving the library interface to provide a better overview of the available books.
+
+- [ ] Task: Update the `LibraryPage.tsx` to fetch and display Author and Publication Year metadata.
+- [ ] Task: Redesign the book list/grid items to align with the new visual guidelines.
+- [ ] Task: Implement a "No books found" state for the library.
+- [ ] Task: Conductor - User Manual Verification 'Phase 2: Library Page Refinement' (Protocol in workflow.md)
+
+## Phase 3: Reader UI & Navigation
+Polishing the reading experience and ensuring smooth transitions.
+
+- [ ] Task: Update `BookPage.tsx` (and `MobiBookPage.tsx`) to use the new serif typography for content.
+- [ ] Task: Implement a toggleable "Distraction-Free" mode in the reader.
+- [ ] Task: Add basic font size controls (Increase/Decrease) to the reader UI.
+- [ ] Task: Ensure the "Back to Library" navigation is prominent and consistent.
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Reader UI & Navigation' (Protocol in workflow.md)
