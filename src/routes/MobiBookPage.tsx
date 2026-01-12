@@ -100,13 +100,42 @@ export default function MobiBookPage(props: { bookId: number }) {
   const srcDoc = useMemo(() => {
     const html = htmlQ.data ?? "";
     const css = `
-      :root { color-scheme: light; }
-      html, body { height: 100%; margin: 0; overflow: hidden !important; }
-      body { font-family: ui-serif, Georgia, serif; line-height: 1.55; }
-      a { color: #2b64c8; }
-      a:visited { color: #5b3aa7; }
+      :root {
+        --font-serif: 'EB Garamond', serif;
+        --color-bg-light: #f8f5f2;
+        --color-text-light: #2d3748;
+        --color-bg-dark: #1a202c;
+        --color-text-dark: #cbd5e0;
+      }
+      
+      html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden !important;
+        background-color: var(--color-bg-light);
+        color: var(--color-text-light);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html, body {
+          background-color: var(--color-bg-dark);
+          color: var(--color-text-dark);
+        }
+      }
+
+      body {
+        font-family: var(--font-serif);
+        line-height: 1.65;
+        font-size: 1.15rem;
+      }
+      
+      a { color: #c0392b; }
+      a:visited { color: #8e44ad; }
       img, svg { max-width: 100%; height: auto; }
-      pre { white-space: pre-wrap; }
+      pre {
+        white-space: pre-wrap;
+        font-family: var(--font-serif);
+      }
     `;
     return injectHead(html, css);
   }, [htmlQ.data]);
@@ -279,12 +308,12 @@ export default function MobiBookPage(props: { bookId: number }) {
 
   return (
     <div className="page" style={{ padding: 0 }}>
-      <div className="row" style={{ padding: 12, borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+      <div className="row" style={{ padding: 12, borderBottom: "1px solid var(--glass-border)", background: "var(--glass-surface)" }}>
         <Link to="/" className="buttonSecondary">
-          Back
+          Library
         </Link>
         <div style={{ minWidth: 0 }}>
-          <div className="bookTitle" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div className="bookTitle" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: '1.2rem' }}>
             {bookQ.data?.title}
           </div>
           <div className="muted" style={{ fontSize: 12 }}>

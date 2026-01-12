@@ -341,6 +341,13 @@ body {
   color: var(--color-text-light);
 }
 
+.readerContent {
+  font-family: var(--font-serif);
+  line-height: 1.6;
+  font-size: 1.1rem;
+  color: var(--color-text-light);
+}
+
 .bookGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
