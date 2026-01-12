@@ -5,7 +5,7 @@ This phase focuses on setting up the global styles and typography that will defi
 
 - [x] Task: Integrate Google Fonts (EB Garamond and Inter) into the project. [fc1b214]
 - [x] Task: Define global CSS variables for the "Classic Academic" color palette and typography. [65f1fcb]
-- [ ] Task: Update global styles to apply the new typography and background colors.
+- [x] Task: Update global styles to apply the new typography and background colors. [c91d08f]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Styling' (Protocol in workflow.md)
 
 ## Phase 2: Library Page Refinement
