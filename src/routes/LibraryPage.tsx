@@ -378,7 +378,12 @@ export default function LibraryPage() {
       {booksQ.isLoading ? (
         <div className="muted">Loading…</div>
       ) : (booksQ.data ?? []).length === 0 ? (
-        <div className="muted">No books yet. Download from the catalog below.</div>
+        <div className="emptyState">
+          <div className="emptyStateTitle">Your library is empty</div>
+          <div className="muted">
+            Download some Shakespearean classics from the catalog below to get started.
+          </div>
+        </div>
       ) : (
         <div className="bookGrid">
           {(booksQ.data ?? []).map((b) => (
