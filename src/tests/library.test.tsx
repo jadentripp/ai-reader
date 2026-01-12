@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import LibraryPage from '../routes/LibraryPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

@@ -434,13 +434,6 @@ body {
   background: var(--glass-surface);
 }
 
-@media (prefers-color-scheme: dark) {
-  .bookTitle {
-    color: var(--color-text-dark);
-  }
-}
-
-
 .bookShell {
   height: calc(100vh - 48px);
   display: flex;
@@ -471,17 +464,6 @@ body {
   padding: 12px;
 }
 
-.bookGrid {
-
-
-.bookLeftTabs,
-.bookRightTabs {
-  display: flex;
-  gap: 6px;
-  padding: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 .tab {
   padding: 6px 10px;
   border-radius: 10px;
@@ -497,37 +479,10 @@ body {
   border-color: rgba(57, 108, 216, 0.35);
 }
 
-.panelScroll {
-  padding: 10px;
-  overflow: auto;
-  min-height: 0;
-}
-
 .divider {
   height: 1px;
   background: var(--glass-border);
   margin: 10px 0;
-}
-
-.tocList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tocItem {
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-surface-subtle);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  cursor: pointer;
-}
-
-.tocItem:hover {
-  border-color: rgba(57, 108, 216, 0.45);
 }
 
 .bookTopBar {
@@ -535,74 +490,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-.bookToolbar {
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  background: var(--glass-surface);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  box-shadow: var(--glass-shadow);
-  padding: 10px;
-}
-
-.bookToolbarTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.bookStatusPills {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.pill {
-  font-size: 12px;
-  line-height: 16px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-surface-subtle);
-  color: var(--glass-text-muted);
-}
-
-.bookToolbarProgress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.range.bookProgressRange {
-  width: 100%;
-  flex: 1;
-  min-width: 180px;
-}
-
-.bookChapterFile {
-  max-width: 240px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bookSubPanel {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--glass-border);
-}
-
-.bookSettingsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 12px;
-  align-items: end;
+  margin-bottom: 12px;
 }
 
 .buttonToggleActive {
@@ -610,175 +498,8 @@ body {
   border-color: rgba(57, 108, 216, 0.35);
 }
 
-.selectionBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-}
-
-.highlightBar {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-}
-
-.selectionQuote {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.searchResults {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.searchHit {
-  text-align: left;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-surface);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  cursor: pointer;
-}
-
-.searchSnippet {
-  margin-top: 4px;
-}
-
-.highlightList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.highlightRow {
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  background: var(--glass-surface);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.highlightJump {
-  text-align: left;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-}
-
-.highlightQuote {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.colorDot {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
-}
-
-.pre {
-  white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-    monospace;
-  font-size: 13px;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-surface);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  min-height: 120px;
-}
-
-.bookmarkList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 10px 0;
-}
-
-.bookmarkRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.bookmarkJump {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 8px 10px;
-  background: var(--glass-surface-subtle);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  cursor: pointer;
-}
-
-.bookmarkCfi {
-  font-size: 12px;
-  opacity: 0.85;
-  word-break: break-all;
-}
-
-.bookTopControls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.bookHeaderLeft {
-  min-width: 0;
-}
-
-.bookControls {
-  display: flex;
-  gap: 8px;
-}
-
-.range {
-  width: 220px;
-}
-
-@media (max-width: 980px) {
-  .bookSettingsGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .bookChapterFile {
-    display: none;
-  }
+.muted {
+  color: var(--glass-text-muted);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -796,7 +517,8 @@ body {
 
   .topBar,
   .sidebar,
-  .threadPane {
+  .threadPane,
+  .readerSidebar {
     background: var(--glass-surface);
     border-color: var(--glass-border);
   }
@@ -814,7 +536,8 @@ body {
   .select,
   .textarea,
   .sceneButton,
-  .msg {
+  .msg,
+  .tab {
     background: var(--glass-surface-strong);
     color: #f6f6f6;
     border-color: var(--glass-border);
@@ -826,37 +549,68 @@ body {
     border-color: var(--glass-border);
   }
 
-  .bookLeft,
-  .bookRight {
-    background: var(--glass-surface);
-    border-color: var(--glass-border);
-  }
-
-  .tab,
-  .tocItem,
-  .searchHit,
-  .highlightRow,
-  .pre,
-  .bookmarkJump {
-    background: var(--glass-surface-strong);
-    color: #f6f6f6;
-    border-color: var(--glass-border);
-  }
-
   .divider {
     background: var(--glass-border);
-  }
-
-  .selectionBar {
-    border-color: var(--glass-border);
-    background: rgba(20, 20, 22, 0.55);
   }
 
   .muted {
     color: rgba(255, 255, 255, 0.65);
   }
+}
 
-  .lineNo {
-    color: rgba(255, 255, 255, 0.55);
+.reader-layout-single {
+  max-width: 800px;
+  margin: 0 auto;
+  height: 100%;
+  background: var(--color-bg-light);
+  box-shadow: 0 0 50px rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.reader-layout-dual {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  background: var(--color-bg-light);
+  box-shadow: 0 0 50px rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Paper texture effect */
+.reader-layout-single::before,
+.reader-layout-dual::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.reader-layout-dual::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background: rgba(0,0,0,0.1);
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  z-index: 2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .reader-layout-single,
+  .reader-layout-dual {
+    background: var(--color-bg-dark);
+  }
+  .reader-layout-dual::after {
+    background: rgba(255,255,255,0.1);
   }
 }

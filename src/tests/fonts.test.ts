@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
+// @ts-ignore
 import fs from 'fs';
+// @ts-ignore
 import path from 'path';
 
 describe('Project Fonts', () => {
   it('index.html should include Google Fonts links for EB Garamond and Inter', () => {
-    const indexPath = path.resolve(__dirname, '../../index.html');
+    // @ts-ignore
+    const indexPath = path.resolve(process.cwd(), 'index.html');
     const indexContent = fs.readFileSync(indexPath, 'utf-8');
 
     // Check for preconnect links
