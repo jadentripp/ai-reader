@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   hardDeleteBook,
   downloadGutenbergMobi,
@@ -264,14 +268,14 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="page">
-      <h2>Library</h2>
-
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <div className="muted">Project Gutenberg (DRM-free)</div>
-        <div className="row">
-          <button
-            className="button"
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Library</h2>
+          <p className="text-sm text-muted-foreground">Project Gutenberg (DRM-free)</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
             onClick={startOrResumeBulk}
             disabled={bulkScan.running}
             title="Downloads all Shakespeare items that have a .mobi on Gutenberg"
@@ -283,207 +287,231 @@ export default function LibraryPage() {
                 : bulkScan.scanned > 0
                   ? "Resume scan"
                   : "Download all Shakespeare (.mobi)"}
-          </button>
-          <button className="buttonSecondary" onClick={() => setPaused(true)} disabled={paused}>
+          </Button>
+          <Button variant="outline" onClick={() => setPaused(true)} disabled={paused}>
             Pause
-          </button>
-          <button className="buttonSecondary" onClick={resumeAll} disabled={!paused}>
+          </Button>
+          <Button variant="outline" onClick={resumeAll} disabled={!paused}>
             Resume
-          </button>
-          <button
-            className="buttonSecondary"
-            onClick={retryFailed}
-            disabled={counts.failed === 0}
-            title="Retry all failed downloads"
-          >
+          </Button>
+          <Button variant="outline" onClick={retryFailed} disabled={counts.failed === 0} title="Retry all failed downloads">
             Retry failed
-          </button>
-          <button
-            className="buttonSecondary"
-            onClick={clearFailed}
-            disabled={counts.failed === 0}
-            title="Remove failed items from the queue"
-          >
+          </Button>
+          <Button variant="outline" onClick={clearFailed} disabled={counts.failed === 0} title="Remove failed items from the queue">
             Clear failed
-          </button>
-          <button
-            className="buttonSecondary"
-            onClick={clearDone}
-            disabled={counts.done === 0}
-            title="Remove completed items from the queue"
-          >
+          </Button>
+          <Button variant="outline" onClick={clearDone} disabled={counts.done === 0} title="Remove completed items from the queue">
             Clear done
-          </button>
-          <button
-            className="buttonSecondary"
+          </Button>
+          <Button
+            variant="secondary"
             onClick={() => {
               setCatalogPageUrl(null);
               void qc.invalidateQueries({ queryKey: ["gutendex"] });
             }}
           >
             Refresh catalog
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="muted" style={{ marginTop: 8 }}>
-        Queue: {counts.downloading} downloading, {counts.queued} queued, {counts.failed} failed, {counts.done} done
-        {paused ? " (paused)" : ""}
-        {active ? ` — Now: ${active.title}` : ""}
-        {bulkScan.error ? ` — Scan error: ${bulkScan.error}` : ""}
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <Badge variant="secondary">Downloading {counts.downloading}</Badge>
+        <Badge variant="secondary">Queued {counts.queued}</Badge>
+        <Badge variant={counts.failed ? "destructive" : "secondary"}>Failed {counts.failed}</Badge>
+        <Badge variant="secondary">Done {counts.done}</Badge>
+        {paused ? <Badge variant="outline">Paused</Badge> : null}
+        {active ? <span className="text-sm">Now: {active.title}</span> : null}
+        {bulkScan.error ? <span className="text-sm text-destructive">Scan error: {bulkScan.error}</span> : null}
       </div>
 
       {queue.length > 0 ? (
-        <div className="catalogList" style={{ marginTop: 10 }}>
-          {queue.slice().reverse().map((t) => (
-            <div key={t.gutenbergId} className="catalogRow">
-              <div style={{ minWidth: 0 }}>
-                <div className="bookTitle">{t.title}</div>
-                <div className="muted">
-                  #{t.gutenbergId} · {t.status} · attempts {t.attempts}
-                </div>
-                {t.error ? <div className="error">{t.error}</div> : null}
+        <Card>
+          <CardHeader>
+            <CardTitle>Queue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-64 pr-4">
+              <div className="space-y-3">
+                {queue.slice().reverse().map((t) => (
+                  <div key={t.gutenbergId} className="flex flex-wrap items-start justify-between gap-3 rounded-lg border bg-card p-3">
+                    <div className="min-w-0 space-y-1">
+                      <div className="font-medium leading-tight">{t.title}</div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span>#{t.gutenbergId}</span>
+                        <Badge
+                          variant={
+                            t.status === "failed" ? "destructive" : t.status === "done" ? "secondary" : "outline"
+                          }
+                        >
+                          {t.status}
+                        </Badge>
+                        <span>attempts {t.attempts}</span>
+                      </div>
+                      {t.error ? <div className="text-xs text-destructive">{t.error}</div> : null}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {t.status === "failed" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setQueue((prev) =>
+                              prev.map((x) =>
+                                x.gutenbergId === t.gutenbergId ? { ...x, status: "queued", error: null } : x,
+                              ),
+                            )
+                          }
+                        >
+                          Retry
+                        </Button>
+                      ) : null}
+                      {t.status === "queued" || t.status === "failed" || t.status === "done" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setQueue((prev) => prev.filter((x) => x.gutenbergId !== t.gutenbergId))}
+                          title="Remove from queue"
+                        >
+                          Remove
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="row">
-                {t.status === "failed" ? (
-                  <button
-                    className="buttonSecondary"
-                    onClick={() =>
-                      setQueue((prev) =>
-                        prev.map((x) =>
-                          x.gutenbergId === t.gutenbergId ? { ...x, status: "queued", error: null } : x,
-                        ),
-                      )
-                    }
-                  >
-                    Retry
-                  </button>
-                ) : null}
-                {t.status === "queued" || t.status === "failed" || t.status === "done" ? (
-                  <button
-                    className="buttonSecondary"
-                    onClick={() => setQueue((prev) => prev.filter((x) => x.gutenbergId !== t.gutenbergId))}
-                    title="Remove from queue"
-                  >
-                    Remove
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       ) : null}
 
-      <h3>Downloaded</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-semibold">Downloaded</h3>
+      </div>
       {booksQ.isLoading ? (
-        <div className="muted">Loading…</div>
+        <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (booksQ.data ?? []).length === 0 ? (
-        <div className="emptyState">
-          <div className="emptyStateTitle">Your library is empty</div>
-          <div className="muted">
-            Download some Shakespearean classics from the catalog below to get started.
-          </div>
-        </div>
+        <Card>
+          <CardContent className="py-10 text-center">
+            <div className="text-lg font-semibold">Your library is empty</div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Download some Shakespearean classics from the catalog below to get started.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="bookGrid">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(booksQ.data ?? []).map((b) => (
-            <div key={b.id} className="bookCard">
-              {b.cover_url ? (
-                <img className="bookCover" src={b.cover_url} alt="" />
-              ) : (
-                <div className="bookCoverPlaceholder" />
-              )}
-              <div style={{ minWidth: 0 }}>
-                <Link to="/book/$bookId" params={{ bookId: String(b.id) }} className="bookOpenLink">
-                  <div className="bookTitle">{b.title}</div>
-                  <div className="muted">{b.authors}</div>
-                  {b.publication_year && <div className="muted">Published: {b.publication_year}</div>}
-                  <div className="muted">#{b.gutenberg_id}</div>
-                </Link>
-                <div className="row" style={{ justifyContent: "space-between", marginTop: 8 }}>
-                  <button
-                    className="buttonSecondary"
-                    onClick={() => {
-                      const ok = window.confirm(`Delete “${b.title}” and its downloaded files?`);
-                      if (!ok) return;
-                      deleteM.mutate(b.id);
-                    }}
-                    disabled={deleteM.isPending}
-                  >
-                    Delete
-                  </button>
-                </div>
+            <Card key={b.id} className="overflow-hidden">
+              <div className="aspect-[3/4] w-full bg-muted">
+                {b.cover_url ? (
+                  <img className="h-full w-full object-cover" src={b.cover_url} alt="" />
+                ) : (
+                  <div className="h-full w-full" />
+                )}
               </div>
-            </div>
+              <CardContent className="space-y-2 pt-4">
+                <Link to="/book/$bookId" params={{ bookId: String(b.id) }} className="block space-y-1">
+                  <div className="text-base font-semibold leading-tight hover:underline">{b.title}</div>
+                  <div className="text-sm text-muted-foreground">{b.authors}</div>
+                  {b.publication_year && (
+                    <div className="text-xs text-muted-foreground">Published: {b.publication_year}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground">#{b.gutenberg_id}</div>
+                </Link>
+              </CardContent>
+              <CardContent className="pt-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const ok = window.confirm(`Delete “${b.title}” and its downloaded files?`);
+                    if (!ok) return;
+                    deleteM.mutate(b.id);
+                  }}
+                  disabled={deleteM.isPending}
+                >
+                  Delete
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
-      <h3>Shakespeare catalog</h3>
-      {catalogQ.isLoading ? (
-        <div className="muted">Loading…</div>
-      ) : catalogQ.isError ? (
-        <div className="error">Failed to load catalog.</div>
-      ) : (
-        <>
-          <div className="muted">
-            Showing {(catalogQ.data?.results ?? []).length} of {catalogQ.data?.count ?? 0}
-          </div>
-          <div className="catalogList">
-            {(catalogQ.data?.results ?? []).map((b) => {
-              const mobiUrl = bestMobiUrl(b);
-              const already = localGutenbergIds.has(b.id);
-              const queued = queue.some((t) => t.gutenbergId === b.id);
-              return (
-                <div key={b.id} className="catalogRow">
-                  <div style={{ minWidth: 0 }}>
-                    <div className="bookTitle">{b.title}</div>
-                    <div className="muted">{authorsString(b)}</div>
-                    <div className="muted">Gutenberg #{b.id}</div>
-                  </div>
-                  <div className="row">
-                    <button
-                      className="button"
-                      disabled={already || queued || !mobiUrl}
-                      onClick={() => {
-                        if (!mobiUrl) return;
-                        enqueue({
-                          gutenbergId: b.id,
-                          title: b.title,
-                          authors: authorsString(b),
-                          publicationYear: null,
-                          coverUrl: coverUrl(b),
-                          mobiUrl,
-                        });
-                        setPaused(false);
-                        void runQueue();
-                      }}
-                    >
-                      {already ? "Downloaded" : queued ? "Queued" : mobiUrl ? "Queue MOBI" : "No MOBI"}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <button
-              className="buttonSecondary"
-              disabled={!catalogQ.data?.previous}
-              onClick={() => setCatalogPageUrl(catalogQ.data?.previous ?? null)}
-            >
-              Prev
-            </button>
-            <button
-              className="buttonSecondary"
-              disabled={!catalogQ.data?.next}
-              onClick={() => setCatalogPageUrl(catalogQ.data?.next ?? null)}
-            >
-              Next
-            </button>
-          </div>
-        </>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Shakespeare catalog</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {catalogQ.isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : catalogQ.isError ? (
+            <p className="text-sm text-destructive">Failed to load catalog.</p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Showing {(catalogQ.data?.results ?? []).length} of {catalogQ.data?.count ?? 0}
+              </p>
+              <div className="space-y-3">
+                {(catalogQ.data?.results ?? []).map((b) => {
+                  const mobiUrl = bestMobiUrl(b);
+                  const already = localGutenbergIds.has(b.id);
+                  const queued = queue.some((t) => t.gutenbergId === b.id);
+                  return (
+                    <div key={b.id} className="flex flex-wrap items-start justify-between gap-3 rounded-lg border bg-card p-3">
+                      <div className="min-w-0 space-y-1">
+                        <div className="font-medium leading-tight">{b.title}</div>
+                        <div className="text-xs text-muted-foreground">{authorsString(b)}</div>
+                        <div className="text-xs text-muted-foreground">Gutenberg #{b.id}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          disabled={already || queued || !mobiUrl}
+                          onClick={() => {
+                            if (!mobiUrl) return;
+                            enqueue({
+                              gutenbergId: b.id,
+                              title: b.title,
+                              authors: authorsString(b),
+                              publicationYear: null,
+                              coverUrl: coverUrl(b),
+                              mobiUrl,
+                            });
+                            setPaused(false);
+                            void runQueue();
+                          }}
+                        >
+                          {already ? "Downloaded" : queued ? "Queued" : mobiUrl ? "Queue MOBI" : "No MOBI"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!catalogQ.data?.previous}
+                  onClick={() => setCatalogPageUrl(catalogQ.data?.previous ?? null)}
+                >
+                  Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!catalogQ.data?.next}
+                  onClick={() => setCatalogPageUrl(catalogQ.data?.next ?? null)}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

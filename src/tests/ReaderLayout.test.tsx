@@ -16,24 +16,23 @@ describe('ReaderLayout', () => {
     expect(screen.getByTestId('content')).toBeDefined();
   });
 
-  it('applies single column class when columns is 1', () => {
+  it('stores the column count on the root element', () => {
     const { container } = render(
       <ReaderLayout columns={1}>
         <div>Test Content</div>
       </ReaderLayout>
     );
     // @ts-ignore
-    expect(container.firstChild).toHaveClass('reader-layout-single');
+    expect(container.firstChild).toHaveAttribute('data-columns', '1');
   });
 
-  it('applies dual column class when columns is 2', () => {
+  it('updates the column count when set to 2', () => {
     const { container } = render(
       <ReaderLayout columns={2}>
         <div>Test Content</div>
       </ReaderLayout>
     );
     // @ts-ignore
-    expect(container.firstChild).toHaveClass('reader-layout-dual');
+    expect(container.firstChild).toHaveAttribute('data-columns', '2');
   });
 });
-

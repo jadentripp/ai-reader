@@ -1,5 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import {
   addHighlightMessage,
   createHighlight,
@@ -28,6 +37,12 @@ export interface Act {
 const DESIRED_PAGE_WIDTH = 750;
 const HIGHLIGHT_PROMPT =
   "You are an assistant embedded in a Shakespeare reader. Respond with concise, thoughtful guidance using the selected highlight as context.";
+const CHAT_PROMPTS = [
+  { label: "Summarize", prompt: "Summarize this passage in modern English." },
+  { label: "Explain imagery", prompt: "Explain the imagery and symbolism in this passage." },
+  { label: "Character intent", prompt: "What does this reveal about the character's intent or motivation?" },
+  { label: "Historical context", prompt: "Provide historical or cultural context for this line." },
+];
 
 type PendingHighlight = {
   startPath: number[];
@@ -112,6 +127,7 @@ export default function MobiBookPage(props: { bookId: number }) {
   const rootRef = useRef<HTMLElement | null>(null);
   const docRef = useRef<Document | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const layoutRafRef = useRef<number | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
@@ -164,12 +180,12 @@ export default function MobiBookPage(props: { bookId: number }) {
         --page-gap: ${gap}px;
         --page-content-width: ${DESIRED_PAGE_WIDTH}px;
         --column-width: var(--page-content-width);
-        --page-ink: #2c2722;
-        --page-muted: #6d645c;
-        --page-link: #b24a2f;
-        --page-link-hover: #8f2f1c;
-        --page-rule: rgba(44, 39, 34, 0.18);
-        --page-mark: rgba(178, 74, 47, 0.18);
+        --page-ink: #1f1b16;
+        --page-muted: #4b4138;
+        --page-link: #8b3b1f;
+        --page-link-hover: #6f2b14;
+        --page-rule: rgba(31, 27, 22, 0.24);
+        --page-mark: rgba(139, 59, 31, 0.22);
       }
       html, body {
         width: 100%;
@@ -182,9 +198,9 @@ export default function MobiBookPage(props: { bookId: number }) {
         font-family: ${fontFamily};
         line-height: ${lineHeight};
         font-size: 1.1rem;
-        color: var(--page-ink);
+        color: var(--page-ink) !important;
         letter-spacing: 0.01em;
-        background-color: transparent;
+        background-color: #fdf8f1;
         text-rendering: optimizeLegibility;
       }
       #reader-root {
@@ -202,7 +218,7 @@ export default function MobiBookPage(props: { bookId: number }) {
         overflow-x: hidden;
         overflow-y: hidden;
         scroll-behavior: smooth;
-        color: var(--page-ink);
+        color: var(--page-ink) !important;
         touch-action: pan-y;
       }
       #reader-root::-webkit-scrollbar {
@@ -249,12 +265,12 @@ export default function MobiBookPage(props: { bookId: number }) {
         color: var(--page-muted);
       }
       a {
-        color: var(--page-link);
+        color: var(--page-link) !important;
         text-decoration: none;
         border-bottom: 1px solid transparent;
       }
       a:hover {
-        color: var(--page-link-hover);
+        color: var(--page-link-hover) !important;
         border-bottom-color: currentColor;
       }
       strong, b {
@@ -326,15 +342,16 @@ export default function MobiBookPage(props: { bookId: number }) {
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --page-ink: #f1e9dc;
-          --page-muted: rgba(241, 233, 220, 0.7);
-          --page-link: #e28a6d;
-          --page-link-hover: #f0a08a;
-          --page-rule: rgba(241, 233, 220, 0.22);
-          --page-mark: rgba(208, 107, 76, 0.25);
+          --page-ink: #f7efe4;
+          --page-muted: rgba(247, 239, 228, 0.78);
+          --page-link: #f3a07f;
+          --page-link-hover: #f7b097;
+          --page-rule: rgba(247, 239, 228, 0.26);
+          --page-mark: rgba(243, 160, 127, 0.28);
         }
         body {
           color: var(--page-ink);
+          background-color: #141210;
         }
         pre,
         code {
@@ -979,35 +996,40 @@ export default function MobiBookPage(props: { bookId: number }) {
     : generalMessages;
 
   const contextLabel = selectedHighlight ? "Highlight Context" : "Current Page Context";
+  const chatContextHint = selectedHighlight
+    ? "Responses are grounded in the selected highlight."
+    : "Responses use the current page context.";
 
-  if (htmlQ.isLoading) return <div className="page">Loading Book Content...</div>;
+  if (htmlQ.isLoading) {
+    return <div className="px-4 py-6 text-sm text-muted-foreground">Loading book content...</div>;
+  }
   if (htmlQ.isError) {
     return (
-      <div className="page error">
+      <div className="px-4 py-6 text-sm text-destructive">
         Failed to load book content. The downloaded files may be missing. Re-download this book from Library.
       </div>
     );
   }
 
   return (
-    <div className="bookShell">
-      <div className="bookTopBar">
-        <div className="bookHeaderLeft">
-          <button className="buttonSecondary" onClick={() => window.history.back()}>Back</button>
-          <span style={{ marginLeft: 12, fontWeight: 600 }}>{bookQ.data?.title}</span>
+    <div className="mx-auto flex h-[calc(100vh-3.5rem)] max-w-[1400px] flex-col gap-3 overflow-hidden px-3 py-3">
+      <div className="shrink-0 flex flex-wrap items-center gap-3 rounded-xl border border-border/80 bg-card p-3 shadow-sm">
+        <Button variant="outline" size="sm" onClick={() => window.history.back()}>
+          Back
+        </Button>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">Reading</div>
+          <div className="truncate font-semibold">{bookQ.data?.title}</div>
         </div>
-
-        <div className="row" style={{ marginLeft: "auto", gap: 8, position: 'relative' }}>
-          <button 
-            className={`buttonSecondary ${showAppearance ? 'buttonToggleActive' : ''}`}
-            onClick={() => setShowAppearance(!showAppearance)}
-          >
-            Appearance
-          </button>
-
-          {showAppearance && (
-            <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 100, marginTop: 8 }}>
-              <AppearancePanel 
+        <div className="flex flex-wrap items-center gap-2">
+          <Popover open={showAppearance} onOpenChange={setShowAppearance}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                Appearance
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto p-0">
+              <AppearancePanel
                 fontFamily={fontFamily}
                 lineHeight={lineHeight}
                 margin={margin}
@@ -1015,29 +1037,33 @@ export default function MobiBookPage(props: { bookId: number }) {
                 onLineHeightChange={setLineHeight}
                 onMarginChange={setMargin}
               />
-            </div>
-          )}
+            </PopoverContent>
+          </Popover>
 
-          <div className="divider" style={{ width: 1, height: 24, margin: '0 4px', background: 'var(--glass-border)' }} />
-          
-          <button 
-            className={`buttonSecondary ${columns === 2 ? 'buttonToggleActive' : ''}`}
+          <Separator orientation="vertical" className="h-6" />
+
+          <Button
+            variant={columns === 2 ? "secondary" : "outline"}
+            size="sm"
             onClick={() => setColumns(columns === 1 ? 2 : 1)}
           >
-            {columns === 1 ? 'Single' : 'Dual'}
-          </button>
+            {columns === 1 ? "Single" : "Dual"}
+          </Button>
 
-          <div className="divider" style={{ width: 1, height: 24, margin: '0 4px', background: 'var(--glass-border)' }} />
-          
-          <button className="buttonSecondary" onClick={prev}>Prev</button>
-          <button className="buttonSecondary" onClick={next}>Next</button>
-          <div className="muted" style={{ marginLeft: 8, fontSize: "0.85rem", display: "flex", gap: 12 }}>
-            <span>Page {currentPage} / {totalPages}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: 12 }}>
-            <input
-              className="input"
-              style={{ width: 80, padding: "6px 8px" }}
+          <Separator orientation="vertical" className="h-6" />
+
+          <Button variant="outline" size="sm" onClick={prev}>
+            Prev
+          </Button>
+          <Button variant="outline" size="sm" onClick={next}>
+            Next
+          </Button>
+          <Badge variant="secondary" className="px-2 py-1 text-xs font-medium">
+            Page {currentPage} / {totalPages}
+          </Badge>
+          <div className="flex items-center gap-2">
+            <Input
+              className="h-8 w-20"
               placeholder="Page"
               value={jumpPage}
               onChange={(e) => setJumpPage(e.currentTarget.value)}
@@ -1047,151 +1073,231 @@ export default function MobiBookPage(props: { bookId: number }) {
                 if (Number.isFinite(value) && value >= 1) scrollToPage(Math.min(value, totalPages));
               }}
             />
-            <button
-              className="buttonSecondary"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => {
                 const value = Number(jumpPage);
                 if (Number.isFinite(value) && value >= 1) scrollToPage(Math.min(value, totalPages));
               }}
             >
               Go
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="bookReaderGrid" style={{ height: "calc(100vh - 64px)" }}>
-        <main style={{ position: "relative", overflow: "hidden" }} ref={containerRef}>
-          <ReaderLayout
-            columns={columns}
-            style={{ width: readerWidth, maxWidth: "100%", margin: "0 auto" }}
-          >
+      <div className="grid flex-1 min-h-0 grid-cols-[minmax(0,1fr)_360px] gap-3">
+        <main className="relative min-h-0" ref={containerRef}>
+          <ReaderLayout columns={columns} style={{ width: readerWidth, maxWidth: "100%", margin: "0 auto" }}>
             <iframe
               ref={iframeRef}
               title="mobi"
               sandbox="allow-same-origin allow-scripts"
-              style={{ width: "100%", height: "100%", border: 0, display: "block", background: "transparent" }}
+              className="block h-full w-full border-0 bg-transparent"
               srcDoc={srcDoc}
               onLoad={handleIframeLoad}
             />
           </ReaderLayout>
           {pendingHighlight ? (
             <div
-              className="highlightToolbar"
+              className="absolute z-20 flex -translate-x-1/2 items-center gap-2 rounded-lg border bg-popover p-2 shadow-lg"
               style={{
                 top: Math.max(16, pendingHighlight.rect.top - 44),
                 left: pendingHighlight.rect.left + pendingHighlight.rect.width / 2,
               }}
             >
-              <button className="button" onClick={handleCreateHighlight}>
+              <Button size="sm" onClick={handleCreateHighlight}>
                 Highlight &amp; Note
-              </button>
-              <button className="buttonSecondary" onClick={() => setPendingHighlight(null)}>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPendingHighlight(null)}>
                 Cancel
-              </button>
+              </Button>
             </div>
           ) : null}
         </main>
-        <aside className="highlightPane">
-          <div className="highlightPaneHeader">
-            <div>
-              <div className="highlightPaneTitle">Highlights &amp; Notes</div>
-              <div className="muted">
-                {highlightsQ.data ? `${highlightsQ.data.length} saved` : "Loading highlights..."}
-              </div>
-            </div>
-            <button
-              className="buttonSecondary"
-              onClick={() => {
-                setSelectedHighlightId(null);
-                setNoteDraft("");
-              }}
-            >
-              Clear
-            </button>
-          </div>
-          <div className="highlightList">
-            {highlightsQ.data?.length ? (
-              highlightsQ.data.map((highlight) => (
-                <button
-                  key={highlight.id}
-                  className={`highlightCard ${
-                    highlight.id === selectedHighlightId ? "highlightCardActive" : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedHighlightId(highlight.id);
-                    scrollToHighlight(highlight.id);
-                  }}
-                >
-                  <div className="highlightText">“{highlight.text}”</div>
-                  <div className="highlightMeta">
-                    {highlight.note ? "Note attached" : "No note yet"}
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="emptyState">
-                <div className="emptyStateTitle">Highlight your favorite lines</div>
-                <div className="muted">Select text in the reader to add a note and start a chat.</div>
-              </div>
-            )}
-          </div>
 
-          <div className="highlightDetail">
-            {selectedHighlight ? (
-              <>
-                <div className="highlightDetailHeader">Note</div>
-                <textarea
-                  className="textarea"
-                  value={noteDraft}
-                  onChange={(e) => setNoteDraft(e.currentTarget.value)}
-                  placeholder="Leave a note about this passage…"
-                />
-                <div className="row">
-                  <button className="buttonSecondary" onClick={handleSaveNote}>
-                    Save note
-                  </button>
+        <aside className="min-h-0">
+          <Card className="flex h-full flex-col overflow-hidden">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Highlights &amp; Notes</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {highlightsQ.data ? `${highlightsQ.data.length} saved` : "Loading highlights..."}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedHighlightId(null);
+                  setNoteDraft("");
+                }}
+              >
+                Clear
+              </Button>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0 overflow-hidden pb-6">
+              <div className="flex h-full flex-col gap-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold">Highlights</div>
+                  <ScrollArea className="h-28 pr-3">
+                  {highlightsQ.data?.length ? (
+                    <div className="space-y-2">
+                      {highlightsQ.data.map((highlight) => (
+                        <Button
+                          key={highlight.id}
+                          variant={highlight.id === selectedHighlightId ? "secondary" : "outline"}
+                          className={cn(
+                            "h-auto w-full justify-start whitespace-normal text-left",
+                            highlight.id === selectedHighlightId && "border-primary/40"
+                          )}
+                          onClick={() => {
+                            setSelectedHighlightId(highlight.id);
+                            scrollToHighlight(highlight.id);
+                          }}
+                        >
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium leading-snug">“{highlight.text}”</div>
+                            <div className="text-xs text-muted-foreground">
+                              {highlight.note ? "Note attached" : "No note yet"}
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                      Select text in the reader to add a note and start a chat.
+                    </div>
+                  )}
+                  </ScrollArea>
                 </div>
-              </>
-            ) : (
-              <div className="muted">Select a highlight to attach a note or keep chatting on this page.</div>
-            )}
 
-            <div className="highlightDetailHeader" style={{ marginTop: 16 }}>
-              {contextLabel}
-            </div>
-            <div className="highlightContext">
-              {contextText || "No readable context found on this page yet."}
-            </div>
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold">Note</div>
+                  {selectedHighlight ? (
+                    <>
+                      <Textarea
+                        className="min-h-[72px] max-h-32"
+                        value={noteDraft}
+                        onChange={(e) => setNoteDraft(e.currentTarget.value)}
+                        placeholder="Leave a note about this passage…"
+                      />
+                      <Button variant="outline" size="sm" onClick={handleSaveNote}>
+                        Save note
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Select a highlight to attach a note or keep chatting on this page.
+                    </p>
+                  )}
+                </div>
 
-            <div className="highlightDetailHeader" style={{ marginTop: 16 }}>
-              Chat
-            </div>
-            <div className="highlightChat">
-              {chatMessages.length ? (
-                chatMessages.map((message) => (
-                  <div key={message.id} className={`highlightChatBubble role-${message.role}`}>
-                    <div className="highlightChatRole">{message.role}</div>
-                    <div className="highlightChatContent">{message.content}</div>
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold">{contextLabel}</div>
+                  <div className="max-h-28 overflow-y-auto rounded-lg border bg-muted/40 p-3 text-sm">
+                    {contextText || "No readable context found on this page yet."}
                   </div>
-                ))
-              ) : (
-                <div className="muted">Ask a question to begin.</div>
-              )}
-            </div>
-            <div className="highlightChatComposer">
-              <textarea
-                className="textarea"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.currentTarget.value)}
-                placeholder="Ask about the meaning, context, or interpretation…"
-                style={{ minHeight: 80 }}
-              />
-              <button className="button" onClick={sendChat} disabled={chatSending}>
-                {chatSending ? "Sending…" : "Send"}
-              </button>
-            </div>
-          </div>
+                </div>
+
+                <div className="flex flex-1 min-h-0 flex-col gap-3 rounded-xl border bg-card/70 p-3 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold">Ask the Folio Guide</div>
+                      <div className="text-xs text-muted-foreground">{chatContextHint}</div>
+                    </div>
+                    <Badge
+                      variant={chatSending ? "secondary" : "outline"}
+                      className={cn(chatSending && "bg-primary/10 text-primary")}
+                    >
+                      {chatSending ? "Thinking..." : "Ready"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {CHAT_PROMPTS.map((prompt) => (
+                      <Button
+                        key={prompt.label}
+                        variant="secondary"
+                        size="sm"
+                        className="h-7 rounded-full px-3 text-xs"
+                        onClick={() => {
+                          setChatInput(prompt.prompt);
+                          chatInputRef.current?.focus();
+                        }}
+                        disabled={chatSending}
+                        type="button"
+                      >
+                        {prompt.label}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <ScrollArea className="flex-1 min-h-0 pr-3">
+                    {chatMessages.length ? (
+                      <div className="space-y-3">
+                        {chatMessages.map((message) => {
+                          const isUser = message.role === "user";
+                          const roleLabel = isUser ? "You" : "AI Guide";
+                          return (
+                            <div
+                              key={message.id}
+                              className={cn("flex", isUser ? "justify-end" : "justify-start")}
+                            >
+                              <div
+                                className={cn(
+                                  "max-w-[85%] rounded-xl border p-3 text-sm shadow-sm",
+                                  isUser ? "bg-primary text-primary-foreground" : "bg-muted/40"
+                                )}
+                              >
+                                <div
+                                  className={cn(
+                                    "text-[10px] uppercase tracking-wide",
+                                    isUser ? "text-primary-foreground/70" : "text-muted-foreground"
+                                  )}
+                                >
+                                  {roleLabel}
+                                </div>
+                                <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">
+                        Ask for a summary, translation, or explanation of the passage.
+                      </div>
+                    )}
+                  </ScrollArea>
+
+                  <div className="space-y-2">
+                    <Textarea
+                      ref={chatInputRef}
+                      className="min-h-[64px] max-h-28 resize-y"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                          e.preventDefault();
+                          sendChat();
+                        }
+                      }}
+                      placeholder="Ask about the meaning, context, or interpretation…"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">Press Cmd/Ctrl + Enter to send</span>
+                      <Button onClick={sendChat} disabled={chatSending}>
+                        {chatSending ? "Sending…" : "Send"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </aside>
       </div>
     </div>

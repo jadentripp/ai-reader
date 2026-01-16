@@ -6,37 +6,24 @@ import fs from 'fs';
 import path from 'path';
 
 describe('Global Theme Variables', () => {
-  it('should define classic academic typography variables in App.css', () => {
+  it('should define shadcn theme tokens in index.css', () => {
     // @ts-ignore
-    const cssPath = path.resolve(process.cwd(), 'src/App.css');
-    const cssContent = fs.readFileSync(cssPath, 'utf-8');
-    
-    expect(cssContent).toContain("--font-serif: 'EB Garamond', serif;");
-    expect(cssContent).toContain("--font-sans: 'Inter', sans-serif;");
-  });
-
-  it('should define classic academic color palette variables in App.css', () => {
-    // @ts-ignore
-    const cssPath = path.resolve(process.cwd(), 'src/App.css');
+    const cssPath = path.resolve(process.cwd(), 'src/index.css');
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
 
-    expect(cssContent).toContain('--color-bg-light: #f8f5f2;');
-    expect(cssContent).toContain('--color-text-light: #2d3748;');
-    expect(cssContent).toContain('--color-bg-dark: #1a202c;');
-    expect(cssContent).toContain('--color-text-dark: #cbd5e0;');
-    expect(cssContent).toContain('--color-accent: #c0392b;');
+    expect(cssContent).toContain('@import "tailwindcss"');
+    expect(cssContent).toContain('--background:');
+    expect(cssContent).toContain('--foreground:');
+    expect(cssContent).toContain('--primary:');
+    expect(cssContent).toContain('--radius:');
   });
 
   it('should apply the new variables to global selectors', () => {
     // @ts-ignore
-    const cssPath = path.resolve(process.cwd(), 'src/App.css');
+    const cssPath = path.resolve(process.cwd(), 'src/index.css');
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
 
-    // Check application of variables
-    // We expect the default font to be sans-serif (UI)
-    // and the background/color to use the light mode variables by default
-    expect(cssContent).toContain('font-family: var(--font-sans)');
-    expect(cssContent).toContain('background-color: var(--color-bg-light)');
-    expect(cssContent).toContain('color: var(--color-text-light)');
+    expect(cssContent).toContain('@layer base');
+    expect(cssContent).toContain('@apply bg-background text-foreground');
   });
 });
