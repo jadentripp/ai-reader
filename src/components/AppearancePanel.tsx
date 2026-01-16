@@ -1,4 +1,14 @@
-import React from 'react';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 interface AppearancePanelProps {
   fontFamily: string;
@@ -18,54 +28,59 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
   onMarginChange,
 }) => {
   return (
-    <div className="bookToolbar" style={{ padding: '16px', minWidth: '240px' }}>
-      <h3 style={{ margin: '0 0 16px 0', fontFamily: 'var(--font-serif)' }}>Appearance</h3>
-      
-      <div className="form">
-        <label className="label">
-          <span className="muted" id="font-family-label">Font Family</span>
-          <select 
-            className="select" 
-            value={fontFamily} 
-            onChange={(e) => onFontFamilyChange(e.target.value)}
-            aria-labelledby="font-family-label"
-          >
-            <option value="'EB Garamond', serif">EB Garamond</option>
-            <option value="'Inter', sans-serif">Inter</option>
-            <option value="'Baskervville', serif">Baskerville</option>
-            <option value="Georgia, serif">Georgia</option>
-            <option value="serif">System Serif</option>
-            <option value="sans-serif">System Sans-Serif</option>
-          </select>
-        </label>
+    <Card className="w-72 shadow-lg">
+      <CardHeader>
+        <CardTitle>Appearance</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="font-family">Font Family</Label>
+          <Select value={fontFamily} onValueChange={onFontFamilyChange}>
+            <SelectTrigger id="font-family" className="w-full">
+              <SelectValue placeholder="Select a font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="'EB Garamond', serif">EB Garamond</SelectItem>
+              <SelectItem value="'Inter', sans-serif">Inter</SelectItem>
+              <SelectItem value="'Baskervville', serif">Baskerville</SelectItem>
+              <SelectItem value="Georgia, serif">Georgia</SelectItem>
+              <SelectItem value="serif">System Serif</SelectItem>
+              <SelectItem value="sans-serif">System Sans-Serif</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <label className="label">
-          <span className="muted" id="line-height-label">Line Height: {lineHeight}</span>
-          <input 
-            type="range" 
-            min="1.0" 
-            max="3.0" 
-            step="0.1" 
-            value={lineHeight} 
-            onChange={(e) => onLineHeightChange(parseFloat(e.target.value))}
-            aria-labelledby="line-height-label"
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <Label htmlFor="line-height">Line Height</Label>
+            <span className="text-muted-foreground">{lineHeight.toFixed(2)}</span>
+          </div>
+          <Slider
+            id="line-height"
+            min={1}
+            max={3}
+            step={0.1}
+            value={[lineHeight]}
+            onValueChange={(value) => onLineHeightChange(value[0])}
           />
-        </label>
+        </div>
 
-        <label className="label">
-          <span className="muted" id="margin-label">Horizontal Margin: {margin}px</span>
-          <input 
-            type="range" 
-            min="0" 
-            max="200" 
-            step="10" 
-            value={margin} 
-            onChange={(e) => onMarginChange(parseInt(e.target.value))}
-            aria-labelledby="margin-label"
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <Label htmlFor="margin">Horizontal Margin</Label>
+            <span className="text-muted-foreground">{margin}px</span>
+          </div>
+          <Slider
+            id="margin"
+            min={0}
+            max={200}
+            step={10}
+            value={[margin]}
+            onValueChange={(value) => onMarginChange(value[0])}
           />
-        </label>
-      </div>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

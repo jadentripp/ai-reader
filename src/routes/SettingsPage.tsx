@@ -1,4 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getSetting, openAiKeyStatus, openAiListModels, setSetting } from "../lib/tauri";
 
 export default function SettingsPage() {
@@ -65,77 +76,85 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="page">
-      <h2>Settings</h2>
-
-      <div className="form">
-        <label className="label">
-          OpenAI API Key
-          <input
-            className="input"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.currentTarget.value)}
-            placeholder="sk-..."
-          />
-          {keyStatus?.has_env_key ? (
-            <span className="muted">An OpenAI key is also available from the environment.</span>
-          ) : (
-            <span className="muted">You can also set OPENAI_API_KEY in the environment.</span>
-          )}
-        </label>
-
-        <label className="label">
-          Model
-          <div className="row" style={{ alignItems: "stretch" }}>
-            <select
-              className="select"
-              value={hasCustomModel ? "__custom__" : model}
-              onChange={(e) => {
-                const value = e.currentTarget.value;
-                if (value === "__custom__") {
-                  setModel(customModel || model);
-                } else {
-                  setModel(value);
-                }
-              }}
-            >
-              <option value="__custom__">Custom model…</option>
-              {models.map((modelId) => (
-                <option key={modelId} value={modelId}>
-                  {modelId}
-                </option>
-              ))}
-            </select>
-            <button className="buttonSecondary" type="button" onClick={loadModels}>
-              Refresh
-            </button>
-          </div>
-          {hasCustomModel ? (
-            <input
-              className="input"
-              value={customModel}
-              onChange={(e) => {
-                setCustomModel(e.currentTarget.value);
-                setModel(e.currentTarget.value);
-              }}
-              placeholder="gpt-4.1-mini"
-            />
-          ) : null}
-          {modelsStatus ? <span className="muted">{modelsStatus}</span> : null}
-        </label>
-
-        <div className="row">
-          <button className="button" onClick={onSave}>
-            Save
-          </button>
-          <button className="buttonSecondary" onClick={onClearKey} type="button">
-            Clear saved key
-          </button>
-          {status ? <div className="muted">{status}</div> : null}
-        </div>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Settings</h2>
+        <p className="text-sm text-muted-foreground">Configure your OpenAI credentials and model.</p>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>OpenAI</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="openai-key">OpenAI API Key</Label>
+            <Input
+              id="openai-key"
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.currentTarget.value)}
+              placeholder="sk-..."
+            />
+            <p className="text-xs text-muted-foreground">
+              {keyStatus?.has_env_key
+                ? "An OpenAI key is also available from the environment."
+                : "You can also set OPENAI_API_KEY in the environment."}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="model-select">Model</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select
+                value={hasCustomModel ? "__custom__" : model}
+                onValueChange={(value) => {
+                  if (value === "__custom__") {
+                    setModel(customModel || model);
+                  } else {
+                    setModel(value);
+                  }
+                }}
+              >
+                <SelectTrigger id="model-select" className="w-full sm:w-72">
+                  <SelectValue placeholder="Select a model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__custom__">Custom model...</SelectItem>
+                  {models.map((modelId) => (
+                    <SelectItem key={modelId} value={modelId}>
+                      {modelId}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" type="button" onClick={loadModels}>
+                Refresh
+              </Button>
+            </div>
+            {hasCustomModel ? (
+              <Input
+                value={customModel}
+                onChange={(e) => {
+                  setCustomModel(e.currentTarget.value);
+                  setModel(e.currentTarget.value);
+                }}
+                placeholder="gpt-4.1-mini"
+              />
+            ) : null}
+            {modelsStatus ? <p className="text-xs text-muted-foreground">{modelsStatus}</p> : null}
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t">
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={onSave}>Save</Button>
+            <Button variant="outline" onClick={onClearKey} type="button">
+              Clear saved key
+            </Button>
+          </div>
+          {status ? <span className="text-sm text-muted-foreground">{status}</span> : null}
+        </CardFooter>
+      </Card>
     </div>
   );
 }

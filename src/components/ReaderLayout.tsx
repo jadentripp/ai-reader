@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 
 interface ReaderLayoutProps {
   children: React.ReactNode;
@@ -7,10 +8,15 @@ interface ReaderLayoutProps {
 }
 
 const ReaderLayout: React.FC<ReaderLayoutProps> = ({ children, columns, style }) => {
-  const layoutClass = columns === 1 ? "reader-layout-single" : "reader-layout-dual";
-  
   return (
-    <div className={layoutClass} style={style}>
+    <div
+      data-columns={columns}
+      className={cn(
+        "relative h-full w-full overflow-hidden rounded-2xl border bg-card shadow-sm",
+        columns === 2 && "ring-1 ring-border/40"
+      )}
+      style={style}
+    >
       {children}
     </div>
   );
