@@ -3,7 +3,7 @@ mod db;
 mod gutendex;
 mod openai;
 
-use db::{Book, BookPosition, Highlight, HighlightMessage};
+use db::{Book, BookMessage, BookPosition, Highlight, HighlightMessage};
 use tauri::AppHandle;
 use std::fs;
 
@@ -225,6 +225,35 @@ fn add_highlight_message(
 }
 
 #[tauri::command]
+fn list_book_messages(
+    app_handle: AppHandle,
+    book_id: i64,
+) -> Result<Vec<BookMessage>, String> {
+    db::init(&app_handle).map_err(|e| e.to_string())?;
+    db::list_book_messages(&app_handle, book_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn add_book_message(
+    app_handle: AppHandle,
+    book_id: i64,
+    role: String,
+    content: String,
+) -> Result<BookMessage, String> {
+    db::init(&app_handle).map_err(|e| e.to_string())?;
+    db::add_book_message(&app_handle, book_id, role, content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_book_messages(
+    app_handle: AppHandle,
+    book_id: i64,
+) -> Result<(), String> {
+    db::init(&app_handle).map_err(|e| e.to_string())?;
+    db::delete_book_messages(&app_handle, book_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn openai_key_status(app_handle: AppHandle) -> Result<openai::KeyStatus, String> {
     db::init(&app_handle).map_err(|e| e.to_string())?;
     openai::key_status(&app_handle).map_err(|e| e.to_string())
@@ -272,6 +301,9 @@ pub fn run() {
             delete_highlight,
             list_highlight_messages,
             add_highlight_message,
+            list_book_messages,
+            add_book_message,
+            delete_book_messages,
             openai_key_status,
             openai_chat,
             openai_list_models,
