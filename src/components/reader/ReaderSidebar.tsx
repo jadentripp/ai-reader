@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Highlight } from "@/lib/tauri";
 import type { ChatPrompt, LocalChatMessage } from "@/lib/readerTypes";
 import ChatPanel from "@/components/reader/ChatPanel";
-import HighlightNote from "@/components/reader/HighlightNote";
 import HighlightsList from "@/components/reader/HighlightsList";
 import ReaderContextPanel from "@/components/reader/ReaderContextPanel";
 import type { RefObject } from "react";
@@ -83,13 +82,10 @@ export default function ReaderSidebar({
               highlightPageMap={highlightPageMap}
               expanded={highlightLibraryExpanded}
               onToggleExpanded={onToggleHighlightLibrary}
-            />
-
-            <HighlightNote
-              selectedHighlight={selectedHighlight}
               noteDraft={noteDraft}
-              onNoteChange={onNoteDraftChange}
+              onNoteDraftChange={onNoteDraftChange}
               onSaveNote={onSaveNote}
+              selectedHighlight={selectedHighlight}
             />
 
             <ReaderContextPanel label={contextLabel} text={contextText} />
