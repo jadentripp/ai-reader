@@ -5,7 +5,7 @@ import HighlightsSidebar from "@/components/reader/HighlightsSidebar";
 import ChatSidebar from "@/components/reader/ChatSidebar";
 import ReaderTopBar from "@/components/reader/ReaderTopBar";
 import { Button } from "@/components/ui/button";
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { injectHead, wrapBody, processGutenbergContent } from "@/lib/readerHtml";
 import type { ChatPrompt, LocalChatMessage, PendingHighlight } from "@/lib/readerTypes";
@@ -1388,16 +1388,8 @@ export default function MobiBookPage(props: { bookId: number }) {
                 onTocNavigate={handleTocNavigate}
                 tocExpanded={tocExpanded}
                 onToggleTocExpanded={() => setTocExpanded((prev) => !prev)}
+                onCollapse={() => setLeftPanelCollapsed(true)}
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-2 h-8 w-8 p-0"
-                onClick={() => setLeftPanelCollapsed(true)}
-                title="Collapse left panel"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </Button>
             </>
           )}
         </div>
@@ -1428,32 +1420,22 @@ export default function MobiBookPage(props: { bookId: number }) {
               </Button>
             </div>
           ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute left-0 top-2 h-8 w-8 p-0 z-10"
-                onClick={() => setRightPanelCollapsed(true)}
-                title="Collapse right panel"
-              >
-                <PanelRightClose className="h-4 w-4" />
-              </Button>
-              <ChatSidebar
-                contextHint={chatContextHint}
-                messages={chatMessages}
-                prompts={CHAT_PROMPTS}
-                chatInput={chatInput}
-                onChatInputChange={setChatInput}
-                onPromptSelect={setChatInput}
-                onSend={sendChat}
-                chatSending={chatSending}
-                chatInputRef={chatInputRef}
-                currentModel={currentModel}
-                availableModels={availableModels}
-                onModelChange={handleModelChange}
-                modelsLoading={modelsLoading}
-              />
-            </>
+            <ChatSidebar
+              contextHint={chatContextHint}
+              messages={chatMessages}
+              prompts={CHAT_PROMPTS}
+              chatInput={chatInput}
+              onChatInputChange={setChatInput}
+              onPromptSelect={setChatInput}
+              onSend={sendChat}
+              chatSending={chatSending}
+              chatInputRef={chatInputRef}
+              currentModel={currentModel}
+              availableModels={availableModels}
+              onModelChange={handleModelChange}
+              modelsLoading={modelsLoading}
+              onCollapse={() => setRightPanelCollapsed(true)}
+            />
           )}
         </div>
       </div>

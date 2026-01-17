@@ -21,7 +21,7 @@ import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import type { ChatPrompt, LocalChatMessage } from "@/lib/readerTypes";
 import type { RefObject } from "react";
-import { Send, Sparkles, ChevronDown, Check, Settings2 } from "lucide-react";
+import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose } from "lucide-react";
 
 type ChatSidebarProps = {
   contextHint: string;
@@ -37,6 +37,7 @@ type ChatSidebarProps = {
   availableModels: string[];
   onModelChange: (model: string) => void;
   modelsLoading?: boolean;
+  onCollapse: () => void;
 };
 
 function formatModelName(modelId: string): string {
@@ -165,12 +166,22 @@ export default function ChatSidebar({
   availableModels,
   onModelChange,
   modelsLoading,
+  onCollapse,
 }: ChatSidebarProps) {
   return (
     <aside className="min-h-0 flex flex-col">
       <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm">
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between gap-3 border-b border-border/40 px-4 py-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={onCollapse}
+            title="Collapse right panel"
+          >
+            <PanelRightClose className="h-4 w-4" />
+          </Button>
           <div className="flex items-center gap-2">
             <div className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",

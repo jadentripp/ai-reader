@@ -58,13 +58,6 @@ const COLLECTIONS: CatalogEntry[] = [
     kind: "collection",
     catalogKey: "roman-drama",
   },
-  {
-    key: "collection-gothic",
-    label: "Gothic fiction",
-    description: "Haunted manors, dark romances, and early horror.",
-    kind: "collection",
-    catalogKey: "gothic",
-  },
 ];
 
 const CATEGORY_GROUPS: { label: string; topics: string[] }[] = [

@@ -9,9 +9,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Highlight } from "@/lib/tauri";
-import { Highlighter, Trash2, FileText } from "lucide-react";
+import { Highlighter, Trash2, FileText, Check, X } from "lucide-react";
+import { useState, useEffect } from "react";
 
 type HighlightsListProps = {
   highlights: Highlight[] | undefined;
@@ -21,6 +23,10 @@ type HighlightsListProps = {
   highlightPageMap: Record<number, number>;
   expanded: boolean;
   onToggleExpanded: () => void;
+  noteDraft: string;
+  onNoteDraftChange: (value: string) => void;
+  onSaveNote: () => void;
+  selectedHighlight: Highlight | null;
 };
 
 export default function HighlightsList({
@@ -29,7 +35,22 @@ export default function HighlightsList({
   onSelectHighlight,
   onDeleteHighlight,
   highlightPageMap,
+  noteDraft,
+  onNoteDraftChange,
+  onSaveNote,
+  selectedHighlight,
 }: HighlightsListProps) {
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (selectedHighlightId !== editingNoteId) {
+      setEditingNoteId(null);
+    }
+  }, [selectedHighlightId, editingNoteId]);
+
+  const hasUnsavedChanges = selectedHighlight
+    ? noteDraft !== (selectedHighlight.note ?? "")
+    : false;
   if (!highlights?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -77,7 +98,7 @@ export default function HighlightsList({
               </p>
 
               <div className="mt-2 flex items-center gap-2">
-                {hasNote && (
+                {hasNote && !isSelected && (
                   <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <FileText className="h-3 w-3" />
                     Note
@@ -89,6 +110,43 @@ export default function HighlightsList({
                   </span>
                 )}
               </div>
+
+              {/* Inline note editing when selected */}
+              {isSelected && (
+                <div className="mt-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+                  <Textarea
+                    className={cn(
+                      "min-h-[60px] max-h-24 resize-none text-sm",
+                      "border-border/40 bg-background/80",
+                      "focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20",
+                      "placeholder:text-muted-foreground/50"
+                    )}
+                    value={noteDraft}
+                    onChange={(e) => onNoteDraftChange(e.currentTarget.value)}
+                    placeholder="Add a note..."
+                  />
+                  {hasUnsavedChanges && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={onSaveNote}
+                        className="flex items-center gap-1.5 rounded-md bg-amber-500 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-600"
+                      >
+                        <Check className="h-3 w-3" />
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onNoteDraftChange(selectedHighlight?.note ?? "")}
+                        className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                      >
+                        <X className="h-3 w-3" />
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">

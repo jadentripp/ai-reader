@@ -1,10 +1,9 @@
 import { cn } from "@/lib/utils";
 import type { Highlight } from "@/lib/tauri";
-import HighlightNote from "@/components/reader/HighlightNote";
 import HighlightsList from "@/components/reader/HighlightsList";
 import TocPanel, { type TocEntry } from "@/components/reader/TocPanel";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { List, Highlighter, FileText } from "lucide-react";
+import { List, Highlighter, PanelLeftClose } from "lucide-react";
 import { useState } from "react";
 
 type HighlightsSidebarProps = {
@@ -25,9 +24,10 @@ type HighlightsSidebarProps = {
   onTocNavigate: (entry: TocEntry) => void;
   tocExpanded: boolean;
   onToggleTocExpanded: () => void;
+  onCollapse: () => void;
 };
 
-type Tab = "contents" | "highlights" | "notes";
+type Tab = "contents" | "highlights";
 
 export default function HighlightsSidebar({
   highlights,
@@ -47,6 +47,7 @@ export default function HighlightsSidebar({
   onTocNavigate,
   tocExpanded,
   onToggleTocExpanded,
+  onCollapse,
 }: HighlightsSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("contents");
   const highlightCount = highlights?.length ?? 0;
@@ -54,45 +55,71 @@ export default function HighlightsSidebar({
   const tabs: { id: Tab; label: string; icon: typeof List; count?: number }[] = [
     { id: "contents", label: "Contents", icon: List, count: tocEntries.length },
     { id: "highlights", label: "Highlights", icon: Highlighter, count: highlightCount },
-    { id: "notes", label: "Notes", icon: FileText },
   ];
 
   return (
     <aside className="min-h-0 flex flex-col">
       <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm">
-        {/* Tab Navigation */}
-        <div className="shrink-0 flex border-b border-border/40">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors relative",
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground/80"
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                {tab.count !== undefined && tab.count > 0 && (
-                  <span className={cn(
-                    "ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium",
-                    isActive ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                  )}>
-                    {tab.count}
-                  </span>
-                )}
-                {isActive && (
-                  <div className="absolute bottom-0 left-2 right-2 h-0.5 rounded-t-full bg-primary" />
-                )}
-              </button>
-            );
-          })}
+        {/* Tab Navigation - Editorial Style */}
+        <div className="shrink-0 border-b border-border/40">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-6">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      "group flex items-center gap-2 transition-all duration-200",
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground/70 hover:text-foreground"
+                    )}
+                  >
+                    <Icon className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      isActive && "scale-110"
+                    )} />
+                    <span className={cn(
+                      "text-[13px] tracking-wide transition-all duration-200",
+                      isActive ? "font-semibold" : "font-medium"
+                    )}>
+                      {tab.label}
+                    </span>
+                    {tab.count !== undefined && tab.count > 0 && (
+                      <span className={cn(
+                        "tabular-nums text-[11px] font-medium transition-colors duration-200",
+                        isActive ? "text-foreground/70" : "text-muted-foreground/50"
+                      )}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={onCollapse}
+              title="Collapse panel"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-all duration-200 hover:bg-muted hover:text-foreground"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          </div>
+          {/* Active indicator bar */}
+          <div className="relative h-0.5 bg-border/30">
+            <div
+              className="absolute bottom-0 h-0.5 bg-foreground/80 transition-all duration-300 ease-out"
+              style={{
+                left: `${(tabs.findIndex(t => t.id === activeTab) / tabs.length) * 100}%`,
+                width: `${100 / tabs.length}%`,
+              }}
+            />
+          </div>
         </div>
 
         {/* Content */}
@@ -127,17 +154,12 @@ export default function HighlightsSidebar({
                   highlightPageMap={highlightPageMap}
                   expanded={highlightLibraryExpanded}
                   onToggleExpanded={onToggleHighlightLibrary}
+                  noteDraft={noteDraft}
+                  onNoteDraftChange={onNoteDraftChange}
+                  onSaveNote={onSaveNote}
+                  selectedHighlight={selectedHighlight}
                 />
               </div>
-            )}
-
-            {activeTab === "notes" && (
-              <HighlightNote
-                selectedHighlight={selectedHighlight}
-                noteDraft={noteDraft}
-                onNoteChange={onNoteDraftChange}
-                onSaveNote={onSaveNote}
-              />
             )}
           </div>
         </ScrollArea>

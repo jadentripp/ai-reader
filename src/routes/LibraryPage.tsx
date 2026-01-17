@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X, Trash2, Play, Pause, RotateCcw, Trash, CheckCircle2, BookOpen, Sparkles, ChevronRight, Download, Clock, ArrowUpDown, BookMarked, FileText } from "lucide-react";
+import { Search, X, Trash2, Play, Pause, RotateCcw, Trash, CheckCircle2, BookOpen, Sparkles, ChevronRight, Download, Clock, ArrowUpDown, BookMarked, FileText, History, TrendingUp, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -184,12 +184,55 @@ type DownloadTask = {
 };
 
 const FEATURED_COLLECTIONS = [
-  { key: "collection-shakespeare", icon: "🎭", accent: "from-amber-500/20 to-orange-500/10" },
-  { key: "collection-greek-tragedy", icon: "🏛️", accent: "from-stone-500/20 to-amber-500/10" },
-  { key: "collection-gothic", icon: "🦇", accent: "from-violet-500/20 to-slate-500/10" },
-  { key: "collection-greek-epic", icon: "⚔️", accent: "from-sky-500/20 to-emerald-500/10" },
-  { key: "collection-roman-drama", icon: "🏺", accent: "from-rose-500/20 to-amber-500/10" },
+  { key: "collection-shakespeare", icon: "🎭", subtitle: "Plays & Sonnets" },
+  { key: "collection-greek-tragedy", icon: "🏛️", subtitle: "Classical Drama" },
+  { key: "collection-greek-epic", icon: "⚔️", subtitle: "Epic Poetry" },
+  { key: "collection-roman-drama", icon: "🏺", subtitle: "Latin Theatre" },
 ];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  "Literature": "✦",
+  "Science & Technology": "◈",
+  "History": "◆",
+  "Social Sciences & Society": "◇",
+  "Philosophy & Religion": "✧",
+  "Arts & Culture": "❖",
+  "Lifestyle & Hobbies": "○",
+  "Health & Medicine": "●",
+  "Education & Reference": "◎",
+};
+
+const POPULAR_SEARCHES = [
+  "Shakespeare",
+  "Jane Austen",
+  "Mark Twain",
+  "Charles Dickens",
+  "Edgar Allan Poe",
+  "Oscar Wilde",
+  "H.G. Wells",
+  "Arthur Conan Doyle",
+];
+
+const RECENT_SEARCHES_KEY = "reader-recent-searches";
+const MAX_RECENT_SEARCHES = 8;
+
+function getRecentSearches(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as string[];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentSearch(query: string) {
+  const trimmed = query.trim();
+  if (!trimmed || trimmed.length < 2) return;
+  const existing = getRecentSearches().filter((s) => s.toLowerCase() !== trimmed.toLowerCase());
+  const updated = [trimmed, ...existing].slice(0, MAX_RECENT_SEARCHES);
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+}
 
 export default function LibraryPage() {
   const qc = useQueryClient();
@@ -199,6 +242,27 @@ export default function LibraryPage() {
   const [catalogQuery, setCatalogQuery] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+  }, []);
+
+  const handleSearch = (query: string) => {
+    setCatalogQuery(query);
+    if (query.trim().length >= 2) {
+      addRecentSearch(query);
+      setRecentSearches(getRecentSearches());
+    }
+    setSearchFocused(false);
+  };
+
+  const clearRecentSearches = () => {
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+    setRecentSearches([]);
+  };
   const activeCatalog = useMemo<CatalogEntry>(() => {
     return CATALOG_BY_KEY.get(catalogKey) ?? CATALOG_GROUPS[0].items[0]!;
   }, [catalogKey]);
@@ -560,28 +624,150 @@ export default function LibraryPage() {
     <TooltipProvider>
       <div className="min-h-screen">
         {/* Search Header */}
-        <div className="border-b border-border/40 bg-gradient-to-b from-amber-50/30 to-background dark:from-amber-950/10">
-          <div className="mx-auto max-w-6xl px-6 py-6">
-            <div className="relative max-w-xl">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/60" />
-              <Input
-                type="search"
-                placeholder="Search Project Gutenberg..."
-                value={catalogQuery}
-                onChange={(e) => setCatalogQuery(e.target.value)}
-                className="h-12 rounded-xl border-border/60 bg-background/80 pl-12 pr-4 text-base shadow-sm backdrop-blur-sm transition-all placeholder:text-muted-foreground/50 focus:border-amber-500/50 focus:bg-background focus:ring-amber-500/20"
-              />
-              {catalogQuery && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-lg"
-                  onClick={() => setCatalogQuery("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+        <div className="relative border-b border-border/40 bg-gradient-to-b from-amber-50/50 via-amber-50/20 to-background dark:from-amber-950/20 dark:via-amber-950/10">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-100/40 via-transparent to-transparent dark:from-amber-900/20" />
+          <div className="relative mx-auto max-w-6xl px-6 py-8">
+            <div className="mb-2 text-center">
+              <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground md:text-3xl">
+                Discover Classic Literature
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Over 70,000 free ebooks from Project Gutenberg
+              </p>
+            </div>
+            
+            <div className="relative mx-auto mt-6 max-w-2xl">
+              <div className={`relative transition-all duration-300 ${searchFocused ? "scale-[1.02]" : ""}`}>
+                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/20 via-orange-400/20 to-amber-400/20 opacity-0 blur-xl transition-opacity duration-300" style={{ opacity: searchFocused ? 0.6 : 0 }} />
+                <div className="relative">
+                  {catalogQ.isFetching ? (
+                    <Loader2 className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-amber-500" />
+                  ) : (
+                    <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/60" />
+                  )}
+                  <Input
+                    ref={searchInputRef}
+                    type="search"
+                    placeholder="Search by title, author, or subject..."
+                    value={catalogQuery}
+                    onChange={(e) => setCatalogQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && catalogQuery.trim()) {
+                        handleSearch(catalogQuery);
+                        searchInputRef.current?.blur();
+                      }
+                    }}
+                    className="h-14 rounded-2xl border-2 border-border/40 bg-background pl-14 pr-12 text-base shadow-lg shadow-amber-500/5 transition-all placeholder:text-muted-foreground/50 focus:border-amber-400 focus:shadow-amber-500/10 focus:ring-0 dark:shadow-amber-900/10"
+                  />
+                  {catalogQuery && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 rounded-xl hover:bg-muted"
+                      onClick={() => setCatalogQuery("")}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Search Dropdown */}
+              {searchFocused && !catalogQuery && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-xl shadow-black/5">
+                    {recentSearches.length > 0 && (
+                      <div className="mb-4">
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            <History className="h-3.5 w-3.5" />
+                            Recent
+                          </div>
+                          <button
+                            onClick={clearRecentSearches}
+                            className="text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {recentSearches.map((search) => (
+                            <button
+                              key={search}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSearch(search);
+                              }}
+                              className="rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 text-sm transition-colors hover:border-amber-300 hover:bg-amber-50 dark:hover:border-amber-700 dark:hover:bg-amber-950/30"
+                            >
+                              {search}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        <TrendingUp className="h-3.5 w-3.5" />
+                        Popular Authors
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {POPULAR_SEARCHES.map((search) => (
+                          <button
+                            key={search}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSearch(search);
+                            }}
+                            className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 px-3 py-1.5 text-sm font-medium text-amber-800 transition-all hover:from-amber-200 hover:to-orange-200 hover:shadow-sm dark:from-amber-900/40 dark:to-orange-900/30 dark:text-amber-200 dark:hover:from-amber-900/60 dark:hover:to-orange-900/50"
+                          >
+                            {search}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
+
+            {/* Active Search/Filter Indicator */}
+            {(catalogSearch || activeCatalog.kind !== "all") && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                {activeCatalog.kind !== "all" && (
+                  <Badge 
+                    variant="secondary" 
+                    className="gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+                  >
+                    {activeCatalog.kind === "collection" ? "📚" : "📁"} {activeCatalog.label}
+                    <button
+                      onClick={() => setCatalogKey("collection-all")}
+                      className="ml-1 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {catalogSearch && (
+                  <Badge 
+                    variant="outline" 
+                    className="gap-1.5 rounded-full px-3 py-1"
+                  >
+                    <Search className="h-3 w-3" />
+                    "{catalogSearch}"
+                    <button
+                      onClick={() => setCatalogQuery("")}
+                      className="ml-1 rounded-full p-0.5 hover:bg-muted"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -693,38 +879,45 @@ export default function LibraryPage() {
             </div>
           )}
 
-          {/* Featured Collections */}
-          <section>
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-serif text-xl font-medium text-foreground">Collections</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground"
+          {/* Curated Collections */}
+          <section className="relative">
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-600/80 dark:text-amber-400/70">Browse by</p>
+                <h2 className="font-serif text-2xl font-medium tracking-tight text-foreground">Collections</h2>
+              </div>
+              <button
                 onClick={() => setShowAllCategories(!showAllCategories)}
+                className="group flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                {showAllCategories ? "Show less" : "Browse all"}
-                <ChevronRight className={`h-4 w-4 transition-transform ${showAllCategories ? "rotate-90" : ""}`} />
-              </Button>
+                <span className="border-b border-transparent group-hover:border-current">
+                  {showAllCategories ? "Hide categories" : "All categories"}
+                </span>
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-200 ${showAllCategories ? "rotate-90" : ""}`} />
+              </button>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {/* All Books option */}
+            {/* Collection Cards */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+              {/* All Books */}
               <button
                 onClick={() => setCatalogKey("collection-all")}
-                className={`group relative flex-shrink-0 w-40 overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 ${
+                className={`group relative overflow-hidden rounded-2xl border-2 p-5 text-left transition-all duration-300 ${
                   catalogKey === "collection-all"
-                    ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 shadow-md dark:border-amber-700 dark:from-amber-950/40 dark:to-orange-950/30"
-                    : "border-border/60 bg-card hover:border-border hover:shadow-sm"
+                    ? "border-amber-400 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 shadow-lg shadow-amber-500/10 dark:border-amber-500 dark:from-amber-950/60 dark:via-orange-950/40 dark:to-yellow-950/20"
+                    : "border-border/40 bg-gradient-to-br from-card to-muted/20 hover:border-amber-300/60 hover:shadow-md dark:hover:border-amber-600/40"
                 }`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-yellow-500/10 opacity-0 transition-opacity group-hover:opacity-100" />
+                <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-300/10 blur-2xl transition-opacity group-hover:opacity-100 dark:from-amber-500/10 dark:to-orange-400/5" />
                 <div className="relative">
-                  <span className="text-2xl">📚</span>
-                  <div className="mt-2 font-medium text-foreground">All Books</div>
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 text-xl shadow-sm dark:from-amber-900/50 dark:to-orange-900/30">
+                    📚
+                  </div>
+                  <div className="font-medium text-foreground">All Books</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">Full catalog</div>
                 </div>
               </button>
-              
+
               {FEATURED_COLLECTIONS.map((fc) => {
                 const catalog = CATALOG_BY_KEY.get(fc.key);
                 if (!catalog) return null;
@@ -733,55 +926,62 @@ export default function LibraryPage() {
                   <button
                     key={fc.key}
                     onClick={() => setCatalogKey(isActive ? "collection-all" : fc.key)}
-                    className={`group relative flex-shrink-0 w-40 overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 ${
+                    className={`group relative overflow-hidden rounded-2xl border-2 p-5 text-left transition-all duration-300 ${
                       isActive
-                        ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 shadow-md dark:border-amber-700 dark:from-amber-950/40 dark:to-orange-950/30"
-                        : "border-border/60 bg-card hover:border-border hover:shadow-sm"
+                        ? "border-amber-400 bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 shadow-lg shadow-amber-500/10 dark:border-amber-500 dark:from-amber-950/60 dark:via-orange-950/40 dark:to-yellow-950/20"
+                        : "border-border/40 bg-gradient-to-br from-card to-muted/20 hover:border-amber-300/60 hover:shadow-md dark:hover:border-amber-600/40"
                     }`}
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${fc.accent} opacity-0 transition-opacity group-hover:opacity-100`} />
+                    <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br from-amber-400/20 to-orange-300/10 opacity-0 blur-2xl transition-opacity group-hover:opacity-100 dark:from-amber-500/10 dark:to-orange-400/5" />
                     <div className="relative">
-                      <span className="text-2xl">{fc.icon}</span>
-                      <div className="mt-2 font-medium text-foreground">{catalog.label}</div>
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-stone-100 to-stone-50 text-xl shadow-sm dark:from-stone-800/50 dark:to-stone-900/30">
+                        {fc.icon}
+                      </div>
+                      <div className="font-medium text-foreground">{catalog.label}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{fc.subtitle}</div>
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* All Categories Dropdown */}
+            {/* Categories Panel */}
             {showAllCategories && (
-              <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="rounded-xl border border-border/60 bg-card p-4">
-                  <ScrollArea className="h-64">
-                    <div className="space-y-4 pr-4">
-                      {CATALOG_GROUPS.map((group) => (
-                        <div key={group.label}>
-                          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="rounded-2xl border border-border/60 bg-gradient-to-b from-card to-background p-6 shadow-sm">
+                  <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {CATALOG_GROUPS.slice(1).map((group) => (
+                      <div key={group.label} className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-500 dark:text-amber-400">{CATEGORY_ICONS[group.label] || "◆"}</span>
+                          <h4 className="text-sm font-semibold tracking-wide text-foreground">
                             {group.label}
                           </h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {group.items.map((cat) => (
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {group.items.map((cat) => {
+                            const isActive = catalogKey === cat.key;
+                            return (
                               <button
                                 key={cat.key}
                                 onClick={() => {
                                   setCatalogKey(cat.key);
                                   setShowAllCategories(false);
                                 }}
-                                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                                  catalogKey === cat.key
-                                    ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                                    : "border-transparent bg-muted/50 text-foreground hover:bg-muted"
+                                className={`rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 ${
+                                  isActive
+                                    ? "bg-amber-500 text-white shadow-md shadow-amber-500/25 dark:bg-amber-600"
+                                    : "bg-muted/60 text-muted-foreground hover:bg-amber-100 hover:text-amber-800 dark:hover:bg-amber-900/30 dark:hover:text-amber-300"
                                 }`}
                               >
                                 {cat.label}
                               </button>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

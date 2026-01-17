@@ -118,33 +118,45 @@ export default function ReaderTopBar({
       </div>
 
       {/* Right: View controls */}
-      <div className="flex items-center gap-1">
-        <Button
-          variant={columns === 1 ? "secondary" : "ghost"}
-          size="sm"
-          onClick={columns === 1 ? undefined : onToggleColumns}
-          className="h-8 w-8 p-0"
-          title="Single page"
-        >
-          <BookOpen className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={columns === 2 ? "secondary" : "ghost"}
-          size="sm"
-          onClick={columns === 2 ? undefined : onToggleColumns}
-          className="h-8 w-8 p-0"
-          title="Two pages"
-        >
-          <Columns2 className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center gap-3">
+        {/* Page layout toggle */}
+        <div className="flex items-center rounded-lg border bg-muted/30 p-0.5">
+          <button
+            type="button"
+            onClick={columns === 1 ? undefined : onToggleColumns}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${
+              columns === 1
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Single</span>
+          </button>
+          <button
+            type="button"
+            onClick={columns === 2 ? undefined : onToggleColumns}
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${
+              columns === 2
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Columns2 className="h-3.5 w-3.5" />
+            <span>Spread</span>
+          </button>
+        </div>
 
-        <div className="w-px h-5 bg-border mx-1" />
-
+        {/* Appearance settings */}
         <Popover open={showAppearance} onOpenChange={onShowAppearanceChange}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Settings2 className="h-4 w-4" />
-            </Button>
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-lg border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+              <span>Display</span>
+            </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-auto p-0">
             <AppearancePanel
