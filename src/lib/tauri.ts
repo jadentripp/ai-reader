@@ -65,6 +65,14 @@ export type HighlightMessage = {
   created_at: string;
 };
 
+export type BookMessage = {
+  id: number;
+  book_id: number;
+  role: "system" | "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
 export type OpenAiKeyStatus = {
   has_env_key: boolean;
   has_saved_key: boolean;
@@ -196,6 +204,26 @@ export async function addHighlightMessage(params: {
     role: params.role,
     content: params.content,
   });
+}
+
+export async function listBookMessages(bookId: number): Promise<BookMessage[]> {
+  return await invoke("list_book_messages", { bookId });
+}
+
+export async function addBookMessage(params: {
+  bookId: number;
+  role: "system" | "user" | "assistant";
+  content: string;
+}): Promise<BookMessage> {
+  return await invoke("add_book_message", {
+    bookId: params.bookId,
+    role: params.role,
+    content: params.content,
+  });
+}
+
+export async function deleteBookMessages(bookId: number): Promise<void> {
+  await invoke("delete_book_messages", { bookId });
 }
 
 export async function openAiKeyStatus(): Promise<OpenAiKeyStatus> {
