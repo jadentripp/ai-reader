@@ -185,7 +185,7 @@ export default function SettingsPage() {
             Settings
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Configure your Shakespeare Reader experience
+            Configure your AI Reader experience
           </p>
         </div>
 
@@ -333,7 +333,7 @@ export default function SettingsPage() {
               </svg>
             }
             title="About"
-            description="Shakespeare Reader application information"
+            description="AI Reader application information"
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -344,8 +344,8 @@ export default function SettingsPage() {
               </div>
               <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
               <p className="text-xs leading-relaxed text-muted-foreground">
-                A beautiful reader for Shakespeare's complete works, powered by AI for 
-                deeper understanding and literary analysis.
+                A beautiful reader for classic literature, powered by AI for deeper
+                understanding and literary analysis.
               </p>
             </div>
           </SettingsSection>

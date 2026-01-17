@@ -1,0 +1,97 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#142a4a" />
+      <stop offset="55%" stop-color="#0f1e3a" />
+      <stop offset="100%" stop-color="#0b162b" />
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(260 220) rotate(90) scale(520 620)">
+      <stop offset="0%" stop-color="#7fb9ff" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#7fb9ff" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#7fb9ff" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="bgVignette" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 940) rotate(90) scale(420 680)">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="pageLeft" x1="260" y1="300" x2="520" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3df2d7" />
+      <stop offset="100%" stop-color="#3a8dff" />
+    </linearGradient>
+    <linearGradient id="pageRight" x1="780" y1="300" x2="500" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffd36b" />
+      <stop offset="100%" stop-color="#ff9445" />
+    </linearGradient>
+    <linearGradient id="pageHighlight" x1="0" y1="260" x2="0" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="spine" x1="512" y1="300" x2="512" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f8f1e8" stop-opacity="0.98" />
+      <stop offset="100%" stop-color="#d5c6b7" stop-opacity="0.85" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)" />
+  <rect width="1024" height="1024" rx="220" fill="url(#bgGlow)" />
+  <rect width="1024" height="1024" rx="220" fill="url(#bgVignette)" />
+  <rect x="22" y="22" width="980" height="980" rx="200" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="6" />
+
+  <ellipse cx="512" cy="726" rx="300" ry="120" fill="#0a1022" opacity="0.45" />
+
+  <path
+    d="M230 335
+       Q360 270 512 292
+       L512 725
+       Q356 768 230 705
+       Z"
+    fill="url(#pageLeft)"
+  />
+  <path
+    d="M794 335
+       Q664 270 512 292
+       L512 725
+       Q668 768 794 705
+       Z"
+    fill="url(#pageRight)"
+  />
+
+  <path
+    d="M244 350
+       Q360 292 498 310
+       L498 710
+       Q360 740 244 690
+       Z"
+    fill="url(#pageHighlight)"
+  />
+  <path
+    d="M780 350
+       Q664 292 526 310
+       L526 710
+       Q664 740 780 690
+       Z"
+    fill="url(#pageHighlight)"
+  />
+
+  <rect x="494" y="300" width="36" height="440" rx="18" fill="url(#spine)" />
+
+  <g>
+    <circle cx="512" cy="230" r="62" fill="#ffe7a3" opacity="0.14" />
+    <path
+      d="M512 182
+         L536 226
+         L584 250
+         L536 274
+         L512 320
+         L488 274
+         L440 250
+         L488 226
+         Z"
+      fill="#fff1cf"
+    />
+    <circle cx="444" cy="224" r="10" fill="#48d8ff" />
+    <circle cx="594" cy="224" r="10" fill="#ffd36b" />
+    <circle cx="512" cy="168" r="7" fill="#ffffff" />
+  </g>
+</svg>
