@@ -132,7 +132,8 @@ export function cleanFootnoteContent(html: string): string {
       text === "↩" || 
       text === "↑" || 
       text === "top" ||
-      text.includes("jump up")
+      text.includes("jump up") ||
+      /^\[?\d+\]?$/.test(text)
     ) {
       a.remove();
     }
@@ -1215,12 +1216,64 @@ export default function MobiBookPage(props: { bookId: number }) {
         event.preventDefault();
         const ownerDoc = anchor.ownerDocument;
         const targetId = decodeURIComponent(rawHash);
-        const targetEl = ownerDoc.getElementById(targetId) || 
-                         ownerDoc.getElementsByName(targetId)[0] ||
-                         ownerDoc.querySelector(`[id="${targetId}"]`);
+        
+        let targetEl = ownerDoc.getElementById(targetId) || 
+                       ownerDoc.getElementsByName(targetId)[0] ||
+                       ownerDoc.querySelector(`[id="${targetId}"]`);
+
+        // Robust fallback: if "fn40" fails, try common patterns
+        if (!targetEl && targetId) {
+          const numMatch = targetId.match(/\d+/);
+          if (numMatch) {
+            const num = numMatch[0];
+            console.log("[Link] Searching for fallback patterns for number:", num);
+            
+            // Try common ID patterns
+            const patterns = [
+              `footnote${num}`, `footnote-${num}`, `footnote_${num}`,
+              `fn${num}`, `fn-${num}`, `fn_${num}`,
+              `note${num}`, `note-${num}`, `note_${num}`,
+              `f${num}`, `n${num}`, `ref${num}`,
+              `id${num}`, `${num}`
+            ];
+            
+            for (const p of patterns) {
+              targetEl = ownerDoc.getElementById(p) || 
+                         ownerDoc.querySelector(`[id="${p}"]`) ||
+                         ownerDoc.querySelector(`[name="${p}"]`);
+              if (targetEl) {
+                console.log("[Link] Found target with pattern:", p);
+                break;
+              }
+            }
+
+            // Try searching for any element containing "footnote" and the number in its ID
+            if (!targetEl) {
+              targetEl = ownerDoc.querySelector(`[id*="footnote"][id*="${num}"]`) ||
+                         ownerDoc.querySelector(`[id*="note"][id*="${num}"]`) ||
+                         ownerDoc.querySelector(`[id*="fn"][id*="${num}"]`);
+              if (targetEl) console.log("[Link] Found target with fuzzy ID search");
+            }
+
+            // Try "aid" attribute - common in some MOBI/EPUB formats
+            if (!targetEl) {
+              targetEl = ownerDoc.querySelector(`[aid*="${num}"]`);
+              if (targetEl) console.log("[Link] Found target with aid attribute search");
+            }
+          }
+        }
         
         if (targetEl && targetEl instanceof HTMLElement) {
           console.log("[Link] Footnote target found:", targetId);
+          
+          let content = targetEl.innerHTML;
+          // If the target is an empty anchor (common in some formats), 
+          // use the parent element's content instead
+          if (!content.trim() && targetEl.tagName === "A" && targetEl.parentElement) {
+            content = targetEl.parentElement.innerHTML;
+            console.log("[Link] Target was empty anchor, using parent element content");
+          }
+
           const rect = anchor.getBoundingClientRect();
           const iframeRect = iframeRef.current?.getBoundingClientRect();
           const containerRect = containerRef.current?.getBoundingClientRect();
@@ -1243,14 +1296,18 @@ export default function MobiBookPage(props: { bookId: number }) {
       }
 
       if (lowerHref.startsWith("kindle:pos:")) {
-        event.preventDefault();
         const linkText = anchor.textContent ?? "";
         const headingMatch = findHeadingByText(linkText, anchor);
         if (headingMatch) {
+          event.preventDefault();
           jumpToElement(headingMatch);
           return;
         }
-        return;
+        // If it's a footnote, don't return yet, let the isFootnote logic handle it
+        if (!isFootnote) {
+          event.preventDefault();
+          return;
+        }
       }
 
       if (!rawHash) return;
@@ -1789,6 +1846,8 @@ export default function MobiBookPage(props: { bookId: number }) {
           onCreateHighlight={handleCreateHighlight}
           onCancelHighlight={() => setPendingHighlight(null)}
           onAddToChat={handleAddToChat}
+          activeCitation={activeCitation}
+          onActiveCitationChange={setActiveCitation}
         />
 
         <div className="relative flex min-h-0">
@@ -1834,31 +1893,6 @@ export default function MobiBookPage(props: { bookId: number }) {
           )}
         </div>
       </div>
-
-      <Popover open={!!activeCitation} onOpenChange={(open) => !open && setActiveCitation(null)}>
-        <PopoverAnchor
-          style={{
-            position: "absolute",
-            top: activeCitation?.rect.top ?? 0,
-            left: activeCitation?.rect.left ?? 0,
-            width: activeCitation?.rect.width ?? 0,
-            height: activeCitation?.rect.height ?? 0,
-            pointerEvents: "none",
-          }}
-        />
-        <PopoverContent 
-          className="w-80 max-h-[300px] overflow-y-auto bg-popover p-4 shadow-xl border-border"
-          side="top"
-          align="center"
-        >
-          <div 
-            className="text-sm leading-relaxed prose prose-sm dark:prose-invert"
-            dangerouslySetInnerHTML={{ 
-              __html: activeCitation ? activeCitation.content : "" 
-            }} 
-          />
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }

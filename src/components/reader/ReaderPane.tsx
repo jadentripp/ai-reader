@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import ReaderLayout from "@/components/ReaderLayout";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import type { RefObject } from "react";
 import type { PendingHighlight } from "@/lib/readerTypes";
 
@@ -14,6 +15,8 @@ type ReaderPaneProps = {
   onCreateHighlight: () => void;
   onCancelHighlight: () => void;
   onAddToChat?: () => void;
+  activeCitation: { content: string; rect: { top: number; left: number; width: number; height: number } } | null;
+  onActiveCitationChange: (val: any) => void;
 };
 
 export default function ReaderPane({
@@ -27,6 +30,8 @@ export default function ReaderPane({
   onCreateHighlight,
   onCancelHighlight,
   onAddToChat,
+  activeCitation,
+  onActiveCitationChange,
 }: ReaderPaneProps) {
   return (
     <main className="relative min-h-0" ref={containerRef}>
@@ -40,6 +45,34 @@ export default function ReaderPane({
           onLoad={onLoad}
         />
       </ReaderLayout>
+
+      <Popover open={!!activeCitation} onOpenChange={(open) => !open && onActiveCitationChange(null)}>
+        {activeCitation && (
+          <PopoverAnchor
+            style={{
+              position: "absolute",
+              top: activeCitation.rect.top,
+              left: activeCitation.rect.left,
+              width: activeCitation.rect.width,
+              height: activeCitation.rect.height,
+              pointerEvents: "none",
+            }}
+          />
+        )}
+        <PopoverContent 
+          className="w-80 max-h-[300px] overflow-y-auto bg-popover p-4 shadow-xl border-border"
+          side="top"
+          align="center"
+        >
+          <div 
+            className="text-sm leading-relaxed prose prose-sm dark:prose-invert"
+            dangerouslySetInnerHTML={{ 
+              __html: activeCitation ? activeCitation.content : "" 
+            }} 
+          />
+        </PopoverContent>
+      </Popover>
+
       {pendingHighlight ? (
         <div
           className="absolute z-20 flex -translate-x-1/2 items-center gap-2 rounded-lg border bg-popover p-2 shadow-lg"

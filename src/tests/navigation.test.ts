@@ -23,6 +23,11 @@ describe('cleanFootnoteContent', () => {
     expect(cleanFootnoteContent(html)).toBe('This is the content');
   });
 
+  it('should remove citation numbers like "[1]"', () => {
+    const html = '<a href="#ref">[1]</a> This is the content';
+    expect(cleanFootnoteContent(html)).toBe('This is the content');
+  });
+
   it('should keep other links', () => {
     const html = 'See <a href="http://example.com">this link</a> for more info';
     expect(cleanFootnoteContent(html)).toBe('See <a href="http://example.com">this link</a> for more info');
