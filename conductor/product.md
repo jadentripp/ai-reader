@@ -15,8 +15,10 @@ AI Reader transforms the experience of reading public domain literature from a p
 - **Seamless Discovery:** Integrated search for Project Gutenberg via Gutendex with curated collections.
 - **Local Library Management:** Efficient download and storage of books for offline reading.
 - **Premium Reading Experience:** A paginated, customizable reader supporting single or two-column layouts.
+- **Rich Media Support:** Integrated inline illustration and image extraction from MOBI files, providing a more faithful and visually engaging reading experience for classic literature.
 - **Active Reading Tools:** Robust highlighting and note-taking capabilities with easy browsing.
 - **AI-Powered Insights:** Context-aware chat assistant for summaries, explanations, and analysis with interactive citations that link directly back to the source text.
+- **Interactive Media Features:** Click-to-zoom lightbox for detailed inspection of illustrations and the ability to save images locally.
 
 ## Success Metrics
 - **Engagement:** Frequency and duration of reading sessions.
