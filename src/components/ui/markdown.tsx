@@ -16,10 +16,19 @@ export type MarkdownProps = {
 
 function parseMarkdownIntoBlocks(markdown: string): string[] {
   // Pre-process <cite> tags into a unique format that won't be mangled by Markdown
-  const processed = markdown.replace(
-    /<cite\s+snippet="([^"]*)"\s+index="([^"]*)">([\s\S]*?)<\/cite>/g,
-    (_, snippet, index, text) => `@@CITE_START@@[${index}:::${snippet}]${text}@@CITE_END@@`
-  );
+  // Use a more flexible regex that handles attribute order and optional self-closing
+  const processed = markdown.replace(/<cite\s+([^>]*)\/?>([\s\S]*?)(?:<\/cite>)?/g, (match, attrs, body) => {
+    const snippetMatch = attrs.match(/snippet="([^"]*)"/);
+    const indexMatch = attrs.match(/index="([^"]*)"/);
+    
+    if (!snippetMatch && !indexMatch) return match; // Not a valid cite tag
+    
+    const snippet = snippetMatch ? snippetMatch[1] : "";
+    const index = indexMatch ? indexMatch[1] : "";
+    const cleanBody = body ? body.trim() : "";
+    
+    return `@@CITE@@${index}@@${encodeURIComponent(snippet)}@@${cleanBody}@@`;
+  });
 
   const tokens = marked.lexer(processed)
   return tokens.map((token) => token.raw)
@@ -80,28 +89,35 @@ const MemoizedMarkdownBlock = memo(
         const processNode = (node: any): any => {
           if (typeof node === 'string') {
             // First handle our new @@CITE@@ format
-            const citeParts = node.split(/(@@CITE_START@@\[[^\]]*\][\s\S]*?@@CITE_END@@)/g);
+            const citeParts = node.split(/(@@CITE@@[^@]+@@[^@]*@@[^@]*@@)/g);
             const processedCiteParts = citeParts.flatMap((part, i) => {
-              const citeMatch = part.match(/@@CITE_START@@\[([^:]*):::([^\]]*)\]([\s\S]*?)@@CITE_END@@/);
+              const citeMatch = part.match(/@@CITE@@([^@]+)@@([^@]+)@@([^@]*)@@/);
               if (citeMatch) {
                 const index = parseInt(citeMatch[1], 10);
-                const snippet = citeMatch[2];
-                const text = citeMatch[3];
-                return (
-                  <span
-                    key={`cite-${i}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onCitationClick?.(index, snippet);
-                    }}
-                    className="cursor-pointer bg-primary/10 text-primary border-b border-primary/40 hover:bg-primary/20 transition-colors px-0.5 rounded-sm italic"
-                    title={`Click to see: "${snippet}"`}
-                  >
-                    {text}
-                  </span>
-                );
-              }
+                const snippet = decodeURIComponent(citeMatch[2]);
+                const wrappedText = citeMatch[3];
+                                return (
+                                  <span key={`cite-group-${i}`}>
+                                    {wrappedText}
+                                    <sup
+                                      onClick={(e) => {
+                                        console.log(`[Markdown] Citation clicked! Index: ${index}, Snippet: "${snippet.slice(0, 20)}..."`);
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (!onCitationClick) {
+                                          console.warn("[Markdown] onCitationClick is undefined!");
+                                        }
+                                        onCitationClick?.(index, snippet);
+                                      }}
+                                      className="cursor-pointer text-primary hover:text-primary/70 font-bold px-0.5 select-none inline-block align-baseline hover:scale-110 transition-transform underline decoration-dotted underline-offset-2 ml-0.5"
+                                      style={{ fontSize: '0.75em', verticalAlign: 'super', lineHeight: 0 }}
+                                      title={`Source: "${snippet}"`}
+                                    >
+                                      [{index}]
+                                    </sup>
+                                  </span>
+                                );
+                              }
               
               // Then handle legacy [1] format within the remaining string parts
               const parts = part.split(/(\[\d+\])/g);
@@ -149,25 +165,28 @@ const MemoizedMarkdownBlock = memo(
       li: function LiComponent({ children, ...props }) {
         const processNode = (node: any): any => {
           if (typeof node === 'string') {
-            const citeParts = node.split(/(@@CITE_START@@\[[^\]]*\][\s\S]*?@@CITE_END@@)/g);
+            const citeParts = node.split(/(@@CITE@@[^@]+@@[^@]*@@[^@]*@@)/g);
             const processedCiteParts = citeParts.flatMap((part, i) => {
-              const citeMatch = part.match(/@@CITE_START@@\[([^:]*):::([^\]]*)\]([\s\S]*?)@@CITE_END@@/);
+              const citeMatch = part.match(/@@CITE@@([^@]+)@@([^@]+)@@([^@]*)@@/);
               if (citeMatch) {
                 const index = parseInt(citeMatch[1], 10);
-                const snippet = citeMatch[2];
-                const text = citeMatch[3];
+                const snippet = decodeURIComponent(citeMatch[2]);
+                const wrappedText = citeMatch[3];
                 return (
-                  <span
-                    key={`cite-${i}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onCitationClick?.(index, snippet);
-                    }}
-                    className="cursor-pointer bg-primary/10 text-primary border-b border-primary/40 hover:bg-primary/20 transition-colors px-0.5 rounded-sm italic"
-                    title={`Click to see: "${snippet}"`}
-                  >
-                    {text}
+                  <span key={`cite-group-${i}`}>
+                    {wrappedText}
+                    <sup
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onCitationClick?.(index, snippet);
+                      }}
+                      className="cursor-pointer text-primary hover:text-primary/70 font-bold px-0.5 select-none inline-block align-baseline hover:scale-110 transition-transform underline decoration-dotted underline-offset-2 ml-0.5"
+                      style={{ fontSize: '0.75em', verticalAlign: 'super', lineHeight: 0 }}
+                      title={`Source: "${snippet}"`}
+                    >
+                      [{index}]
+                    </sup>
                   </span>
                 );
               }
