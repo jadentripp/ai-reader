@@ -17,9 +17,7 @@ pub struct KeyStatus {
 #[derive(Debug, Serialize)]
 struct ChatRequest {
     model: String,
-    messages: Vec<ChatMessage>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f32>,
+    input: Vec<ChatMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
     reasoning: Option<ReasoningConfig>,
 }
@@ -31,18 +29,30 @@ struct ReasoningConfig {
 
 #[derive(Debug, Deserialize)]
 struct ChatResponse {
-    output: Option<ChatOutput>,
+    output: Vec<ResponseItem>,
 }
 
 #[derive(Debug, Deserialize)]
-struct ChatOutput {
-    message: ChatOutputMessage,
+#[serde(tag = "type", rename_all = "snake_case")]
+enum ResponseItem {
+    Message {
+        content: Vec<ContentPart>,
+    },
+    Reasoning {
+        summary: Option<String>,
+    },
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Deserialize)]
-struct ChatOutputMessage {
-    content: Option<String>,
-    reasoning_summary: Option<String>,
+#[serde(tag = "type", rename_all = "snake_case")]
+enum ContentPart {
+    OutputText {
+        text: String,
+    },
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,12 +68,16 @@ struct ModelInfo {
 
 fn resolve_api_key(app_handle: &AppHandle) -> Result<String, anyhow::Error> {
     let saved = crate::db::get_setting(app_handle, "openai_api_key".to_string())?;
-    if let Some(key) = saved.filter(|value| !value.trim().is_empty()) {
-        return Ok(key);
+    if let Some(key) = saved {
+        let trimmed = key.trim();
+        if !trimmed.is_empty() {
+            return Ok(trimmed.to_string());
+        }
     }
     if let Ok(env_key) = std::env::var("OPENAI_API_KEY") {
-        if !env_key.trim().is_empty() {
-            return Ok(env_key);
+        let trimmed = env_key.trim();
+        if !trimmed.is_empty() {
+            return Ok(trimmed.to_string());
         }
     }
     Err(anyhow::anyhow!(
@@ -92,30 +106,51 @@ pub struct ChatResult {
 pub async fn chat(app_handle: &AppHandle, messages: Vec<ChatMessage>) -> Result<ChatResult, anyhow::Error> {
     let api_key = resolve_api_key(app_handle)?;
     let model = crate::db::get_setting(app_handle, "openai_model".to_string())?
-        .unwrap_or_else(|| "gpt-4.5-preview".to_string());
+        .unwrap_or_else(|| "gpt-4o".to_string());
 
     let client = reqwest::Client::new();
+    let request_body = ChatRequest {
+        model,
+        input: messages,
+        reasoning: None,
+    };
+
+    let json_payload = serde_json::to_string(&request_body).unwrap_or_default();
+    
     let resp = client
         .post("https://api.openai.com/v1/responses")
-        .header("Authorization", format!("Bearer {}", api_key))
+        .bearer_auth(api_key)
         .header("Content-Type", "application/json")
-        .json(&ChatRequest {
-            model,
-            messages,
-            temperature: Some(0.2),
-            reasoning: Some(ReasoningConfig {
-                summary: "auto".to_string(),
-            }),
-        })
+        .body(json_payload)
         .send()
-        .await?
-        .error_for_status()?;
+        .await?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let error_body = resp.text().await.unwrap_or_else(|_| "Could not read error body".to_string());
+        return Err(anyhow::anyhow!("OpenAI API error {}: {}", status, error_body));
+    }
 
     let body: ChatResponse = resp.json().await?;
-    let output = body.output.ok_or_else(|| anyhow::anyhow!("Missing output in response"))?;
     
-    let content = output.message.content.unwrap_or_default();
-    let reasoning_summary = output.message.reasoning_summary;
+    let mut content = String::new();
+    let mut reasoning_summary = None;
+
+    for item in body.output {
+        match item {
+            ResponseItem::Message { content: parts } => {
+                for part in parts {
+                    if let ContentPart::OutputText { text } = part {
+                        content.push_str(&text);
+                    }
+                }
+            }
+            ResponseItem::Reasoning { summary } => {
+                reasoning_summary = summary;
+            }
+            ResponseItem::Unknown => {}
+        }
+    }
 
     Ok(ChatResult {
         content,
@@ -128,7 +163,7 @@ pub async fn list_models(app_handle: &AppHandle) -> Result<Vec<String>, anyhow::
     let client = reqwest::Client::new();
     let resp = client
         .get("https://api.openai.com/v1/models")
-        .header("Authorization", format!("Bearer {}", api_key))
+        .bearer_auth(api_key)
         .header("Content-Type", "application/json")
         .send()
         .await?

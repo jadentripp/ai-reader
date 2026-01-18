@@ -22,7 +22,7 @@ import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import type { BookChatThread, ChatPrompt, LocalChatMessage } from "@/lib/readerTypes";
 import type { Highlight } from "@/lib/tauri";
-import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose, PlusSquare, History, MessageSquare, X, Trash2, Edit2, Eraser } from "lucide-react";
+import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose, PlusSquare, History, MessageSquare, X, Trash2, Edit2, Eraser, Brain, ChevronRight } from "lucide-react";
 
 type ChatSidebarProps = {
   contextHint: string;
@@ -222,6 +222,37 @@ function EditableThreadTitle({
       >
         <Edit2 className="h-2.5 w-2.5" />
       </button>
+    </div>
+  );
+}
+
+function ReasoningTrace({ summary }: { summary: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="mb-1.5 overflow-hidden rounded-lg border border-border/40 bg-muted/30">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition-colors hover:bg-muted/50"
+      >
+        <Brain className="h-3.5 w-3.5 text-primary/70" />
+        <span className="flex-1 text-[11px] font-medium text-muted-foreground">
+          AI Reasoning
+        </span>
+        <ChevronRight
+          className={cn(
+            "h-3 w-3 text-muted-foreground/50 transition-transform duration-200",
+            isExpanded && "rotate-90"
+          )}
+        />
+      </button>
+      {isExpanded && (
+        <div className="border-t border-border/20 px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground/90">
+          <div className="prose-sm prose-invert max-w-none">
+            {summary}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -438,7 +469,7 @@ export default function ChatSidebar({
           <ChatContainerContent className="gap-3 p-3">
             {messages.length ? (
               <>
-                {messages.map((message) => {
+                {messages.map((message: any) => {
                   const isUser = message.role === "user";
                   return (
                     <div key={message.id} className="group/msg relative">
@@ -454,16 +485,21 @@ export default function ChatSidebar({
                             isUser ? "bg-primary text-primary-foreground" : "bg-muted"
                           )}
                         />
-                        <MessageContent
-                          markdown={!isUser}
-                          onCitationClick={message.onCitationClick ?? onCitationClick}
-                          className={cn(
-                            "max-w-[85%] text-sm py-2 px-3",
-                            isUser ? "bg-primary text-primary-foreground" : "bg-muted/60"
+                        <div className={cn("flex max-w-[85%] flex-col", isUser && "items-end")}>
+                          {message.reasoning_summary && (
+                            <ReasoningTrace summary={message.reasoning_summary} />
                           )}
-                        >
-                          {message.content}
-                        </MessageContent>
+                          <MessageContent
+                            markdown={!isUser}
+                            onCitationClick={message.onCitationClick ?? onCitationClick}
+                            className={cn(
+                              "w-full text-sm py-2 px-3",
+                              isUser ? "bg-primary text-primary-foreground" : "bg-muted/60"
+                            )}
+                          >
+                            {message.content}
+                          </MessageContent>
+                        </div>
                       </Message>
                       {onDeleteMessage && (
                         <div className={cn(

@@ -1671,10 +1671,26 @@ export default function MobiBookPage(props: { bookId: number }) {
     const input = chatInput.trim();
     setChatSending(true);
     setChatInput("");
+    
+    let threadId = currentThreadId;
+
     try {
-      let threadId = currentThreadId;
+      // Optimistic update: immediately show user message in UI
+      const optimisticUserMsg: any = {
+        id: Date.now(), // Temporary ID
+        book_id: id,
+        thread_id: threadId,
+        role: "user",
+        content: input,
+        created_at: new Date().toISOString(),
+        isOptimistic: true
+      };
+
+      queryClient.setQueryData(["bookMessages", id, threadId], (old: any) => {
+        return [...(old || []), optimisticUserMsg];
+      });
       
-      // Persist the user message
+      // Persist the user message to DB
       await addBookMessage({
         bookId: id,
         threadId: threadId,
