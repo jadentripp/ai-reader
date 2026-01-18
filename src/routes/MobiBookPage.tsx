@@ -784,6 +784,42 @@ export default function MobiBookPage(props: { bookId: number }) {
     return scored[0].el;
   };
 
+  const scrollToCfi = (cfi: string) => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+
+    // Simple parser for our format: epubcfi(/6/2!/4/BLOCK_INDEX)
+    const match = cfi.match(/\/4\/(\d+)/);
+    if (match) {
+      const blockIndex = parseInt(match[1], 10) / 2;
+      const element = doc.querySelector(`[data-block-index="${blockIndex}"]`) as HTMLElement | null;
+      if (element) {
+        jumpToElement(element);
+        return true;
+      }
+    }
+    
+    // Fallback for highlight CFIs (which are JSON paths in this app currently)
+    try {
+      const path = JSON.parse(cfi);
+      if (Array.isArray(path)) {
+        const root = getScrollRoot();
+        if (root) {
+          const node = resolveNodePath(root, path);
+          const element = node?.nodeType === Node.TEXT_NODE ? node.parentElement : (node as HTMLElement);
+          if (element) {
+            jumpToElement(element);
+            return true;
+          }
+        }
+      }
+    } catch {
+      // Not a JSON path
+    }
+
+    return false;
+  };
+
   const getElementRect = (element: HTMLElement) => {
     const rects = Array.from(element.getClientRects());
     let directRect = rects.find((rect) => rect.width || rect.height) ?? rects[0];
@@ -1675,6 +1711,13 @@ export default function MobiBookPage(props: { bookId: number }) {
     let threadId = currentThreadId;
 
     try {
+      // Get starting index for cumulative citations
+      let localId = 1;
+      if (threadId !== null) {
+        const maxIdx = await getThreadMaxCitationIndex(threadId);
+        localId = maxIdx + 1;
+      }
+
       // Optimistic update: immediately show user message in UI
       const optimisticUserMsg: any = {
         id: Date.now(), // Temporary ID
@@ -1710,11 +1753,13 @@ export default function MobiBookPage(props: { bookId: number }) {
         "Always use the self-closing format <cite ... />. Do NOT wrap your summary text in the tag.",
       ];
 
-      let localId = 1;
-      const idMap: Record<number, { text: string; blockIndex?: number }> = {}; 
+      const idMap: Record<number, { text: string; blockIndex?: number; cfi?: string; pageNumber?: number }> = {}; 
 
       if (selectedHighlight) {
-        idMap[localId] = { text: selectedHighlight.text };
+        idMap[localId] = { 
+          text: selectedHighlight.text,
+          cfi: selectedHighlight.start_path, // Highlights use start_path as CFI
+        };
         contextBlocks.push(`[SOURCE_ID: ${localId}] Currently Focused Highlight: "${selectedHighlight.text}"`);
         if (selectedHighlight.note) {
           contextBlocks.push(`User's Note on Highlight: "${selectedHighlight.note}"`);
@@ -1726,7 +1771,10 @@ export default function MobiBookPage(props: { bookId: number }) {
         contextBlocks.push("Additional Attached Highlights:");
         attachedHighlights.forEach((h: any) => {
           if (selectedHighlight && h.id === selectedHighlight.id) return;
-          idMap[localId] = { text: h.text };
+          idMap[localId] = { 
+            text: h.text,
+            cfi: h.start_path
+          };
           contextBlocks.push(`[SOURCE_ID: ${localId}] "${h.text}"${h.note ? ` (Note: ${h.note})` : ""}`);
           localId++;
         });
@@ -1769,7 +1817,12 @@ export default function MobiBookPage(props: { bookId: number }) {
                 sentences.forEach(sentence => {
                   const cleanSentence = sentence.trim();
                   if (cleanSentence.length > 5) {
-                    idMap[localId] = { text: cleanSentence, blockIndex }; 
+                    idMap[localId] = { 
+                      text: cleanSentence, 
+                      blockIndex,
+                      cfi: `epubcfi(/6/2!/4/${blockIndex * 2})`, // Simple block-based CFI
+                      pageNumber: currentPage
+                    }; 
                     contextBlocks.push(`[SOURCE_ID: ${localId}] ${cleanSentence}`);
                     localId++;
                   }
@@ -1840,13 +1893,23 @@ export default function MobiBookPage(props: { bookId: number }) {
     let content = message.content;
     let mapping: Record<number, any> = {};
     
-    const mapMatch = content.match(/<!-- context-map: (\{.*?\}) -->/);
-    if (mapMatch) {
+    // Prioritize database context_map
+    if (message.context_map) {
       try {
-        mapping = JSON.parse(mapMatch[1]);
-        content = content.replace(mapMatch[0], "").trim();
+        mapping = JSON.parse(message.context_map);
       } catch (e) {
-        console.error("Failed to parse context map from message", e);
+        console.error("Failed to parse database context_map", e);
+      }
+    } else {
+      // Legacy fallback: parse from content comment
+      const mapMatch = content.match(/<!-- context-map: (\{.*?\}) -->/);
+      if (mapMatch) {
+        try {
+          mapping = JSON.parse(mapMatch[1]);
+          content = content.replace(mapMatch[0], "").trim();
+        } catch (e) {
+          console.error("Failed to parse legacy context map", e);
+        }
       }
     }
 
@@ -1857,6 +1920,15 @@ export default function MobiBookPage(props: { bookId: number }) {
       onCitationClick: (localId: number, snippet?: string) => {
         const value = mapping[localId];
         
+        if (value?.cfi) {
+          scrollToCfi(value.cfi);
+          if (snippet) setActiveAiQuote(snippet);
+          else if (value.text) setActiveAiQuote(value.text);
+          setActiveAiBlockIndex(value.blockIndex ?? null);
+          setSelectedHighlightId(null);
+          return;
+        }
+
         if (snippet) {
           scrollToQuote(snippet, value?.blockIndex);
           setActiveAiQuote(snippet);
@@ -1873,9 +1945,6 @@ export default function MobiBookPage(props: { bookId: number }) {
             setActiveAiBlockIndex(value.blockIndex ?? null);
             setSelectedHighlightId(null);
           }
-        } else {
-          // Fallback to global map for current session's newly sent messages
-          handleCitationClick(localId, snippet);
         }
       },
     };
