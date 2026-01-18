@@ -10,7 +10,7 @@ Update the data layer to support reasoning traces, robust citations, and persist
 - [x] Task: Add unit tests in `db.rs` for new schema fields and citation indexing logic 29838f8
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend Foundation' (Protocol in workflow.md)
 
-## Phase 2: Optimistic UI & Responses API Integration
+## Phase 2: Optimistic UI & Responses API Integration [checkpoint: 158f948]
 Implement the frontend changes to handle the new API and provide immediate user feedback.
 
 - [x] Task: Update `src/lib/tauri.ts` wrappers to handle reasoning summaries and full citation metadata 29838f8
@@ -22,10 +22,11 @@ Implement the frontend changes to handle the new API and provide immediate user 
 ## Phase 3: Robust Citations & Reasoning UI
 Enhance the citations with position data and add the expandable reasoning section.
 
-- [ ] Task: Update citation extraction logic to store `cfi` and `page_number` in the database `context_map`
-- [ ] Task: Implement cumulative indexing logic ( Turn N starts at Index Turn N-1 + 1)
-- [ ] Task: Add expandable "AI Reasoning" section component to `ChatSidebar.tsx`
-- [ ] Task: Update `handleCitationClick` to use the stored `cfi` for jumping, regardless of current page
+- [x] Task: Update citation extraction logic to store `cfi` and `page_number` in the database `context_map` 158f948
+- [x] Task: Implement cumulative indexing logic ( Turn N starts at Index Turn N-1 + 1) 158f948
+- [x] Task: Add expandable "AI Reasoning" section component to `ChatSidebar.tsx` 158f948
+- [x] Task: Update `handleCitationClick` to use the stored `cfi` for jumping, regardless of current page 158f948
+- [ ] Task: Conductor - User Manual Verification 'Phase 3: Citations & Reasoning' (Protocol in workflow.md)
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Citations & Reasoning' (Protocol in workflow.md)
 
 ## Phase 4: Thread Navigation & Polish
