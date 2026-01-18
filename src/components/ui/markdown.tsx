@@ -101,12 +101,8 @@ const MemoizedMarkdownBlock = memo(
                                     {wrappedText}
                                     <sup
                                       onClick={(e) => {
-                                        console.log(`[Markdown] Citation clicked! Index: ${index}, Snippet: "${snippet.slice(0, 20)}..."`);
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        if (!onCitationClick) {
-                                          console.warn("[Markdown] onCitationClick is undefined!");
-                                        }
                                         onCitationClick?.(index, snippet);
                                       }}
                                       className="cursor-pointer text-primary hover:text-primary/70 font-bold px-0.5 select-none inline-block align-baseline hover:scale-110 transition-transform underline decoration-dotted underline-offset-2 ml-0.5"

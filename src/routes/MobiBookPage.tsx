@@ -30,7 +30,7 @@ import { useReaderAppearance } from "../lib/appearance";
 
 const DESIRED_PAGE_WIDTH = 750;
 const CHAT_PROMPTS: ChatPrompt[] = [
-  { label: "Summarize", prompt: "Summarize this passage in modern English." },
+  { label: "Summarize", prompt: "Summarize this passage in modern English, including citations for every key claim." },
 ];
 
 function findTextRange(root: HTMLElement, targetText: string, blockIndex?: number): Range | null {
@@ -40,11 +40,16 @@ function findTextRange(root: HTMLElement, targetText: string, blockIndex?: numbe
   if (blockIndex !== undefined) {
     const block = root.querySelector(`[data-block-index="${blockIndex}"]`);
     if (block instanceof HTMLElement) {
-      console.log(`[findTextRange] Found block for index ${blockIndex}`);
       searchRoot = block;
-    } else {
-      console.warn(`[findTextRange] Block NOT found for index ${blockIndex}`);
     }
+  }
+
+  // Handle snippets with ellipses by splitting them into parts
+  const snippetParts = targetText.split(/\.\.\./).map(p => p.trim()).filter(p => p.length > 0);
+  if (snippetParts.length > 1) {
+    // For now, find the range of the longest part as a reliable anchor
+    const longestPart = snippetParts.reduce((a, b) => a.length > b.length ? a : b);
+    return findTextRange(root, longestPart, blockIndex);
   }
 
   const walker = doc.createTreeWalker(searchRoot, NodeFilter.SHOW_TEXT);
@@ -63,58 +68,35 @@ function findTextRange(root: HTMLElement, targetText: string, blockIndex?: numbe
   }
 
   const fullText = fullTextParts.join("");
-  console.log(`[findTextRange] Extracted ${fullText.length} characters from ${textNodes.length} nodes.`);
-
-  // Normalize for searching: collapse whitespace and trim
-  const normalize = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase();
-  const normalizedTarget = normalize(targetText);
   
-  console.log(`[findTextRange] Searching for: "${normalizedTarget.slice(0, 50)}..."`);
-
+  // Ultra-fuzzy normalization: Keep only alphanumeric characters for the initial match
+  const ultraNormalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedTarget = ultraNormalize(targetText);
+  
   if (!normalizedTarget) return null;
 
-  // We need to find where normalizedTarget appears in fullText
-  // but fullText has original whitespace.
-  const searchableTextParts: string[] = [];
+  let searchableStream = "";
   const searchableToFullMap: number[] = [];
   
-  let lastCharWasSpace = false;
   for (let i = 0; i < fullText.length; i++) {
-    const char = fullText[i];
-    const isWhitespace = /\s/.test(char);
-    if (isWhitespace) {
-      if (!lastCharWasSpace) {
-        searchableToFullMap.push(i);
-        searchableTextParts.push(" ");
-        lastCharWasSpace = true;
-      }
-    } else {
+    const char = fullText[i].toLowerCase();
+    if (/[a-z0-9]/.test(char)) {
+      searchableStream += char;
       searchableToFullMap.push(i);
-      searchableTextParts.push(char.toLowerCase());
-      lastCharWasSpace = false;
     }
   }
 
-  const searchableText = searchableTextParts.join("");
-  const matchIndex = searchableText.indexOf(normalizedTarget);
+  const matchIndex = searchableStream.indexOf(normalizedTarget);
   
   if (matchIndex === -1) {
-    console.warn(`[findTextRange] Snippet not found in searchable text. SearchableText length: ${searchableText.length}`);
-    // Fallback to searching the whole document if block search failed
     if (searchRoot !== root) {
-      console.log("[findTextRange] Retrying search at document root...");
       return findTextRange(root, targetText);
     }
     return null;
   }
 
-  console.log(`[findTextRange] Found match at searchable index ${matchIndex}`);
-
-  // Find the end index in searchableText
-  const matchEndIndex = matchIndex + normalizedTarget.length;
-
   const startFullIndex = searchableToFullMap[matchIndex];
-  const endFullIndex = searchableToFullMap[matchEndIndex - 1] + 1;
+  const endFullIndex = searchableToFullMap[matchIndex + normalizedTarget.length - 1] + 1;
 
   const startInfo = charMap[startFullIndex];
   const endInfo = charMap[endFullIndex - 1];
@@ -123,11 +105,9 @@ function findTextRange(root: HTMLElement, targetText: string, blockIndex?: numbe
     const range = doc.createRange();
     range.setStart(startInfo.node, startInfo.offset);
     range.setEnd(endInfo.node, endInfo.offset + 1);
-    console.log("[findTextRange] Successfully created DOM Range");
     return range;
   }
 
-  console.warn("[findTextRange] Failed to resolve character mapping to DOM nodes");
   return null;
 }
 
@@ -144,7 +124,7 @@ export default function MobiBookPage(props: { bookId: number }) {
   const [activeAiBlockIndex, setActiveAiBlockIndex] = useState<number | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<number | null>(null);
   const [attachedHighlightIds, setAttachedHighlightIds] = useState<number[]>([]);
-  const [contextMap, setContextMap] = useState<Record<number, number>>({}); // contextId -> highlightId
+  const [contextMap, setContextMap] = useState<Record<number, { text: string; blockIndex?: number }>>({});
   const [highlightLibraryExpanded, setHighlightLibraryExpanded] = useState(false);
   const [highlightPageMap] = useState<Record<number, number>>({});
   const [noteDraft, setNoteDraft] = useState("");
@@ -801,8 +781,17 @@ export default function MobiBookPage(props: { bookId: number }) {
     const stride = pageWidth + gap;
     const total = Math.max(1, Math.ceil((usableWidth + gap) / stride));
     setTotalPages(total);
-    const lockedPage = Math.min(total, Math.max(1, pageLockRef.current));
+    
+    // Derive page from actual scroll position
+    const currentScroll = root.scrollLeft;
+    const calculatedPage = Math.round(currentScroll / (stride || 1)) + 1;
+    const lockedPage = Math.min(total, Math.max(1, calculatedPage));
+    
     setCurrentPage(lockedPage);
+    // Only update pageLock if we are close to a page boundary or it's a significant move
+    if (Math.abs(currentScroll - (pageLockRef.current - 1) * stride) > stride / 2) {
+      pageLockRef.current = lockedPage;
+    }
     scheduleSaveProgress(lockedPage);
   };
 
@@ -821,7 +810,7 @@ export default function MobiBookPage(props: { bookId: number }) {
     lockTimeoutRef.current = window.setTimeout(() => {
       lockTimeoutRef.current = null;
       lockToPage();
-    }, 140);
+    }, 250); // Increased delay to allow smooth manual scrolling
   };
 
   const scheduleLayoutRebuild = () => {
@@ -1197,50 +1186,6 @@ export default function MobiBookPage(props: { bookId: number }) {
     );
   };
 
-  const getVisibleSentences = () => {
-    const doc = iframeRef.current?.contentDocument;
-    const root = getScrollRoot();
-    if (!doc || !root) return [];
-
-    const { pageWidth, gap } = getPageMetrics();
-    const stride = pageWidth + gap;
-    const pageLeft = Math.max(0, (currentPage - 1) * stride);
-    const pageRight = pageLeft + pageWidth;
-    const rootRect = root.getBoundingClientRect();
-
-    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const pieces: string[] = [];
-    while (walker.nextNode()) {
-      const node = walker.currentNode as Text;
-      if (!node.nodeValue || !node.nodeValue.trim()) continue;
-      const range = doc.createRange();
-      range.selectNodeContents(node);
-      const rects = Array.from(range.getClientRects());
-      const intersects = rects.some((rect: DOMRect) => {
-        const left = rect.left - rootRect.left + root.scrollLeft;
-        const right = rect.right - rootRect.left + root.scrollLeft;
-        return right >= pageLeft && left <= pageRight;
-      });
-      if (intersects) {
-        pieces.push(node.nodeValue);
-      }
-    }
-
-    const fullText = pieces.join("").replace(/\s+/g, " ").trim();
-    if (!fullText) return [];
-
-    try {
-      // @ts-ignore - Intl.Segmenter might not be in older TS libs
-      const segmenter = new (Intl as any).Segmenter("en", { granularity: "sentence" });
-      return Array.from(segmenter.segment(fullText))
-        .map((s: any) => s.segment.trim())
-        .filter((s) => s.length > 20); // Only meaningful sentences
-    } catch (e) {
-      // Fallback if Intl.Segmenter is unavailable
-      return fullText.split(/(?<=[.!?])\s+/).filter((s) => s.length > 20);
-    }
-  };
-
   const handleCreateHighlight = async () => {
 
     if (!pendingHighlight) return;
@@ -1322,29 +1267,44 @@ export default function MobiBookPage(props: { bookId: number }) {
   };
 
   const handleCitationClick = (citationId: number, snippet?: string) => {
-    console.log(`[handleCitationClick] ID: ${citationId}, Snippet provided: ${!!snippet}`);
+    let value = contextMap[citationId];
+    
+    // Fallback: If not in current state, search message history for the mapping
+    if (!value) {
+      console.log(`[Chat:Citation] ID ${citationId} not in current contextMap. Searching message history...`);
+      const messages = bookMessagesQ.data ?? [];
+      for (const msg of messages) {
+        if (msg.role === "assistant" && msg.content.includes("<!-- context-map:")) {
+          try {
+            const mapStr = msg.content.split("<!-- context-map:")[1].split("-->")[0];
+            const parsedMap = JSON.parse(mapStr);
+            if (parsedMap[citationId]) {
+              value = parsedMap[citationId];
+              console.log(`[Chat:Citation] Found ID ${citationId} in message history mapping.`);
+              break;
+            }
+          } catch (e) {
+            console.error("[Chat:Citation] Failed to parse historical context-map", e);
+          }
+        }
+      }
+    }
+
     if (snippet) {
-      scrollToQuote(snippet, citationId);
+      scrollToQuote(snippet, value?.blockIndex);
       setActiveAiQuote(snippet);
-      setActiveAiBlockIndex(citationId);
+      setActiveAiBlockIndex(value?.blockIndex ?? null);
       setSelectedHighlightId(null);
       return;
     }
 
-    const value = contextMap[citationId];
-    console.log(`[handleCitationClick] Value in contextMap for ${citationId}:`, value);
-    if (typeof value === "number" && value !== -1) {
-      scrollToHighlight(value);
-      setSelectedHighlightId(value);
-      setActiveAiQuote(null);
-      setActiveAiBlockIndex(null);
-    } else if (value && typeof value === "object") {
-      // @ts-ignore
+    // Otherwise, use the text from the context map
+    if (value && typeof value === "object") {
       const text = value.text;
       if (text) {
-        scrollToQuote(text, citationId);
+        scrollToQuote(text, value.blockIndex);
         setActiveAiQuote(text);
-        setActiveAiBlockIndex(citationId);
+        setActiveAiBlockIndex(value.blockIndex ?? null);
         setSelectedHighlightId(null);
       }
     }
@@ -1401,80 +1361,88 @@ export default function MobiBookPage(props: { bookId: number }) {
       const contextBlocks = [
         "You are an assistant embedded in an AI reader.",
         "IMPORTANT: You have access to the reader's current context. Respond thoughtfully using all context provided below.",
-        "CITATIONS: When referring to information from the book, you MUST insert a citation tag: <cite snippet=\"...\" index=\"...\" /> immediately after the relevant sentence or phrase.",
-        "The 'snippet' attribute MUST be the verbatim text from the book that supports your claim.",
-        "The 'index' attribute MUST be the [ID] provided in the context blocks below.",
-        "Example: The author arrived in St. Petersburg on December 10th <cite snippet=\"I arrived here yesterday\" index=\"4\" /> and feels confident.",
-        "Do NOT wrap your summary text inside the cite tag. Always use the self-closing format.",
+        "CITATIONS: For every specific claim, fact, or summary point, you MUST insert a citation: <cite snippet=\"...\" index=\"...\" />.",
+        "The 'snippet' MUST be the verbatim text from the book supporting that specific claim. NEVER use ellipses '...' - if a quote is too long, cite multiple shorter verbatim snippets.",
+        "The 'index' MUST be the exact number from the [SOURCE_ID: ...] tag provided in the context blocks below.",
+        "CRITICAL: You MUST use the unique IDs provided. Do NOT default to '1'. Each claim must point to its specific source block.",
+        "Example: Agamemnon refused the ransom <cite snippet=\"The priest being refused\" index=\"1\" /> and dismissed him rudely.",
+        "Always use the self-closing format <cite ... />. Do NOT wrap your summary text in the tag.",
       ];
 
-      let contextId = 1;
-      const idMap: Record<number, any> = {}; // contextId -> highlightId or { text: string }
+      let localId = 1;
+      const idMap: Record<number, { text: string; blockIndex?: number }> = {}; 
 
       if (selectedHighlight) {
-        idMap[contextId] = selectedHighlight.id;
-        contextBlocks.push(`[${contextId}] Currently Focused Highlight: "${selectedHighlight.text}"`);
+        idMap[localId] = { text: selectedHighlight.text };
+        contextBlocks.push(`[SOURCE_ID: ${localId}] Currently Focused Highlight: "${selectedHighlight.text}"`);
         if (selectedHighlight.note) {
-          contextBlocks.push(`User's Note on Highlight [${contextId}]: "${selectedHighlight.note}"`);
+          contextBlocks.push(`User's Note on Highlight: "${selectedHighlight.note}"`);
         }
-        contextId++;
+        localId++;
       }
 
       if (attachedHighlights.length > 0) {
         contextBlocks.push("Additional Attached Highlights:");
         attachedHighlights.forEach((h: any) => {
-          // Avoid duplicate entry if it's already focused
           if (selectedHighlight && h.id === selectedHighlight.id) return;
-          
-          idMap[contextId] = h.id;
-          contextBlocks.push(`[${contextId}] "${h.text}"${h.note ? ` (Note: ${h.note})` : ""}`);
-          contextId++;
+          idMap[localId] = { text: h.text };
+          contextBlocks.push(`[SOURCE_ID: ${localId}] "${h.text}"${h.note ? ` (Note: ${h.note})` : ""}`);
+          localId++;
         });
       }
 
-      if (!selectedHighlight && attachedHighlights.length === 0) {
-        const sentences = getVisibleSentences();
-        if (sentences.length > 0) {
-          contextBlocks.push("Current Page Content (Sentences):");
-          sentences.forEach((s) => {
-            idMap[contextId] = { text: s };
-            contextBlocks.push(`[${contextId}] ${s}`);
-            contextId++;
-          });
-        } else {
-          // Try to get block-level context if sentences failed or as an alternative
-          const doc = iframeRef.current?.contentDocument;
-          const root = getScrollRoot();
-          if (doc && root) {
-            const { pageWidth, gap } = getPageMetrics();
-            const stride = pageWidth + gap;
-            const pageLeft = Math.max(0, (currentPage - 1) * stride);
-            const pageRight = pageLeft + pageWidth;
-            const rootRect = root.getBoundingClientRect();
+      // Always add visible page content to the context
+      const doc = iframeRef.current?.contentDocument;
+      const root = getScrollRoot();
+      if (doc && root) {
+        const metrics = getPageMetrics();
+        const stride = metrics.pageWidth + metrics.gap;
+        const rootRect = root.getBoundingClientRect();
 
-            const blocks = Array.from(doc.querySelectorAll("[data-block-index]")) as HTMLElement[];
-            blocks.forEach((block) => {
-              const rect = block.getBoundingClientRect();
-              const left = rect.left - rootRect.left + root.scrollLeft;
-              const right = rect.right - rootRect.left + root.scrollLeft;
+        console.log(`[Chat:Context] Filtering blocks. CurrentPage: ${currentPage}, Columns: ${columns}, Stride: ${stride}, scrollLeft: ${root.scrollLeft}`);
+
+          const blocks = Array.from(doc.querySelectorAll("[data-block-index]")) as HTMLElement[];
+          contextBlocks.push("Current View Content:");
+          
+          const visibleWidth = rootRect.width;
+
+          blocks.forEach((block) => {
+            const rects = Array.from(block.getClientRects());
+            const indexAttr = block.getAttribute("data-block-index");
+            if (!indexAttr) return;
+            const blockIndex = parseInt(indexAttr, 10);
+
+            // A block is visible if any of its column fragments are within the visible viewport bounds
+            const isVisible = rects.some(rect => {
+              const visualLeft = rect.left - rootRect.left;
+              const visualRight = rect.right - rootRect.left;
               
-              if (right >= pageLeft && left <= pageRight) {
-                const index = block.getAttribute("data-block-index");
-                const text = block.textContent?.trim();
-                if (text && index) {
-                  idMap[index] = { text }; // Use the actual block index as the ID
-                  contextBlocks.push(`[${index}] ${text}`);
-                }
-              }
+              // We use a 2px buffer to ignore microscopic slivers on the edges
+              return (visualRight > 2 && visualLeft < visibleWidth - 2);
             });
-          }
-        }
+            
+            if (isVisible) {
+              const text = block.textContent?.trim();
+              if (text) {
+                const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z"])/);
+                sentences.forEach(sentence => {
+                  const cleanSentence = sentence.trim();
+                  if (cleanSentence.length > 5) {
+                    idMap[localId] = { text: cleanSentence, blockIndex }; 
+                    contextBlocks.push(`[SOURCE_ID: ${localId}] ${cleanSentence}`);
+                    localId++;
+                  }
+                });
+              }
+            }
+          });
       }
 
       const mapping = idMap;
       setContextMap(mapping);
 
       const systemContent = contextBlocks.join("\n");
+      
       const messages = bookMessagesQ.data ?? [];
 
       const response = await openAiChat([
@@ -1545,36 +1513,28 @@ export default function MobiBookPage(props: { bookId: number }) {
       id: String(message.id),
       role: message.role as "user" | "assistant",
       content: content,
-      onCitationClick: (index: number, snippet?: string) => {
-        console.log(`[ChatMessage:onCitationClick] Index: ${index}, Snippet: ${!!snippet}`);
+      onCitationClick: (localId: number, snippet?: string) => {
+        const value = mapping[localId];
+        
         if (snippet) {
-          scrollToQuote(snippet, index);
+          scrollToQuote(snippet, value?.blockIndex);
           setActiveAiQuote(snippet);
-          setActiveAiBlockIndex(index);
+          setActiveAiBlockIndex(value?.blockIndex ?? null);
           setSelectedHighlightId(null);
           return;
         }
 
-        const value = mapping[index];
-        console.log(`[ChatMessage:onCitationClick] Mapping value for ${index}:`, value);
-        if (typeof value === "number" && value !== -1) {
-          scrollToHighlight(value);
-          setSelectedHighlightId(value);
-          setActiveAiQuote(null);
-          setActiveAiBlockIndex(null);
-        } else if (value && typeof value === "object") {
-          // @ts-ignore
+        if (value && typeof value === "object") {
           const text = value.text;
           if (text) {
-            scrollToQuote(text, index);
+            scrollToQuote(text, value.blockIndex);
             setActiveAiQuote(text);
-            setActiveAiBlockIndex(index);
+            setActiveAiBlockIndex(value.blockIndex ?? null);
             setSelectedHighlightId(null);
           }
         } else {
           // Fallback to global map for current session's newly sent messages
-          console.log(`[ChatMessage:onCitationClick] Falling back to global handleCitationClick for ${index}`);
-          handleCitationClick(index, snippet);
+          handleCitationClick(localId, snippet);
         }
       },
     };
