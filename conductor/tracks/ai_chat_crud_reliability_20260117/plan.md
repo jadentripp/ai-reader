@@ -10,7 +10,7 @@ Implement the necessary Rust commands and database logic to support full CRUD fo
 - [x] Task: Add unit tests in `db.rs` for new CRUD operations (5b43f7d)
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend' (Protocol in workflow.md)
 
-## Phase 2: Frontend API & Thread UI
+## Phase 2: Frontend API & Thread UI [checkpoint: c3d1210]
 Update the React frontend to use the new commands and enhance the thread management UI.
 
 - [x] Task: Add new Tauri command wrappers to `src/lib/tauri.ts` (805d958)
