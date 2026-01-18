@@ -14,7 +14,7 @@ Implement the necessary Rust commands and database logic to support full CRUD fo
 Update the React frontend to use the new commands and enhance the thread management UI.
 
 - [x] Task: Add new Tauri command wrappers to `src/lib/tauri.ts` (805d958)
-- [ ] Task: Implement "Rename Thread" UI in `ChatSidebar.tsx` (inline edit or dialog)
+- [x] Task: Implement "Rename Thread" UI in `ChatSidebar.tsx` (inline edit or dialog) (a20291c)
 - [ ] Task: Add "Clear Chat" button to `ChatSidebar.tsx` for the default chat state
 - [ ] Task: Refactor "New Chat" logic in `MobiBookPage.tsx` to ensure immediate selection and cache invalidation
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Thread UI' (Protocol in workflow.md)
