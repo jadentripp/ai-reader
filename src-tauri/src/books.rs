@@ -360,54 +360,6 @@ fn strip_invalid_controls(s: &str) -> String {
     out
 }
 
-fn find_ci(haystack: &[u8], needle: &[u8], start: usize) -> Option<usize> {
-    if needle.is_empty() || haystack.len() < needle.len() {
-        return None;
-    }
-    for i in start..=haystack.len().saturating_sub(needle.len()) {
-        if haystack[i..i + needle.len()]
-            .iter()
-            .zip(needle.iter())
-            .all(|(a, b)| a.to_ascii_lowercase() == *b)
-        {
-            return Some(i);
-        }
-    }
-    None
-}
-
-fn extract_body_fragments(html: &str) -> Option<String> {
-    let bytes = html.as_bytes();
-    let mut cursor = 0;
-    let mut parts: Vec<&str> = Vec::new();
-
-    loop {
-        let body_start = find_ci(bytes, b"<body", cursor)?;
-        let body_tag_end = bytes[body_start..]
-            .iter()
-            .position(|&b| b == b'>')
-            .map(|off| body_start + off)?;
-        let body_close = match find_ci(bytes, b"</body>", body_tag_end + 1) {
-            Some(pos) => pos,
-            None => break,
-        };
-
-        if body_tag_end + 1 <= body_close && body_close <= html.len() {
-            let inner = &html[body_tag_end + 1..body_close];
-            if !inner.trim().is_empty() {
-                parts.push(inner);
-            }
-        }
-        cursor = body_close + "</body>".len();
-    }
-
-    if parts.is_empty() {
-        None
-    } else {
-        Some(parts.join("\n"))
-    }
-}
-
 pub fn extract_mobi_images(bytes: &[u8]) -> Result<(std::collections::HashMap<usize, Vec<u8>>, Option<i32>), anyhow::Error> {
     if bytes.len() < 80 {
         anyhow::bail!("MOBI file too small");
@@ -528,7 +480,7 @@ pub fn extract_mobi_to_html(app_handle: &AppHandle, gutenberg_id: i64, mobi_path
 
     // PalmDOC header (16 bytes)
     let compression = be_u16(rec0, 0).unwrap_or(1);
-    let text_len = be_u32(rec0, 4).unwrap_or(0) as usize;
+    let _text_len = be_u32(rec0, 4).unwrap_or(0) as usize;
     let record_count = be_u16(rec0, 8).unwrap_or(0) as usize;
     let extra_flags = mobi_extra_data_flags(rec0);
 
@@ -537,7 +489,8 @@ pub fn extract_mobi_to_html(app_handle: &AppHandle, gutenberg_id: i64, mobi_path
     }
 
     let max_record = (1 + record_count).min(num_records);
-    let mut out: Vec<u8> = Vec::with_capacity(text_len.max(1024));
+    let mut record_texts: Vec<String> = Vec::new();
+    
     for idx in 1..max_record {
         let start = offsets[idx];
         let end = offsets[idx + 1];
@@ -547,40 +500,25 @@ pub fn extract_mobi_to_html(app_handle: &AppHandle, gutenberg_id: i64, mobi_path
         let rec = &bytes[start..end];
         let trimmed_len = trim_trailing_record_data(rec, extra_flags);
         let rec = &rec[..trimmed_len];
-        match compression {
-            1 => {
-                out.extend_from_slice(rec);
-            }
-            2 => {
-                let decompressed = palmdoc_decompress(rec);
-                out.extend_from_slice(&decompressed);
-            }
-            _ => {
-                out.extend_from_slice(rec);
-            }
-        }
-        if text_len > 0 && out.len() >= text_len {
-            out.truncate(text_len);
-            break;
+        
+        let decompressed = match compression {
+            1 => rec.to_vec(),
+            2 => palmdoc_decompress(rec),
+            _ => rec.to_vec(),
+        };
+        
+        let text = decode_mobi_text(rec0, &decompressed);
+        if !text.trim().is_empty() {
+            record_texts.push(text);
         }
     }
 
-    // Trim trailing nulls
-    while out.last() == Some(&0) {
-        out.pop();
-    }
+    // Concatenate records directly. MOBI HTML is often split across records regardless of tags.
+    let joined_text = record_texts.concat();
+    let text = strip_invalid_controls(&joined_text);
 
-    // MOBI text streams are commonly Windows-1252 or UTF-8 depending on header.
-    let text = strip_invalid_controls(&decode_mobi_text(rec0, &out));
     let html = if text.to_lowercase().contains("<html") {
-        if let Some(body) = extract_body_fragments(&text) {
-            format!(
-                "<!doctype html><html><head><meta charset=\"utf-8\"></head><body>{}</body></html>",
-                body
-            )
-        } else {
-            text
-        }
+        text
     } else {
         format!(
             "<!doctype html><html><head><meta charset=\"utf-8\"></head><body><pre>{}</pre></body></html>",

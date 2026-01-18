@@ -131,7 +131,7 @@ fn get_book_html(app_handle: AppHandle, book_id: i64) -> Result<String, String> 
 }
 
 #[tauri::command]
-fn get_book_image_path(app_handle: AppHandle, book_id: i64, relative_index: i32) -> Result<String, String> {
+fn get_book_image_data(app_handle: AppHandle, book_id: i64, relative_index: i32) -> Result<String, String> {
     db::init(&app_handle).map_err(|e| e.to_string())?;
     let book = db::get_book(&app_handle, book_id).map_err(|e| e.to_string())?;
     let first_image_index = book.first_image_index.ok_or("Book has no image index".to_string())?;
@@ -141,7 +141,17 @@ fn get_book_image_path(app_handle: AppHandle, book_id: i64, relative_index: i32)
     let path = books::get_book_asset_path(&app_handle, book.gutenberg_id, absolute_index)
         .map_err(|e| e.to_string())?;
         
-    Ok(path.to_string_lossy().to_string())
+    let bytes = fs::read(&path).map_err(|e| e.to_string())?;
+    let extension = path.extension().and_then(|s| s.to_str()).unwrap_or("jpeg");
+    let mime = match extension {
+        "jpg" | "jpeg" => "image/jpeg",
+        "png" => "image/png",
+        "gif" => "image/gif",
+        _ => "image/jpeg",
+    };
+    
+    let b64 = data_encoding::BASE64.encode(&bytes);
+    Ok(format!("data:{};base64,{}", mime, b64))
 }
 
 #[tauri::command]
@@ -343,6 +353,8 @@ async fn openai_list_models(app_handle: AppHandle) -> Result<Vec<String>, String
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             db_init,
             gutendex_shakespeare_page,
@@ -351,7 +363,7 @@ pub fn run() {
             list_books,
             get_book,
             get_book_html,
-            get_book_image_path,
+            get_book_image_data,
             get_book_position,
             set_book_position,
             hard_delete_book,
