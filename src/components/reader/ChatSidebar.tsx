@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ChatContainerRoot,
@@ -20,8 +20,8 @@ import {
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import type { BookChatThread, ChatPrompt, LocalChatMessage } from "@/lib/readerTypes";
-import type { RefObject } from "react";
-import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose, PlusSquare, History, MessageSquare } from "lucide-react";
+import type { Highlight } from "@/lib/tauri";
+import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose, PlusSquare, History, MessageSquare, X, Trash2 } from "lucide-react";
 
 type ChatSidebarProps = {
   contextHint: string;
@@ -29,7 +29,7 @@ type ChatSidebarProps = {
   prompts: ChatPrompt[];
   chatInput: string;
   onChatInputChange: (value: string) => void;
-  onPromptSelect: (prompt: string) => void;
+  onPromptSelect: (value: string) => void;
   onSend: () => void;
   onNewChat?: () => void;
   chatSending: boolean;
@@ -37,13 +37,17 @@ type ChatSidebarProps = {
   currentModel: string;
   availableModels: string[];
   onModelChange: (model: string) => void;
-  modelsLoading?: boolean;
+  modelsLoading: boolean;
   onCollapse: () => void;
-  threads?: BookChatThread[];
-  currentThreadId?: number | null;
-  onSelectThread?: (id: number | null) => void;
+  threads: BookChatThread[] | undefined;
+  currentThreadId: number | null;
+  onSelectThread: (id: number | null) => void;
+  onDeleteThread?: (id: number) => void;
   placeholder?: string;
   isHighlightContext?: boolean;
+  attachedContext?: Highlight[];
+  onRemoveContext?: (id: number) => void;
+  onCitationClick?: (id: number) => void;
 };
 
 function formatModelName(modelId: string): string {
@@ -177,8 +181,12 @@ export default function ChatSidebar({
   threads = [],
   currentThreadId,
   onSelectThread,
+  onDeleteThread,
   placeholder = "Ask about the text...",
   isHighlightContext = false,
+  attachedContext = [],
+  onRemoveContext,
+  onCitationClick,
 }: ChatSidebarProps) {
   return (
     <aside className="min-h-0 flex flex-col">
@@ -235,17 +243,33 @@ export default function ChatSidebar({
                       {currentThreadId === null && <Check className="h-3 w-3" />}
                     </button>
                     {threads.map((thread) => (
-                      <button
+                      <div
                         key={thread.id}
-                        onClick={() => onSelectThread(thread.id)}
                         className={cn(
-                          "flex w-full items-center justify-between rounded-md px-2 py-2 text-xs hover:bg-muted",
+                          "group flex items-center gap-1 rounded-md px-2 py-2 text-xs hover:bg-muted",
                           currentThreadId === thread.id && "bg-muted font-medium"
                         )}
                       >
-                        <span className="truncate pr-2">{thread.title}</span>
-                        {currentThreadId === thread.id && <Check className="h-3 w-3" />}
-                      </button>
+                        <button
+                          onClick={() => onSelectThread(thread.id)}
+                          className="flex-1 text-left truncate"
+                        >
+                          {thread.title}
+                        </button>
+                        {onDeleteThread && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteThread(thread.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-all"
+                            title="Delete thread"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
+                        {currentThreadId === thread.id && <Check className="h-3 w-3 shrink-0" />}
+                      </div>
                     ))}
                   </div>
                 </PopoverContent>
@@ -329,6 +353,7 @@ export default function ChatSidebar({
                       />
                       <MessageContent
                         markdown={!isUser}
+                        onCitationClick={message.onCitationClick ?? onCitationClick}
                         className={cn(
                           "max-w-[85%] text-sm py-2 px-3",
                           isUser ? "bg-primary text-primary-foreground" : "bg-muted/60"
@@ -368,6 +393,31 @@ export default function ChatSidebar({
             <ChatContainerScrollAnchor />
           </ChatContainerContent>
         </ChatContainerRoot>
+
+        {/* Context Shelf */}
+        {attachedContext.length > 0 && (
+          <div className="shrink-0 flex flex-wrap gap-1.5 px-3 py-2 border-t border-border/20 bg-muted/20">
+            {attachedContext.map((h: any) => (
+              <div
+                key={h.id}
+                className="flex items-center gap-1.5 rounded-md bg-primary/10 border border-primary/20 px-2 py-1 group"
+              >
+                <MessageSquare className="h-3 w-3 text-primary/70" />
+                <span className="text-[10px] font-medium text-primary max-w-[120px] truncate">
+                  {h.text}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemoveContext?.(h.id)}
+                  className="rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                  title="Remove context"
+                >
+                  <X className="h-2.5 w-2.5 text-primary/70" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Input */}
         <div className="shrink-0 border-t border-border/40 p-3">

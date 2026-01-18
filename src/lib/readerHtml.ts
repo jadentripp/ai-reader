@@ -58,6 +58,24 @@ export function processGutenbergContent(html: string): ProcessedGutenberg {
   if (translatorMatch) metadata.translator = translatorMatch[1].trim();
   if (annotatorMatch) metadata.annotator = annotatorMatch[1].trim();
 
+  // Inject block indices for citations
+  if (typeof DOMParser !== "undefined") {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      
+      // We want to index meaningful content blocks
+      const blocks = doc.querySelectorAll("p, h1, h2, h3, h4, h5, h6, blockquote, pre, table, li");
+      blocks.forEach((block, index) => {
+        (block as HTMLElement).setAttribute("data-block-index", index.toString());
+      });
+      
+      html = doc.body.innerHTML;
+    } catch (e) {
+      console.error("Failed to inject block indices:", e);
+    }
+  }
+
   return { html, metadata };
 }
 

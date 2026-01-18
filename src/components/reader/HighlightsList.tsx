@@ -12,7 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Highlight } from "@/lib/tauri";
-import { Highlighter, Trash2, FileText, Check, X } from "lucide-react";
+import { Highlighter, Trash2, FileText, Check, X, MessageSquarePlus, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 
 type HighlightsListProps = {
@@ -21,16 +21,16 @@ type HighlightsListProps = {
   onSelectHighlight: (id: number) => void;
   onDeleteHighlight: (id: number) => void;
   highlightPageMap: Record<number, number>;
-  expanded: boolean;
-  onToggleExpanded: () => void;
   noteDraft: string;
   onNoteDraftChange: (value: string) => void;
   onSaveNote: () => void;
   selectedHighlight: Highlight | null;
+  onToggleContext?: (id: number) => void;
+  attachedHighlightIds?: number[];
 };
 
 export default function HighlightsList({
-  highlights,
+  highlights = [],
   selectedHighlightId,
   onSelectHighlight,
   onDeleteHighlight,
@@ -39,6 +39,8 @@ export default function HighlightsList({
   onNoteDraftChange,
   onSaveNote,
   selectedHighlight,
+  onToggleContext,
+  attachedHighlightIds = [],
 }: HighlightsListProps) {
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
 
@@ -66,6 +68,7 @@ export default function HighlightsList({
     <div className="space-y-1.5">
       {highlights.map((highlight) => {
         const isSelected = highlight.id === selectedHighlightId;
+        const isAttached = attachedHighlightIds.includes(highlight.id);
         const hasNote = !!highlight.note;
         const page = highlightPageMap[highlight.id];
 
@@ -104,6 +107,12 @@ export default function HighlightsList({
                     Note
                   </span>
                 )}
+                {isAttached && (
+                  <span className="flex items-center gap-1 text-[10px] text-primary font-medium">
+                    <MessageSquare className="h-3 w-3" />
+                    In Chat
+                  </span>
+                )}
                 {page && (
                   <span className="text-[10px] text-muted-foreground/70">
                     p. {page}
@@ -125,31 +134,64 @@ export default function HighlightsList({
                     onChange={(e) => onNoteDraftChange(e.currentTarget.value)}
                     placeholder="Add a note..."
                   />
-                  {hasUnsavedChanges && (
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={onSaveNote}
-                        className="flex items-center gap-1.5 rounded-md bg-amber-500 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-600"
-                      >
-                        <Check className="h-3 w-3" />
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onNoteDraftChange(selectedHighlight?.note ?? "")}
-                        className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
-                      >
-                        <X className="h-3 w-3" />
-                        Cancel
-                      </button>
+                      {hasUnsavedChanges && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={onSaveNote}
+                            className="flex items-center gap-1.5 rounded-md bg-amber-500 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-600"
+                          >
+                            <Check className="h-3 w-3" />
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onNoteDraftChange(selectedHighlight?.note ?? "")}
+                            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                          >
+                            <X className="h-3 w-3" />
+                            Cancel
+                          </button>
+                        </>
+                      )}
                     </div>
-                  )}
+                    
+                    <button
+                      type="button"
+                      onClick={() => onToggleContext?.(highlight.id)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+                        isAttached 
+                          ? "bg-primary/10 text-primary hover:bg-primary/20" 
+                          : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                      )}
+                    >
+                      {isAttached ? <X className="h-3 w-3" /> : <MessageSquarePlus className="h-3 w-3" />}
+                      {isAttached ? "Remove from Chat" : "Add to Chat"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100 flex flex-col gap-1">
+              <button
+                type="button"
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
+                  isAttached ? "text-primary bg-primary/10" : "text-muted-foreground/60 hover:text-primary hover:bg-primary/10"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleContext?.(highlight.id);
+                }}
+                title={isAttached ? "Remove from Chat" : "Add to Chat"}
+              >
+                {isAttached ? <MessageSquare className="h-3.5 w-3.5" /> : <MessageSquarePlus className="h-3.5 w-3.5" />}
+              </button>
+              
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <button

@@ -1,0 +1,8 @@
+{
+  "track_id": "ai_citations_20260117",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-17T00:00:00Z",
+  "updated_at": "2026-01-17T00:00:00Z",
+  "description": "Add interactive AI citations that highlight snippets in the reader when clicked."
+}

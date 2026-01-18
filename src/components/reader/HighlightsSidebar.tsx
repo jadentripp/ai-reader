@@ -25,18 +25,18 @@ type HighlightsSidebarProps = {
   tocExpanded: boolean;
   onToggleTocExpanded: () => void;
   onCollapse: () => void;
+  onToggleContext?: (id: number) => void;
+  attachedHighlightIds?: number[];
 };
 
 type Tab = "contents" | "highlights";
 
 export default function HighlightsSidebar({
-  highlights,
+  highlights = [],
   selectedHighlightId,
   onSelectHighlight,
   onDeleteHighlight,
   onClearSelection,
-  highlightLibraryExpanded,
-  onToggleHighlightLibrary,
   highlightPageMap,
   selectedHighlight,
   noteDraft,
@@ -48,6 +48,8 @@ export default function HighlightsSidebar({
   tocExpanded,
   onToggleTocExpanded,
   onCollapse,
+  onToggleContext,
+  attachedHighlightIds = [],
 }: HighlightsSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("contents");
   const highlightCount = highlights?.length ?? 0;
@@ -152,12 +154,12 @@ export default function HighlightsSidebar({
                   onSelectHighlight={onSelectHighlight}
                   onDeleteHighlight={onDeleteHighlight}
                   highlightPageMap={highlightPageMap}
-                  expanded={highlightLibraryExpanded}
-                  onToggleExpanded={onToggleHighlightLibrary}
                   noteDraft={noteDraft}
                   onNoteDraftChange={onNoteDraftChange}
                   onSaveNote={onSaveNote}
                   selectedHighlight={selectedHighlight}
+                  onToggleContext={onToggleContext}
+                  attachedHighlightIds={attachedHighlightIds}
                 />
               </div>
             )}
