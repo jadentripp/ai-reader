@@ -270,6 +270,10 @@ export async function clearDefaultBookMessages(bookId: number): Promise<void> {
   await invoke("clear_default_book_messages", { bookId });
 }
 
+export async function deleteBookThreadMessages(threadId: number): Promise<void> {
+  await invoke("delete_book_thread_messages", { threadId });
+}
+
 export async function deleteBookMessages(bookId: number): Promise<void> {
   await invoke("delete_book_messages", { bookId });
 }

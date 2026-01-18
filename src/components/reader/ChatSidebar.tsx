@@ -46,6 +46,7 @@ type ChatSidebarProps = {
   onDeleteThread?: (id: number) => void;
   onRenameThread?: (id: number, title: string) => void;
   onClearDefaultChat?: () => void;
+  onClearThreadChat?: (id: number) => void;
   placeholder?: string;
   isHighlightContext?: boolean;
   attachedContext?: Highlight[];
@@ -341,6 +342,18 @@ export default function ChatSidebar({
                             className="flex-1 text-left truncate"
                           >
                             {thread.title}
+                          </button>
+                        )}
+                        {onClearThreadChat && currentThreadId === thread.id && messages.length > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onClearThreadChat(thread.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-all"
+                            title="Clear thread messages"
+                          >
+                            <Eraser className="h-3 w-3" />
                           </button>
                         )}
                         {onDeleteThread && (
