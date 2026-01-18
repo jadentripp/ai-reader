@@ -659,6 +659,18 @@ pub fn clear_default_book_messages<R: tauri::Runtime>(
     Ok(())
 }
 
+pub fn delete_book_thread_messages<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    thread_id: i64,
+) -> Result<(), anyhow::Error> {
+    let conn = open(app_handle)?;
+    conn.execute(
+        "DELETE FROM book_message WHERE thread_id = ?1",
+        params![thread_id],
+    )?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -846,6 +858,40 @@ mod tests {
 
         assert_eq!(list_book_messages(&handle, book_id, None).unwrap().len(), 0, "Default messages should be cleared");
         assert_eq!(list_book_messages(&handle, book_id, Some(thread.id)).unwrap().len(), 1, "Threaded messages should remain");
+
+        std::fs::remove_file(db_path).ok();
+    }
+
+    #[test]
+    fn test_delete_thread_messages() {
+        let (handle, db_path) = setup("delete_thread_msgs");
+        init(&handle).expect("Failed to init DB");
+
+        let book_id = upsert_book(
+            &handle,
+            1,
+            "Title".to_string(),
+            "Author".to_string(),
+            None,
+            None,
+            "mobi".to_string(),
+            "html".to_string(),
+            None,
+        ).unwrap();
+
+        let thread1 = create_book_chat_thread(&handle, book_id, "Thread 1".to_string()).unwrap();
+        let thread2 = create_book_chat_thread(&handle, book_id, "Thread 2".to_string()).unwrap();
+
+        add_book_message(&handle, book_id, Some(thread1.id), "user".to_string(), "T1 Msg".to_string()).unwrap();
+        add_book_message(&handle, book_id, Some(thread2.id), "user".to_string(), "T2 Msg".to_string()).unwrap();
+
+        assert_eq!(list_book_messages(&handle, book_id, Some(thread1.id)).unwrap().len(), 1);
+        assert_eq!(list_book_messages(&handle, book_id, Some(thread2.id)).unwrap().len(), 1);
+
+        delete_book_thread_messages(&handle, thread1.id).unwrap();
+
+        assert_eq!(list_book_messages(&handle, book_id, Some(thread1.id)).unwrap().len(), 0);
+        assert_eq!(list_book_messages(&handle, book_id, Some(thread2.id)).unwrap().len(), 1);
 
         std::fs::remove_file(db_path).ok();
     }

@@ -26,6 +26,7 @@ import {
   createBookChatThread,
   renameBookChatThread,
   deleteBookChatThread,
+  deleteBookThreadMessages,
   clearDefaultBookMessages,
   listHighlights,
   openAiChat,
@@ -1557,6 +1558,11 @@ export default function MobiBookPage(props: { bookId: number }) {
     await queryClient.invalidateQueries({ queryKey: ["bookMessages", id, null] });
   };
 
+  const handleClearThreadChat = async (threadId: number) => {
+    await deleteBookThreadMessages(threadId);
+    await queryClient.invalidateQueries({ queryKey: ["bookMessages", id, threadId] });
+  };
+
   const scrollToQuote = (text: string, index?: number) => {
     const root = getScrollRoot();
     if (!root) return;
@@ -2020,6 +2026,7 @@ export default function MobiBookPage(props: { bookId: number }) {
               onDeleteThread={handleDeleteThread}
               onRenameThread={handleRenameThread}
               onClearDefaultChat={handleClearDefaultChat}
+              onClearThreadChat={handleClearThreadChat}
               chatSending={chatSending}
               chatInputRef={chatInputRef}
               currentModel={currentModel}
