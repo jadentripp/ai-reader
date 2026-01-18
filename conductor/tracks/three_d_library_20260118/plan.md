@@ -6,7 +6,7 @@ This plan outlines the steps to implement a high-fidelity 3D bookshelf experienc
 Goal: Initialize the 3D context with WebGPU and establish the basic scene structure.
 
 - [x] Task: Install dependencies (`three`, `@types/three`, `@react-three/fiber`, `@react-three/drei`). 7c41632
-- [ ] Task: Create a dedicated `ThreeDLibrary` component route and placeholder in `router.tsx`.
+- [x] Task: Create a dedicated `ThreeDLibrary` component route and placeholder in `router.tsx`. e7471ec
 - [ ] Task: Implement `WebGPUScene` wrapper to initialize `Three.WebGPURenderer` (async initialization).
 - [ ] Task: Set up basic lighting (AmbientLight, DirectionalLight with shadow support).
 - [ ] Task: Conductor - User Manual Verification 'Environment Setup' (Protocol in workflow.md)
