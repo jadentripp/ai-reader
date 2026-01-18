@@ -13,6 +13,7 @@ type ReaderPaneProps = {
   pendingHighlight: PendingHighlight | null;
   onCreateHighlight: () => void;
   onCancelHighlight: () => void;
+  onAddToChat?: () => void;
 };
 
 export default function ReaderPane({
@@ -25,6 +26,7 @@ export default function ReaderPane({
   pendingHighlight,
   onCreateHighlight,
   onCancelHighlight,
+  onAddToChat,
 }: ReaderPaneProps) {
   return (
     <main className="relative min-h-0" ref={containerRef}>
@@ -48,6 +50,9 @@ export default function ReaderPane({
         >
           <Button size="sm" onClick={onCreateHighlight}>
             Highlight &amp; Note
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onAddToChat}>
+            Add to Chat
           </Button>
           <Button variant="outline" size="sm" onClick={onCancelHighlight}>
             Cancel

@@ -15,11 +15,13 @@
 - [x] **Task: Add "New Chat" Functionality** b5c96de
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: UI & Integration' (Protocol in workflow.md)**
 
-## Phase 3: UX Polish
+## Phase 3: UX Polish [checkpoint: 103ebe8]
 - [x] **Task: Improve Context Indicators** dbe4903
-    - [x] Add visual cues when switching between page chat and highlight chat.
-    - [x] Ensure "Ask about the meaning..." placeholder is dynamic based on context.
 - [x] **Task: Final Verification** 103ebe8
-    - [x] Verify that chats survive app restarts.
-    - [x] Verify that Markdown (tables, bold, etc.) renders correctly.
-- [ ] **Task: Conductor - User Manual Verification 'Phase 3: UX Polish' (Protocol in workflow.md)**
+
+## Phase 4: Cursor-Style Unified Context
+- [x] **Task: Implement Multi-Context State** bedbf778
+- [x] **Task: Context Pills UI** dbe4903
+- [x] **Task: Multi-Context System Prompt & Citations** 3a9c7b2
+- [x] **Task: Interactive Citations UI** afec522
+- [x] **Task: "Add to Chat" Integration** 4b9e2c1

@@ -10,17 +10,16 @@ import { cn } from "@/lib/utils";
 import { injectHead, wrapBody, processGutenbergContent } from "@/lib/readerHtml";
 import type { ChatPrompt, PendingHighlight } from "@/lib/readerTypes";
 import {
-  addHighlightMessage,
   addBookMessage,
   createHighlight,
   deleteHighlight,
   getBook,
   getBookHtml,
   getSetting,
-  listHighlightMessages,
   listBookMessages,
   listBookChatThreads,
   createBookChatThread,
+  deleteBookChatThread,
   listHighlights,
   openAiChat,
   openAiListModels,
@@ -34,6 +33,49 @@ const CHAT_PROMPTS: ChatPrompt[] = [
   { label: "Summarize", prompt: "Summarize this passage in modern English." },
 ];
 
+function findTextRange(root: HTMLElement, targetText: string): Range | null {
+  const doc = root.ownerDocument;
+  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let combinedText = "";
+  const nodes: { node: Text; start: number; end: number }[] = [];
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    const text = node.nodeValue || "";
+    const start = combinedText.length;
+    combinedText += text;
+    nodes.push({ node, start, end: combinedText.length });
+  }
+
+  // Exact match is usually best for AI quotes of sentences
+  const index = combinedText.indexOf(targetText);
+  if (index === -1) return null;
+
+  const range = doc.createRange();
+  let startNode: Text | null = null;
+  let startOffset = 0;
+  let endNode: Text | null = null;
+  let endOffset = 0;
+
+  for (const n of nodes) {
+    if (index >= n.start && index < n.end) {
+      startNode = n.node;
+      startOffset = index - n.start;
+    }
+    if (index + targetText.length > n.start && index + targetText.length <= n.end) {
+      endNode = n.node;
+      endOffset = index + targetText.length - n.start;
+    }
+  }
+
+  if (startNode && endNode) {
+    range.setStart(startNode, startOffset);
+    range.setEnd(endNode, endOffset);
+    return range;
+  }
+  return null;
+}
+
 export default function MobiBookPage(props: { bookId: number }) {
   const id = props.bookId;
   const [columns, setColumns] = useState<1 | 2>(1);
@@ -43,7 +85,25 @@ export default function MobiBookPage(props: { bookId: number }) {
   const [jumpPage, setJumpPage] = useState("");
   const [pendingHighlight, setPendingHighlight] = useState<PendingHighlight | null>(null);
   const [selectedHighlightId, setSelectedHighlightId] = useState<number | null>(null);
+  const [activeAiQuote, setActiveAiQuote] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<number | null>(null);
+  const [attachedHighlightIds, setAttachedHighlightIds] = useState<number[]>([]);
+  const [contextMap, setContextMap] = useState<Record<number, number>>({}); // contextId -> highlightId
+  const [highlightLibraryExpanded, setHighlightLibraryExpanded] = useState(false);
+  const [highlightPageMap] = useState<Record<number, number>>({});
+  const [noteDraft, setNoteDraft] = useState("");
+  const [contextText] = useState("");
+  const [chatInput, setChatInput] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+  const [iframeReady, setIframeReady] = useState(false);
+  const [currentModel, setCurrentModel] = useState("gpt-4.1-mini");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
+  const [tocEntries, setTocEntries] = useState<Array<{ id: string; level: number; text: string; element: HTMLElement }>>([]);
+  const [currentTocEntryId, setCurrentTocEntryId] = useState<string | null>(null);
+  const [tocExpanded, setTocExpanded] = useState(false);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
 
   const bookQ = useQuery({ queryKey: ["book", id], queryFn: () => getBook(id) });
   const htmlQ = useQuery({ queryKey: ["bookHtml", id], queryFn: () => getBookHtml(id) });
@@ -78,21 +138,6 @@ export default function MobiBookPage(props: { bookId: number }) {
   const pageLockRef = useRef(1);
   const restoredRef = useRef(false);
   const pendingRestoreRef = useRef<{ page?: number } | null>(null);
-  const [highlightLibraryExpanded, setHighlightLibraryExpanded] = useState(false);
-  const [highlightPageMap, setHighlightPageMap] = useState<Record<number, number>>({});
-  const [noteDraft, setNoteDraft] = useState("");
-  const [contextText, setContextText] = useState("");
-  const [chatInput, setChatInput] = useState("");
-  const [chatSending, setChatSending] = useState(false);
-  const [iframeReady, setIframeReady] = useState(false);
-  const [currentModel, setCurrentModel] = useState("gpt-4.1-mini");
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [modelsLoading, setModelsLoading] = useState(true);
-  const [tocEntries, setTocEntries] = useState<Array<{ id: string; level: number; text: string; element: HTMLElement }>>([]);
-  const [currentTocEntryId, setCurrentTocEntryId] = useState<string | null>(null);
-  const [tocExpanded, setTocExpanded] = useState(false);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
 
   const {
     fontFamily,
@@ -277,10 +322,12 @@ export default function MobiBookPage(props: { bookId: number }) {
         box-shadow: inset 0 -0.05em 0 rgba(178, 74, 47, 0.45);
         border-radius: 4px;
         padding: 0 0.08em;
+        transition: background-color 0.2s, box-shadow 0.2s;
       }
       .readerHighlightActive {
-        background: rgba(178, 74, 47, 0.25);
-        box-shadow: inset 0 -0.12em 0 rgba(178, 74, 47, 0.65);
+        background: rgba(178, 74, 47, 0.2) !important;
+        box-shadow: inset 0 -0.25em 0 rgba(178, 74, 47, 0.9) !important;
+        color: inherit !important;
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -392,12 +439,12 @@ export default function MobiBookPage(props: { bookId: number }) {
     }
   };
 
-  const renderHighlights = (activeId?: number | null) => {
+  const renderHighlights = (activeId?: number | null, activeQuote?: string | null) => {
     const doc = iframeRef.current?.contentDocument;
     const root = getScrollRoot();
     if (!doc || !root || !highlightsQ.data) return;
     clearExistingHighlights(doc);
-    for (const highlight of highlightsQ.data) {
+    for (const highlight of highlightsQ.data as any[]) {
       let startPath: number[];
       let endPath: number[];
       try {
@@ -419,40 +466,19 @@ export default function MobiBookPage(props: { bookId: number }) {
       const activeEls = doc.querySelectorAll(
         `span.readerHighlight[data-highlight-id="${activeId}"]`
       );
-      activeEls.forEach((el) => (el as HTMLElement).classList.add("readerHighlightActive"));
+      activeEls.forEach((el: any) => (el as HTMLElement).classList.add("readerHighlightActive"));
     }
-  };
 
-  const getCurrentPageContext = () => {
-    const doc = iframeRef.current?.contentDocument;
-    const root = getScrollRoot();
-    if (!doc || !root) return "";
-    const { pageWidth, gap } = getPageMetrics();
-    if (!pageWidth) return "";
-    const stride = pageWidth + gap;
-    const pageLeft = Math.max(0, (currentPage - 1) * stride);
-    const pageRight = pageLeft + pageWidth;
-    const rootRect = root.getBoundingClientRect();
-    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const pieces: string[] = [];
-    while (walker.nextNode()) {
-      const node = walker.currentNode as Text;
-      if (!node.nodeValue || !node.nodeValue.trim()) continue;
-      const range = doc.createRange();
-      range.selectNodeContents(node);
-      const rects = Array.from(range.getClientRects());
-      const intersects = rects.some((rect: DOMRect) => {
-        const left = rect.left - rootRect.left + root.scrollLeft;
-        const right = rect.right - rootRect.left + root.scrollLeft;
-        return right >= pageLeft && left <= pageRight;
-      });
-      if (intersects) {
-        pieces.push(node.nodeValue.trim().replace(/\s+/g, " "));
+    if (activeQuote) {
+      const range = findTextRange(root, activeQuote);
+      if (range) {
+        applyHighlightToRange(range, -999);
+        const activeEls = doc.querySelectorAll(
+          `span.readerHighlight[data-highlight-id="-999"]`
+        );
+        activeEls.forEach((el: any) => (el as HTMLElement).classList.add("readerHighlightActive"));
       }
     }
-    const text = pieces.join(" ").trim();
-    if (!text) return "";
-    return text.length > 1200 ? `${text.slice(0, 1200)}…` : text;
   };
 
   const getPageMetrics = () => {
@@ -470,21 +496,6 @@ export default function MobiBookPage(props: { bookId: number }) {
     const pageWidth = Number.isFinite(pageWidthVar) && pageWidthVar > 0 ? pageWidthVar : fallbackPageWidth;
     const gap = Number.isFinite(gapVar) && gapVar > 0 ? gapVar : 0;
     return { pageWidth, gap, paddingLeft, paddingRight, scrollWidth: root.scrollWidth };
-  };
-
-  const getPageForRect = (rect: DOMRect) => {
-    const root = getScrollRoot();
-    if (!root) return null;
-    const { pageWidth, gap, paddingLeft, paddingRight, scrollWidth } = getPageMetrics();
-    if (!pageWidth) return null;
-    const stride = pageWidth + gap;
-    const rootRect = root.getBoundingClientRect();
-    const offsetLeft = rect.left - rootRect.left + root.scrollLeft;
-    const page = Math.floor(offsetLeft / stride) + 1;
-    if (!Number.isFinite(page)) return null;
-    const usableWidth = Math.max(0, scrollWidth - paddingLeft - paddingRight);
-    const total = Math.max(1, Math.ceil((usableWidth + gap) / stride));
-    return Math.min(total, Math.max(1, page));
   };
 
   const resetHeadingIndex = () => {
@@ -632,24 +643,6 @@ export default function MobiBookPage(props: { bookId: number }) {
   const findHighlightFromEvent = (event: Event) => {
     const target = getEventTargetElement(event.target);
     return (target?.closest?.(".readerHighlight") as HTMLElement | null) ?? null;
-  };
-
-  const getHighlightPage = (highlightId: number) => {
-    const doc = iframeRef.current?.contentDocument;
-    if (!doc) return null;
-    const elements = Array.from(
-      doc.querySelectorAll(`span.readerHighlight[data-highlight-id="${highlightId}"]`)
-    ) as HTMLElement[];
-    if (!elements.length) return null;
-    let bestRect: DOMRect | null = null;
-    for (const el of elements) {
-      const rect = el.getBoundingClientRect();
-      if (!bestRect || rect.left < bestRect.left) {
-        bestRect = rect;
-      }
-    }
-    if (!bestRect) return null;
-    return getPageForRect(bestRect);
   };
 
   const syncPageMetrics = () => {
@@ -1086,78 +1079,76 @@ export default function MobiBookPage(props: { bookId: number }) {
 
   useEffect(() => {
     if (!iframeReady || !highlightsQ.data) return;
-    renderHighlights(selectedHighlightId);
-  }, [iframeReady, highlightsQ.data]);
+    renderHighlights(selectedHighlightId, activeAiQuote);
+  }, [iframeReady, highlightsQ.data, activeAiQuote, selectedHighlightId]);
 
   useEffect(() => {
     if (!iframeReady) return;
-    renderHighlights(selectedHighlightId);
-  }, [selectedHighlightId, iframeReady]);
-
-  useEffect(() => {
-    if (!highlightLibraryExpanded) {
-      setHighlightPageMap({});
-      return;
-    }
-    if (!iframeReady || !highlightsQ.data) return;
-    const handle = window.requestAnimationFrame(() => {
-      const nextMap: Record<number, number> = {};
-      for (const highlight of highlightsQ.data) {
-        const page = getHighlightPage(highlight.id);
-        if (page) {
-          nextMap[highlight.id] = page;
-        }
-      }
-      setHighlightPageMap(nextMap);
-    });
-    return () => window.cancelAnimationFrame(handle);
-  }, [
-    highlightLibraryExpanded,
-    iframeReady,
-    highlightsQ.data,
-    columns,
-    fontFamily,
-    lineHeight,
-    margin,
-    totalPages,
-  ]);
+    renderHighlights(selectedHighlightId, activeAiQuote);
+  }, [selectedHighlightId, activeAiQuote, iframeReady]);
 
   const selectedHighlight = useMemo(() => {
-    return highlightsQ.data?.find((highlight) => highlight.id === selectedHighlightId) ?? null;
+    return (highlightsQ.data as any[] | undefined)?.find((highlight: any) => highlight.id === selectedHighlightId) ?? null;
   }, [highlightsQ.data, selectedHighlightId]);
 
-  useEffect(() => {
-    if (!selectedHighlightId || !highlightsQ.data) return;
-    const exists = highlightsQ.data.some((highlight) => highlight.id === selectedHighlightId);
-    if (!exists) {
-      setSelectedHighlightId(null);
-    }
-  }, [highlightsQ.data, selectedHighlightId]);
+  const attachedHighlights = useMemo(() => {
+    return (highlightsQ.data as any[] | undefined)?.filter((h: any) => attachedHighlightIds.includes(h.id)) ?? [];
+  }, [highlightsQ.data, attachedHighlightIds]);
 
-  useEffect(() => {
-    if (selectedHighlight) {
-      setNoteDraft(selectedHighlight.note ?? "");
-    } else {
-      setNoteDraft("");
-    }
-  }, [selectedHighlight?.id]);
+  const toggleHighlightAttachment = (highlightId: number) => {
+    setAttachedHighlightIds((prev) =>
+      prev.includes(highlightId)
+        ? prev.filter((id) => id !== highlightId)
+        : [...prev, highlightId]
+    );
+  };
 
-  useEffect(() => {
-    if (!iframeReady) return;
-    if (selectedHighlight) {
-      setContextText(selectedHighlight.text);
-      return;
-    }
-    setContextText(getCurrentPageContext());
-  }, [iframeReady, selectedHighlight?.id, currentPage]);
+  const getVisibleSentences = () => {
+    const doc = iframeRef.current?.contentDocument;
+    const root = getScrollRoot();
+    if (!doc || !root) return [];
 
-  const messagesQ = useQuery({
-    queryKey: ["highlightMessages", selectedHighlightId],
-    queryFn: () => listHighlightMessages(selectedHighlightId ?? 0),
-    enabled: !!selectedHighlightId,
-  });
+    const { pageWidth, gap } = getPageMetrics();
+    const stride = pageWidth + gap;
+    const pageLeft = Math.max(0, (currentPage - 1) * stride);
+    const pageRight = pageLeft + pageWidth;
+    const rootRect = root.getBoundingClientRect();
+
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const pieces: string[] = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      if (!node.nodeValue || !node.nodeValue.trim()) continue;
+      const range = doc.createRange();
+      range.selectNodeContents(node);
+      const rects = Array.from(range.getClientRects());
+      const intersects = rects.some((rect: DOMRect) => {
+        const left = rect.left - rootRect.left + root.scrollLeft;
+        const right = rect.right - rootRect.left + root.scrollLeft;
+        return right >= pageLeft && left <= pageRight;
+      });
+      if (intersects) {
+        pieces.push(node.nodeValue);
+      }
+    }
+
+    const fullText = pieces.join("").replace(/\s+/g, " ").trim();
+    if (!fullText) return [];
+
+    try {
+      // @ts-ignore - Intl.Segmenter might not be in older TS libs
+      const segmenter = new (Intl as any).Segmenter("en", { granularity: "sentence" });
+      return Array.from(segmenter.segment(fullText))
+        .map((s: any) => s.segment.trim())
+        .filter((s) => s.length > 20); // Only meaningful sentences
+    } catch (e) {
+      // Fallback if Intl.Segmenter is unavailable
+      return fullText.split(/(?<=[.!?])\s+/).filter((s) => s.length > 20);
+    }
+  };
 
   const handleCreateHighlight = async () => {
+
     if (!pendingHighlight) return;
     const highlight = await createHighlight({
       bookId: id,
@@ -1182,12 +1173,68 @@ export default function MobiBookPage(props: { bookId: number }) {
     await queryClient.invalidateQueries({ queryKey: ["bookHighlights", id] });
   };
 
+  const handleAddToChat = async () => {
+    if (!pendingHighlight) return;
+    const highlight = await createHighlight({
+      bookId: id,
+      startPath: JSON.stringify(pendingHighlight.startPath),
+      startOffset: pendingHighlight.startOffset,
+      endPath: JSON.stringify(pendingHighlight.endPath),
+      endOffset: pendingHighlight.endOffset,
+      text: pendingHighlight.text,
+      note: "",
+    });
+    setPendingHighlight(null);
+    await queryClient.invalidateQueries({ queryKey: ["bookHighlights", id] });
+    toggleHighlightAttachment(highlight.id);
+  };
+
   const handleNewChat = async () => {
     if (selectedHighlight) return;
     const title = `Chat ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
     const thread = await createBookChatThread({ bookId: id, title });
     setCurrentThreadId(thread.id);
     await queryClient.invalidateQueries({ queryKey: ["bookChatThreads", id] });
+  };
+
+  const handleDeleteThread = async (threadId: number) => {
+    await deleteBookChatThread(threadId);
+    if (currentThreadId === threadId) {
+      setCurrentThreadId(null);
+    }
+    await queryClient.invalidateQueries({ queryKey: ["bookChatThreads", id] });
+  };
+
+  const scrollToQuote = (text: string) => {
+    const root = getScrollRoot();
+    if (!root) return;
+    const range = findTextRange(root, text);
+    if (range) {
+      const rect = range.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const offsetLeft = rect.left - rootRect.left + root.scrollLeft;
+      const metrics = getPageMetrics();
+      const stride = metrics.pageWidth + metrics.gap;
+      const page = stride ? Math.max(1, Math.floor(offsetLeft / stride) + 1) : 1;
+      scrollToPage(page);
+    }
+  };
+
+  const handleCitationClick = (citationId: number) => {
+    const value = contextMap[citationId];
+    if (typeof value === "number" && value !== -1) {
+      scrollToHighlight(value);
+      setSelectedHighlightId(value);
+      setActiveAiQuote(null);
+    } else if (value && typeof value === "object") {
+      // @ts-ignore
+      const text = value.text;
+      if (text) {
+        scrollToQuote(text);
+        setActiveAiQuote(text);
+        setSelectedHighlightId(null);
+      }
+    }
   };
 
   const handleDeleteHighlight = async (highlightId: number) => {
@@ -1211,7 +1258,7 @@ export default function MobiBookPage(props: { bookId: number }) {
         return;
       }
       if (attempts === 0 && iframeReady && highlightsQ.data) {
-        renderHighlights(highlightId);
+        renderHighlights(highlightId, activeAiQuote);
       }
       if (attempts < 4) {
         attempts += 1;
@@ -1227,94 +1274,130 @@ export default function MobiBookPage(props: { bookId: number }) {
     setChatSending(true);
     setChatInput("");
     try {
+      let threadId = currentThreadId;
+      
+      // Persist the user message
+      await addBookMessage({
+        bookId: id,
+        threadId: threadId,
+        role: "user",
+        content: input,
+      });
+
+      // Build context blocks
+      const contextBlocks = [
+        "You are an assistant embedded in an AI reader.",
+        "IMPORTANT: You have access to the reader's current context. Respond thoughtfully using all context provided below.",
+        "CITATIONS: When referring to information from the book, you MUST wrap the cited snippet in <cite snippet=\"...\" index=\"...\">text</cite> tags.",
+        "The 'snippet' attribute should be the verbatim text from the book.",
+        "The 'index' attribute should be the [ID] provided in the context blocks below.",
+        "Example: As mentioned in <cite snippet=\"To be, or not to be\" index=\"42\">the famous soliloquy</cite>, life is complex.",
+      ];
+
+      let contextId = 1;
+      const idMap: Record<number, any> = {}; // contextId -> highlightId or { text: string }
+
       if (selectedHighlight) {
-        await addHighlightMessage({
-          highlightId: selectedHighlight.id,
-          role: "user",
-          content: input,
-        });
-        const messages = messagesQ.data ?? [];
-        const systemContent = [
-          "You are an assistant embedded in an AI reader.",
-          "IMPORTANT: You have full access to the user's currently selected highlight. Respond thoughtfully using this specific context.",
-          `Current Highlight Text: "${selectedHighlight.text}"`,
-          selectedHighlight.note ? `User's Note on Highlight: "${selectedHighlight.note}"` : null,
-        ]
-          .filter(Boolean)
-          .join("\n");
-        const response = await openAiChat([
-          { role: "system", content: systemContent },
-          ...messages.map((message) => ({ role: message.role, content: message.content })),
-          { role: "user", content: input },
-        ]);
-        await addHighlightMessage({
-          highlightId: selectedHighlight.id,
-          role: "assistant",
-          content: response,
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["highlightMessages", selectedHighlight.id],
-        });
-      } else {
-        let threadId = currentThreadId;
-        
-        // If this is the first message in a default (null) thread, or we want a fresh thread, 
-        // we can create one. For now, let's just use the current threadId.
-        
-        await addBookMessage({
-          bookId: id,
-          threadId: threadId,
-          role: "user",
-          content: input,
-        });
-        const messages = bookMessagesQ.data ?? [];
-        const systemContent = [
-          "You are an assistant embedded in an AI reader.",
-          "IMPORTANT: You have full access to the reader's current context. Respond thoughtfully using the context provided below.",
-          contextText ? `Current page context: "${contextText}"` : "Current page context unavailable.",
-        ]
-          .filter(Boolean)
-          .join("\n");
-        const response = await openAiChat([
-          { role: "system", content: systemContent },
-          ...messages.map((message) => ({ role: message.role, content: message.content })),
-          { role: "user", content: input },
-        ]);
-        await addBookMessage({
-          bookId: id,
-          threadId: threadId,
-          role: "assistant",
-          content: response,
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["bookMessages", id, threadId],
+        idMap[contextId] = selectedHighlight.id;
+        contextBlocks.push(`[${contextId}] Currently Focused Highlight: "${selectedHighlight.text}"`);
+        if (selectedHighlight.note) {
+          contextBlocks.push(`User's Note on Highlight [${contextId}]: "${selectedHighlight.note}"`);
+        }
+        contextId++;
+      }
+
+      if (attachedHighlights.length > 0) {
+        contextBlocks.push("Additional Attached Highlights:");
+        attachedHighlights.forEach((h: any) => {
+          // Avoid duplicate entry if it's already focused
+          if (selectedHighlight && h.id === selectedHighlight.id) return;
+          
+          idMap[contextId] = h.id;
+          contextBlocks.push(`[${contextId}] "${h.text}"${h.note ? ` (Note: ${h.note})` : ""}`);
+          contextId++;
         });
       }
+
+      if (!selectedHighlight && attachedHighlights.length === 0) {
+        const sentences = getVisibleSentences();
+        if (sentences.length > 0) {
+          contextBlocks.push("Current Page Content (Sentences):");
+          sentences.forEach((s) => {
+            idMap[contextId] = { text: s };
+            contextBlocks.push(`[${contextId}] ${s}`);
+            contextId++;
+          });
+        } else {
+          // Try to get block-level context if sentences failed or as an alternative
+          const doc = iframeRef.current?.contentDocument;
+          const root = getScrollRoot();
+          if (doc && root) {
+            const { pageWidth, gap } = getPageMetrics();
+            const stride = pageWidth + gap;
+            const pageLeft = Math.max(0, (currentPage - 1) * stride);
+            const pageRight = pageLeft + pageWidth;
+            const rootRect = root.getBoundingClientRect();
+
+            const blocks = Array.from(doc.querySelectorAll("[data-block-index]")) as HTMLElement[];
+            blocks.forEach((block) => {
+              const rect = block.getBoundingClientRect();
+              const left = rect.left - rootRect.left + root.scrollLeft;
+              const right = rect.right - rootRect.left + root.scrollLeft;
+              
+              if (right >= pageLeft && left <= pageRight) {
+                const index = block.getAttribute("data-block-index");
+                const text = block.textContent?.trim();
+                if (text && index) {
+                  idMap[index] = { text }; // Use the actual block index as the ID
+                  contextBlocks.push(`[${index}] ${text}`);
+                }
+              }
+            });
+          }
+        }
+      }
+
+      const mapping = idMap;
+      setContextMap(mapping);
+
+      const systemContent = contextBlocks.join("\n");
+      const messages = bookMessagesQ.data ?? [];
+
+      const response = await openAiChat([
+        { role: "system", content: systemContent },
+        ...messages.map((message: any) => ({ role: message.role, content: message.content })),
+        { role: "user", content: input },
+      ]);
+
+      // Append hidden mapping to the assistant's message
+      const finalResponse = `${response}\n\n<!-- context-map: ${JSON.stringify(mapping)} -->`;
+
+      await addBookMessage({
+        bookId: id,
+        threadId: threadId,
+        role: "assistant",
+        content: finalResponse,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["bookMessages", id, threadId],
+      });
     } catch (error: any) {
       const errorMessage = String(error?.message ?? error);
-      if (selectedHighlight) {
-        await addHighlightMessage({
-          highlightId: selectedHighlight.id,
-          role: "assistant",
-          content: errorMessage,
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["highlightMessages", selectedHighlight.id],
-        });
-      } else {
-        await addBookMessage({
-          bookId: id,
-          role: "assistant",
-          content: errorMessage,
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["bookMessages", id],
-        });
-      }
+      await addBookMessage({
+        bookId: id,
+        threadId: currentThreadId,
+        role: "assistant",
+        content: errorMessage,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["bookMessages", id, currentThreadId],
+      });
     } finally {
       setChatSending(false);
     }
   };
+
 
   const handleModelChange = async (model: string) => {
     setCurrentModel(model);
@@ -1330,17 +1413,45 @@ export default function MobiBookPage(props: { bookId: number }) {
     jumpToElement(entry.element);
   };
 
-  const chatMessages = selectedHighlight
-    ? (messagesQ.data ?? []).map((message) => ({
-        id: String(message.id),
-        role: message.role as "user" | "assistant",
-        content: message.content,
-      }))
-    : (bookMessagesQ.data ?? []).map((message) => ({
-        id: String(message.id),
-        role: message.role as "user" | "assistant",
-        content: message.content,
-      }));
+  const chatMessages = (bookMessagesQ.data ?? []).map((message: any) => {
+    let content = message.content;
+    let mapping: Record<number, any> = {};
+    
+    const mapMatch = content.match(/<!-- context-map: (\{.*?\}) -->/);
+    if (mapMatch) {
+      try {
+        mapping = JSON.parse(mapMatch[1]);
+        content = content.replace(mapMatch[0], "").trim();
+      } catch (e) {
+        console.error("Failed to parse context map from message", e);
+      }
+    }
+
+    return {
+      id: String(message.id),
+      role: message.role as "user" | "assistant",
+      content: content,
+      onCitationClick: (citationId: number) => {
+        const value = mapping[citationId];
+        if (typeof value === "number" && value !== -1) {
+          scrollToHighlight(value);
+          setSelectedHighlightId(value);
+          setActiveAiQuote(null);
+        } else if (value && typeof value === "object") {
+          // @ts-ignore
+          const text = value.text;
+          if (text) {
+            scrollToQuote(text);
+            setActiveAiQuote(text);
+            setSelectedHighlightId(null);
+          }
+        } else {
+          // Fallback to global map for current session's newly sent messages
+          handleCitationClick(citationId);
+        }
+      },
+    };
+  });
 
   const chatContextHint = selectedHighlight
     ? "Using selected highlight as context"
@@ -1438,6 +1549,8 @@ export default function MobiBookPage(props: { bookId: number }) {
                 tocExpanded={tocExpanded}
                 onToggleTocExpanded={() => setTocExpanded((prev) => !prev)}
                 onCollapse={() => setLeftPanelCollapsed(true)}
+                onToggleContext={toggleHighlightAttachment}
+                attachedHighlightIds={attachedHighlightIds}
               />
             </>
           )}
@@ -1453,6 +1566,7 @@ export default function MobiBookPage(props: { bookId: number }) {
           pendingHighlight={pendingHighlight}
           onCreateHighlight={handleCreateHighlight}
           onCancelHighlight={() => setPendingHighlight(null)}
+          onAddToChat={handleAddToChat}
         />
 
         <div className="relative flex min-h-0">
@@ -1478,6 +1592,7 @@ export default function MobiBookPage(props: { bookId: number }) {
               onPromptSelect={setChatInput}
               onSend={sendChat}
               onNewChat={!selectedHighlight ? handleNewChat : undefined}
+              onDeleteThread={handleDeleteThread}
               chatSending={chatSending}
               chatInputRef={chatInputRef}
               currentModel={currentModel}
@@ -1490,6 +1605,9 @@ export default function MobiBookPage(props: { bookId: number }) {
               onSelectThread={setCurrentThreadId}
               placeholder={chatPlaceholder}
               isHighlightContext={!!selectedHighlight}
+              attachedContext={attachedHighlights}
+              onRemoveContext={toggleHighlightAttachment}
+              onCitationClick={handleCitationClick}
             />
           )}
         </div>
