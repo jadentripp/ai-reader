@@ -62,7 +62,9 @@ export function processGutenbergContent(html: string): ProcessedGutenberg {
   if (typeof DOMParser !== "undefined") {
     try {
       const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
+      // Normalize before parsing to remove multiple html/body/head tags
+      const normalized = normalizeHtmlFragment(html);
+      const doc = parser.parseFromString(normalized, "text/html");
       
       // We want to index meaningful content blocks
       const blocks = doc.querySelectorAll("p, h1, h2, h3, h4, h5, h6, blockquote, pre, table, li");
