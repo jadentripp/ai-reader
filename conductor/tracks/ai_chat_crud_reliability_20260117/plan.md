@@ -22,8 +22,11 @@ Update the React frontend to use the new commands and enhance the thread managem
 ## Phase 3: Message Management & Polish
 Implement individual message deletion and refine the overall chat experience.
 
-- [ ] Task: Add hover-to-show "Delete" button to message bubbles in `ChatSidebar.tsx`
-- [ ] Task: Implement message deletion logic with TanStack Query cache invalidation
-- [ ] Task: Add confirmation dialog for deleting assistant messages
-- [ ] Task: Final verification of empty states and navigation transitions
+- [x] Task: Add hover-to-show "Delete" button to message bubbles in `ChatSidebar.tsx` (b9dbd55)
+- [x] Task: Implement message deletion logic with TanStack Query cache invalidation (b9dbd55)
+- [x] Task: Add confirmation dialog for deleting assistant messages (b9dbd55)
+- [x] Task: Final verification of empty states and navigation transitions (b9dbd55)
+
+## Phase 3: Message Management & Polish [checkpoint: b9dbd55]
+Implement individual message deletion and refine the overall chat experience.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Message Management' (Protocol in workflow.md)
