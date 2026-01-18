@@ -10,12 +10,9 @@
 - [ ] **Task: Conductor - User Manual Verification 'Phase 1: Persistence' (Protocol in workflow.md)**
 
 ## Phase 2: Frontend Integration & Markdown
-- [x] **Task: Implement Markdown Rendering** 9197157
-    - [x] Update `ChatPanel.tsx` (or `ChatSidebar.tsx`) to use the `Markdown` component for assistant messages.
-- [x] **Task: Connect General Chat to Database** 8152ba5
-    - [x] Refactor `MobiBookPage.tsx` to use TanStack Query for general messages instead of local state.
-- [x] **Task: Add "New Chat" Functionality** 8152ba5
-    - [x] Implement a way to clear the current general chat history for a book.
+- [x] **Task: Implement Markdown Rendering** 6f08a04
+- [x] **Task: Connect General Chat to Database** 6f08a04
+- [x] **Task: Add "New Chat" Functionality** 6f08a04
 - [ ] **Task: Conductor - User Manual Verification 'Phase 2: UI & Integration' (Protocol in workflow.md)**
 
 ## Phase 3: UX Polish
