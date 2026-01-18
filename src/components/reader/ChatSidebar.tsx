@@ -1,4 +1,4 @@
-import { useState, type RefObject } from "react";
+import { useState, type RefObject, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ChatContainerRoot,
@@ -17,11 +17,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import type { BookChatThread, ChatPrompt, LocalChatMessage } from "@/lib/readerTypes";
 import type { Highlight } from "@/lib/tauri";
-import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose, PlusSquare, History, MessageSquare, X, Trash2 } from "lucide-react";
+import { Send, Sparkles, ChevronDown, Check, Settings2, PanelRightClose, PlusSquare, History, MessageSquare, X, Trash2, Edit2, Eraser } from "lucide-react";
 
 type ChatSidebarProps = {
   contextHint: string;
@@ -43,6 +44,8 @@ type ChatSidebarProps = {
   currentThreadId: number | null;
   onSelectThread: (id: number | null) => void;
   onDeleteThread?: (id: number) => void;
+  onRenameThread?: (id: number, title: string) => void;
+  onClearDefaultChat?: () => void;
   placeholder?: string;
   isHighlightContext?: boolean;
   attachedContext?: Highlight[];
@@ -162,6 +165,65 @@ function ModelSelector({
   );
 }
 
+function EditableThreadTitle({
+  title,
+  onRename,
+}: {
+  title: string;
+  onRename: (newTitle: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(title);
+
+  useEffect(() => {
+    setValue(title);
+  }, [title]);
+
+  if (isEditing) {
+    return (
+      <form
+        className="flex-1 flex items-center gap-1"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (value.trim() && value !== title) {
+            onRename(value.trim());
+          }
+          setIsEditing(false);
+        }}
+      >
+        <Input
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => {
+            if (value.trim() && value !== title) {
+              onRename(value.trim());
+            }
+            setIsEditing(false);
+          }}
+          className="h-7 text-xs px-1.5 py-0 min-w-0"
+        />
+      </form>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex items-center gap-1 group/title min-w-0">
+      <span className="truncate">{title}</span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsEditing(true);
+        }}
+        className="opacity-0 group-hover/title:opacity-100 p-0.5 hover:text-primary transition-all"
+        title="Rename thread"
+      >
+        <Edit2 className="h-2.5 w-2.5" />
+      </button>
+    </div>
+  );
+}
+
 export default function ChatSidebar({
   contextHint,
   messages,
@@ -182,6 +244,8 @@ export default function ChatSidebar({
   currentThreadId,
   onSelectThread,
   onDeleteThread,
+  onRenameThread,
+  onClearDefaultChat,
   placeholder = "Ask about the text...",
   isHighlightContext = false,
   attachedContext = [],
@@ -215,7 +279,7 @@ export default function ChatSidebar({
                 <PlusSquare className="h-4 w-4" />
               </Button>
             )}
-            {onSelectThread && threads.length > 0 && (
+            {onSelectThread && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -232,16 +296,32 @@ export default function ChatSidebar({
                     Chat History
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-1">
-                    <button
-                      onClick={() => onSelectThread(null)}
+                    <div
                       className={cn(
-                        "flex w-full items-center justify-between rounded-md px-2 py-2 text-xs hover:bg-muted",
+                        "group flex items-center gap-1 rounded-md px-2 py-2 text-xs hover:bg-muted",
                         currentThreadId === null && "bg-muted font-medium"
                       )}
                     >
-                      <span>Default Chat</span>
-                      {currentThreadId === null && <Check className="h-3 w-3" />}
-                    </button>
+                      <button
+                        onClick={() => onSelectThread(null)}
+                        className="flex-1 text-left"
+                      >
+                        Default Chat
+                      </button>
+                      {onClearDefaultChat && currentThreadId === null && messages.length > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onClearDefaultChat();
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-all"
+                          title="Clear default chat"
+                        >
+                          <Eraser className="h-3 w-3" />
+                        </button>
+                      )}
+                      {currentThreadId === null && <Check className="h-3 w-3 shrink-0" />}
+                    </div>
                     {threads.map((thread) => (
                       <div
                         key={thread.id}
@@ -250,12 +330,19 @@ export default function ChatSidebar({
                           currentThreadId === thread.id && "bg-muted font-medium"
                         )}
                       >
-                        <button
-                          onClick={() => onSelectThread(thread.id)}
-                          className="flex-1 text-left truncate"
-                        >
-                          {thread.title}
-                        </button>
+                        {onRenameThread ? (
+                          <EditableThreadTitle
+                            title={thread.title}
+                            onRename={(newTitle) => onRenameThread(thread.id, newTitle)}
+                          />
+                        ) : (
+                          <button
+                            onClick={() => onSelectThread(thread.id)}
+                            className="flex-1 text-left truncate"
+                          >
+                            {thread.title}
+                          </button>
+                        )}
                         {onDeleteThread && (
                           <button
                             onClick={(e) => {
