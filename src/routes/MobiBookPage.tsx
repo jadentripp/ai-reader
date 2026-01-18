@@ -11,8 +11,7 @@ import { injectHead, wrapBody, processGutenbergContent } from "@/lib/readerHtml"
 import type { ChatPrompt, PendingHighlight } from "@/lib/readerTypes";
 import {
   Popover,
-  PopoverContent,
-  PopoverAnchor,
+  PopoverContent,  PopoverAnchor,
 } from "@/components/ui/popover";
 import {
   addBookMessage,
@@ -20,6 +19,7 @@ import {
   deleteHighlight,
   getBook,
   getBookHtml,
+  getBookImageData,
   getSetting,
   listBookMessages,
   listBookChatThreads,
@@ -692,7 +692,9 @@ export default function MobiBookPage(props: { bookId: number }) {
       targetLeft,
       page,
       currentScroll: root.scrollLeft,
-      stride
+      stride,
+      rootScrollWidth: root.scrollWidth,
+      rootClientWidth: root.clientWidth
     });
 
     // Start navigation lock
@@ -735,7 +737,25 @@ export default function MobiBookPage(props: { bookId: number }) {
     const fuzzy = entries.filter(
       (entry: { norm: string; el: HTMLElement }) => entry.norm.includes(target) || target.includes(entry.norm)
     );
-    const candidates = exact.length ? exact : fuzzy;
+    let candidates = exact.length ? exact : fuzzy;
+
+    // Fallback: search all elements if no heading match
+    if (candidates.length === 0) {
+      const doc = iframeRef.current?.contentDocument;
+      if (doc) {
+        // Only search meaningful blocks to avoid performance issues
+        const allNodes = Array.from(doc.querySelectorAll("p, div, td, li, b, i, span")) as HTMLElement[];
+        const matches = allNodes.filter(el => {
+          const norm = normalizeLinkText(el.textContent ?? "");
+          return norm === target || norm.includes(target);
+        });
+        if (matches.length > 0) {
+          console.log("[Link] Found target in all-elements fallback:", text);
+          candidates = matches.map(el => ({ el, norm: normalizeLinkText(el.textContent ?? "") }));
+        }
+      }
+    }
+
     if (!candidates.length) return null;
     const refRect = referenceEl ? getElementRect(referenceEl) : null;
     const refOffset = refRect ? getOffsetLeftForRect(refRect) : null;
@@ -1101,6 +1121,8 @@ export default function MobiBookPage(props: { bookId: number }) {
     stripGutenbergBoilerplate(doc);
     syncPageMetrics();
 
+    console.log(`[Navigation] Total elements with data-fid: ${doc.querySelectorAll("[data-fid]").length}`);
+
     // Resolve MOBI images
     const resolveMobiImages = async () => {
       const imgs = doc.querySelectorAll("img.mobi-inline-image");
@@ -1109,13 +1131,8 @@ export default function MobiBookPage(props: { bookId: number }) {
         const relativeIndex = img.getAttribute("data-kindle-index");
         if (bookId && relativeIndex) {
           try {
-            const { invoke } = await import("@tauri-apps/api/core");
-            const { convertFileSrc } = await import("@tauri-apps/api/core");
-            const path = await invoke<string>("get_book_image_path", { 
-              bookId: parseInt(bookId), 
-              relativeIndex: parseInt(relativeIndex) 
-            });
-            (img as HTMLImageElement).src = convertFileSrc(path);
+            const dataUrl = await getBookImageData(parseInt(bookId), parseInt(relativeIndex));
+            (img as HTMLImageElement).src = dataUrl;
           } catch (e) {
             console.error("Failed to resolve image:", e);
           }
@@ -1377,14 +1394,19 @@ export default function MobiBookPage(props: { bookId: number }) {
              event.preventDefault();
              jumpToElement(targetEl);
              return;
+          } else {
+             console.log("[Link] Target NOT found by data-fid:", fidNum);
           }
         }
 
         const headingMatch = findHeadingByText(linkText, anchor);
         if (headingMatch) {
+          console.log("[Link] Found target by heading text match:", linkText);
           event.preventDefault();
           jumpToElement(headingMatch);
           return;
+        } else {
+          console.log("[Link] No heading match found for text:", linkText);
         }
         // If it's a footnote, don't return yet, let the isFootnote logic handle it
         if (!isFootnote) {
@@ -1403,13 +1425,17 @@ export default function MobiBookPage(props: { bookId: number }) {
       const ownerDoc = anchor.ownerDocument;
       const anchorTargetEl =
         (ownerDoc.getElementById(targetId) as HTMLElement | null) ??
-        (ownerDoc.getElementsByName(targetId)[0] as HTMLElement | undefined);
+        (ownerDoc.getElementsByName(targetId)[0] as HTMLElement | undefined) ??
+        ownerDoc.querySelector(`[id="${targetId}"]`) ??
+        ownerDoc.querySelector(`[name="${targetId}"]`);
       
       event.preventDefault();
       if (!anchorTargetEl) {
+        console.log("[Link] Internal target NOT found for ID/name:", targetId);
         return;
       }
-      jumpToElement(anchorTargetEl);
+      console.log("[Link] Navigating to internal target:", targetId);
+      jumpToElement(anchorTargetEl as HTMLElement);
     };
     linkClickRef.current = handleLinkClick;
     doc.addEventListener("click", handleLinkClick, true);
@@ -1766,6 +1792,7 @@ export default function MobiBookPage(props: { bookId: number }) {
   };
 
   const handleTocNavigate = (entry: { id: string; element: HTMLElement }) => {
+    console.log("[TOC] Navigating to entry:", entry.text, entry.id);
     setCurrentTocEntryId(entry.id);
     jumpToElement(entry.element);
   };

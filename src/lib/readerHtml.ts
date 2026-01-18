@@ -68,60 +68,53 @@ export function processGutenbergContent(html: string, bookId?: number): Processe
   if (typeof DOMParser !== "undefined") {
     try {
       const parser = new DOMParser();
-      // Split into fragments by </html> to handle multi-part MOBI/EPUB html
-      const fragments = html.split(/<\/html>/i);
-      const processedFragments = fragments.map((fragment, fid) => {
-        if (!fragment.trim()) return "";
-        const normalized = normalizeHtmlFragment(fragment);
-        if (!normalized) return "";
-        
+      const fid = 1; 
+      const normalized = normalizeHtmlFragment(html);
+      if (normalized) {
         const doc = parser.parseFromString(normalized, "text/html");
         
         // Rewrite image sources
         const images = doc.querySelectorAll("img");
         images.forEach(img => {
           const src = img.getAttribute("src") || "";
-          // kindle:embed:0016?mime=image/jpeg
-          if (src.startsWith("kindle:embed:")) {
-            const indexPart = src.split(":")[2]?.split("?")[0];
-            if (indexPart && bookId !== undefined) {
-              const relativeIndex = parseKindleIndex(indexPart);
-              // We'll use a data attribute and let the frontend resolve it or use a custom protocol.
-              // For now, let's mark it for the MobiBookPage to resolve or use a placeholder.
+          if (src.startsWith("kindle:")) {
+            let relativeIndex = 0;
+            if (src.startsWith("kindle:embed:")) {
+              const indexPart = src.split(":")[2]?.split("?")[0];
+              if (indexPart) {
+                relativeIndex = parseKindleIndex(indexPart);
+              }
+            } else if (src.startsWith("kindle:flow:")) {
+              const indexPart = src.split(":")[2]?.split("?")[0];
+              if (indexPart) {
+                relativeIndex = parseKindleIndex(indexPart);
+              }
+            }
+
+            if (bookId !== undefined) {
               img.setAttribute("data-kindle-index", relativeIndex.toString());
               img.setAttribute("data-book-id", bookId.toString());
-              img.src = ""; // Clear for now
+              img.setAttribute("data-src", src);
+              img.removeAttribute("src");
               img.classList.add("mobi-inline-image");
             }
           }
         });
 
-        // Mark the first element of this fragment with the fid
+        // Mark the first element
         const firstEl = doc.body.firstElementChild;
         if (firstEl) {
           firstEl.setAttribute("data-fid", fid.toString());
         }
 
-        // We want to index meaningful content blocks
+        // Index blocks
         const blocks = doc.querySelectorAll("p, h1, h2, h3, h4, h5, h6, blockquote, pre, table, li");
-        blocks.forEach((block) => {
-          // We'll need a way to keep block indices unique across fragments if needed, 
-          // but for now let's just mark them.
-          (block as HTMLElement).setAttribute("data-block-index", "pending");
+        blocks.forEach((block, index) => {
+          (block as HTMLElement).setAttribute("data-block-index", index.toString());
         });
-        
-        return doc.body.innerHTML;
-      });
 
-      // Join and re-index blocks globally
-      const fullHtml = processedFragments.join("\n");
-      const doc = parser.parseFromString(fullHtml, "text/html");
-      const allBlocks = doc.querySelectorAll("[data-block-index=\"pending\"]");
-      allBlocks.forEach((block, index) => {
-        (block as HTMLElement).setAttribute("data-block-index", index.toString());
-      });
-
-      html = doc.body.innerHTML;
+        html = doc.body.innerHTML;
+      }
     } catch (e) {
       console.error("Failed to inject block indices:", e);
     }

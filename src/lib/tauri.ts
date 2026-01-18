@@ -9,6 +9,7 @@ export type Book = {
   cover_url: string | null;
   mobi_path: string | null;
   html_path: string | null;
+  first_image_index: number | null;
   created_at: string;
 };
 
@@ -265,4 +266,8 @@ export async function openAiChat(messages: ChatMessage[]): Promise<string> {
 
 export async function openAiListModels(): Promise<string[]> {
   return await invoke("openai_list_models");
+}
+
+export async function getBookImageData(bookId: number, relativeIndex: number): Promise<string> {
+  return await invoke("get_book_image_data", { bookId, relativeIndex });
 }
