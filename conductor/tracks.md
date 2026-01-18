@@ -12,11 +12,3 @@ This file tracks all major tracks for the project. Each track has its own detail
 - [x] **Track: Interactive AI Citations**
 
 *Link: [./tracks/ai_citations_20260117/](./tracks/ai_citations_20260117/)*
-
-
-
-
----
-
-- [x] **Track: Illustration & Image Support**
-*Link: [./tracks/ai_illustrations_20260117/](./tracks/ai_illustrations_20260117/)*
