@@ -129,9 +129,7 @@ export default function SettingsPage() {
     setStatus(null);
     setLoading(true);
     try {
-      if (apiKey.trim()) {
-        await setSetting({ key: "openai_api_key", value: apiKey.trim() });
-      }
+      await setSetting({ key: "openai_api_key", value: apiKey.trim() });
       await setSetting({ key: "openai_model", value: model });
       const savedKeyStatus = await openAiKeyStatus();
       setKeyStatus(savedKeyStatus);

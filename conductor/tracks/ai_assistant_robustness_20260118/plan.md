@@ -1,22 +1,22 @@
 # Implementation Plan - AI Assistant Robustness & UX Overhaul
 
-## Phase 1: Database & Backend Foundation
+## Phase 1: Database & Backend Foundation [checkpoint: 29838f8]
 Update the data layer to support reasoning traces, robust citations, and persistent thread positions.
 
-- [x] Task: Update `book_message` schema to include `reasoning_summary` and `context_map` JSON columns
-- [x] Task: Update `book_chat_thread` schema to include `last_cfi` for persistent thread positions
-- [x] Task: Refactor `openai.rs` to use the `/v1/responses` endpoint and the new response object shape
-- [x] Task: Implement `get_thread_max_citation_index` helper in `db.rs` to support cumulative indexing
-- [x] Task: Add unit tests in `db.rs` for new schema fields and citation indexing logic
+- [x] Task: Update `book_message` schema to include `reasoning_summary` and `context_map` JSON columns 29838f8
+- [x] Task: Update `book_chat_thread` schema to include `last_cfi` for persistent thread positions 29838f8
+- [x] Task: Refactor `openai.rs` to use the `/v1/responses` endpoint and the new response object shape 29838f8
+- [x] Task: Implement `get_thread_max_citation_index` helper in `db.rs` to support cumulative indexing 29838f8
+- [x] Task: Add unit tests in `db.rs` for new schema fields and citation indexing logic 29838f8
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Optimistic UI & Responses API Integration
 Implement the frontend changes to handle the new API and provide immediate user feedback.
 
-- [ ] Task: Update `src/lib/tauri.ts` wrappers to handle reasoning summaries and full citation metadata
-- [ ] Task: Implement optimistic state updates in `MobiBookPage.tsx` (immediate message rendering)
-- [ ] Task: Add "Thinking..." ghost bubble state to `ChatSidebar.tsx` during `chatSending`
-- [ ] Task: Integrate the new `reasoning_summary` into the message processing loop
+- [x] Task: Update `src/lib/tauri.ts` wrappers to handle reasoning summaries and full citation metadata 29838f8
+- [x] Task: Implement optimistic state updates in `MobiBookPage.tsx` (immediate message rendering)
+- [x] Task: Add "Thinking..." ghost bubble state to `ChatSidebar.tsx` during `chatSending`
+- [x] Task: Integrate the new `reasoning_summary` into the message processing loop
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: UI Responsiveness' (Protocol in workflow.md)
 
 ## Phase 3: Robust Citations & Reasoning UI
