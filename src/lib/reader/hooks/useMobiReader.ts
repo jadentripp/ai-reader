@@ -147,7 +147,9 @@ export function useMobiReader(bookId: number) {
     getPageMetrics: pagination.getPageMetrics,
     currentPage: pagination.currentPage,
     onPageTurnNeeded: () => {
-      // Auto-page turn logic could go here later
+      if (pagination.currentPage < pagination.totalPages) {
+        pagination.next();
+      }
     }
   });
 
