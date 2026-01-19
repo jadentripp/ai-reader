@@ -98,6 +98,8 @@ function SelectLabel({
   )
 }
 
+const SelectItemText = SelectPrimitive.ItemText
+
 function SelectItem({
   className,
   children,
@@ -120,7 +122,7 @@ function SelectItem({
           <CheckIcon className="size-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      {children}
     </SelectPrimitive.Item>
   )
 }
@@ -179,6 +181,7 @@ export {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectItemText,
   SelectLabel,
   SelectScrollDownButton,
   SelectScrollUpButton,
