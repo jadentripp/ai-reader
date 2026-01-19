@@ -28,3 +28,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 - [x] **Track: refactor all files over 400 lines to improve maintainability**
 *Link: [./archive/global_refactor_400_20260118/](./archive/global_refactor_400_20260118/)*
 
+---
+
+- [x] **Track: Integrate ElevenLabs Text-to-Speech (TTS) for audiobook-style narration.**
+*Link: [./tracks/elevenlabs_tts_20260118/](./tracks/elevenlabs_tts_20260118/)*
