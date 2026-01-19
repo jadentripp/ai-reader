@@ -22,3 +22,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] **Track: Implement a high-fidelity 3D bookshelf experience using Three.js and WebGPU for browsing the local library.**
 *Link: [./archive/three_d_library_20260118/](./archive/three_d_library_20260118/)*
+
+---
+
+- [x] **Track: refactor all files over 400 lines to improve maintainability**
+*Link: [./tracks/global_refactor_400_20260118/](./tracks/global_refactor_400_20260118/)*
