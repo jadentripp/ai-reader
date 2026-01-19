@@ -37,7 +37,12 @@ describe('ElevenLabsService', () => {
 
   it('should be able to convert text to speech', async () => {
     const service = new ElevenLabsService();
-    const result = await service.textToSpeech('Hello world');
+    const result = await service.textToSpeech('Hello world', 'v1', {
+      stability: 0.5,
+      similarity_boost: 0.75,
+      style: 0,
+      use_speaker_boost: true
+    });
     expect(result).toBeDefined();
     expect(vi_mockConvert).toHaveBeenCalled();
   });
@@ -92,7 +97,12 @@ describe('AudioPlayer', () => {
   });
 
   it('should be able to play text', async () => {
-    await player.play('Test text');
+    await player.play('Test text', 'v1', {
+      stability: 0.5,
+      similarity_boost: 0.75,
+      style: 0,
+      use_speaker_boost: true
+    });
     expect(player.getState()).toBe('playing');
   });
 

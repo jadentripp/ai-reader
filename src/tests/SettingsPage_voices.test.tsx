@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import SettingsPage from '../routes/SettingsPage';
@@ -28,6 +28,15 @@ vi.mock('@/lib/elevenlabs', () => ({
 }));
 
 describe('SettingsPage Voice Selection', () => {
+  beforeAll(() => {
+    // @ts-ignore
+    global.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  });
+
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();

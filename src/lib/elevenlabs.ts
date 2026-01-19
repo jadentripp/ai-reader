@@ -7,6 +7,13 @@ export interface Voice {
   preview_url?: string;
 }
 
+export interface VoiceSettings {
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  use_speaker_boost: boolean;
+}
+
 export async function resolveElevenLabsApiKey(): Promise<string> {
   const saved = await getSetting('elevenlabs_api_key');
   if (saved && saved.trim()) {
@@ -35,12 +42,18 @@ export class ElevenLabsService {
     return this.client;
   }
 
-  async textToSpeech(text: string, voiceId: string = "Xb7hH8MSUJpSbSDYk0k2"): Promise<any> {
+  async textToSpeech(text: string, voiceId: string = "Xb7hH8MSUJpSbSDYk0k2", settings?: VoiceSettings): Promise<any> {
     const client = await this.getClient();
     return await client.textToSpeech.convert(voiceId, {
       text,
       modelId: "eleven_multilingual_v2",
       output_format: "mp3_44100_128",
+      voice_settings: settings ? {
+        stability: settings.stability,
+        similarity_boost: settings.similarity_boost,
+        style: settings.style,
+        use_speaker_boost: settings.use_speaker_boost,
+      } : undefined,
     });
   }
 
@@ -92,7 +105,7 @@ export class AudioPlayer {
     this.onStateChange?.(state);
   }
 
-  async play(text: string, voiceId?: string) {
+  async play(text: string, voiceId?: string, settings?: VoiceSettings) {
     const ctx = this.initContext();
     if (ctx.state === 'suspended') {
       await ctx.resume();
@@ -101,7 +114,25 @@ export class AudioPlayer {
     this.setState('buffering');
 
     try {
-      const audioStream = await elevenLabsService.textToSpeech(text, voiceId);
+      // If settings not provided, try to load from database
+      let finalSettings = settings;
+      if (!finalSettings) {
+        const stability = await getSetting("elevenlabs_stability");
+        const similarity = await getSetting("elevenlabs_similarity");
+        const style = await getSetting("elevenlabs_style");
+        const boost = await getSetting("elevenlabs_speaker_boost");
+        
+        if (stability !== null) {
+          finalSettings = {
+            stability: parseFloat(stability) || 0.5,
+            similarity_boost: parseFloat(similarity ?? "0.75") || 0.75,
+            style: parseFloat(style ?? "0") || 0,
+            use_speaker_boost: boost === "true"
+          };
+        }
+      }
+
+      const audioStream = await elevenLabsService.textToSpeech(text, voiceId, finalSettings);
       const audioData = await this.streamToBuffer(audioStream);
       const audioBuffer = await ctx.decodeAudioData(audioData);
 

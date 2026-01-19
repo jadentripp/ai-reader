@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { audioPlayer, PlaybackState } from '@/lib/elevenlabs';
+import { audioPlayer, PlaybackState, VoiceSettings } from '@/lib/elevenlabs';
 import { getPageContent, PageMetrics } from '@/lib/readerUtils';
 import { getSetting } from '@/lib/tauri';
 
@@ -14,10 +14,25 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
   const [state, setState] = useState<PlaybackState>('idle');
   const [autoNext, setAutoNext] = useState(false);
   const [voiceId, setVoiceId] = useState<string | undefined>();
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings | undefined>();
 
   useEffect(() => {
-    getSetting('elevenlabs_voice_id').then(id => {
+    Promise.all([
+      getSetting('elevenlabs_voice_id'),
+      getSetting('elevenlabs_stability'),
+      getSetting('elevenlabs_similarity'),
+      getSetting('elevenlabs_style'),
+      getSetting('elevenlabs_speaker_boost'),
+    ]).then(([id, stability, similarity, style, boost]) => {
       if (id) setVoiceId(id);
+      if (stability) {
+        setVoiceSettings({
+          stability: parseFloat(stability) || 0.5,
+          similarity_boost: parseFloat(similarity ?? "0.75") || 0.75,
+          style: parseFloat(style ?? "0") || 0,
+          use_speaker_boost: boost === "true"
+        });
+      }
     });
   }, []);
 
@@ -57,16 +72,16 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     const text = getPageText(currentPage);
     if (text) {
       setAutoNext(true);
-      await audioPlayer.play(text, voiceId);
+      await audioPlayer.play(text, voiceId, voiceSettings);
     }
-  }, [currentPage, getPageText, voiceId]);
+  }, [currentPage, getPageText, voiceId, voiceSettings]);
 
   const playText = useCallback(async (text: string) => {
     if (text) {
       setAutoNext(false); // One-off playback should not auto-advance
-      await audioPlayer.play(text, voiceId);
+      await audioPlayer.play(text, voiceId, voiceSettings);
     }
-  }, [voiceId]);
+  }, [voiceId, voiceSettings]);
 
   const pause = useCallback(() => {
     audioPlayer.pause();

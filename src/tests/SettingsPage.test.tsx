@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import SettingsPage from '../routes/SettingsPage';
@@ -18,14 +18,16 @@ vi.mock('@/lib/openai', () => ({
   listModels: vi.fn().mockResolvedValue(['gpt-4', 'gpt-3.5-turbo']),
 }));
 
-// Mock elevenlabs functions
-vi.mock('@/lib/elevenlabs', () => ({
-  elevenLabsService: {
-    testSpeech: vi.fn().mockResolvedValue(undefined),
-  },
-}));
-
 describe('SettingsPage', () => {
+  beforeAll(() => {
+    // @ts-ignore
+    global.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  });
+
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
