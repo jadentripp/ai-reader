@@ -21,6 +21,7 @@
 
 ## AI & Services
 - **LLM Provider:** OpenAI API (utilizing the Responses API for agentic reasoning)
+- **TTS Provider:** ElevenLabs API (via `@elevenlabs/elevenlabs-js`)
 - **Book Source:** Project Gutenberg (via Gutendex API)
 
 ## Development & Infrastructure
