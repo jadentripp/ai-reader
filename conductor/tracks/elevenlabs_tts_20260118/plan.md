@@ -1,6 +1,6 @@
 # Plan: ElevenLabs TTS Integration
 
-## Phase 1: Configuration & Infrastructure
+## Phase 1: Configuration & Infrastructure [checkpoint: 04a081e]
 Establish the foundation for using the ElevenLabs API within the application.
 
 - [x] Task: Add ElevenLabs API Key to Settings 4cfc328
@@ -11,7 +11,7 @@ Establish the foundation for using the ElevenLabs API within the application.
     - [ ] Install `@elevenlabs/elevenlabs-js`.
     - [ ] Create `src/lib/elevenlabs.ts` to wrap API calls (initialization, text-to-speech conversion).
     - [ ] Implement a basic "test voice" function to verify the key and connection in the Settings panel.
-- [ ] Task: Conductor - User Manual Verification 'Configuration & Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Configuration & Infrastructure' (Protocol in workflow.md) 04a081e
 
 ## Phase 2: Core Playback Engine (Streaming)
 Build the logic for fetching audio, playing it, and managing the queue.
