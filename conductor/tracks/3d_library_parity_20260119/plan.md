@@ -2,14 +2,14 @@
 
 This plan outlines the steps to bring the 3D Library ("The Reading Room") to feature parity with the 2D Library, including searching, browsing collections, and managing downloads.
 
-## Phase 1: Foundations & Shared Logic
+## Phase 1: Foundations & Shared Logic [checkpoint: 16334d5]
 - [x] Task: Refactor `useLibrary` hook for better 3D compatibility 46194a2
     - [x] Extract core catalog/library logic into reusable utilities if necessary to ensure 3D page can access the same state.
 - [x] Task: Implement "The Reading Desk" Geometry bf529f1
     - [x] Create a `ReadingDesk` component in `src/components/three/`.
     - [x] Add the desk to `ThreeDLibraryPage`.
     - [x] Position recently read books on the desk surface.
-- [ ] Task: Conductor - User Manual Verification 'Foundations' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Foundations' (Protocol in workflow.md) 16334d5
 
 ## Phase 2: Search & Collections UI
 - [ ] Task: Create 3D Floating Search Interface
