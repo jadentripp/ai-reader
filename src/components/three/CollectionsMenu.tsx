@@ -10,12 +10,12 @@ const QUICK_COLLECTIONS = [
 ];
 
 const CATEGORY_SHORTCUTS = [
-  { key: "category-adventure", label: "Adventure" },
-  { key: "category-novels", label: "Novels" },
-  { key: "category-poetry", label: "Poetry" },
-  { key: "category-science-fiction-and-fantasy", label: "Sci-Fi & Fantasy" },
-  { key: "category-romance", label: "Romance" },
-  { key: "category-biographies", label: "Biographies" },
+  { key: "category-literature-adventure", label: "Adventure" },
+  { key: "category-literature-novels", label: "Novels" },
+  { key: "category-literature-poetry", label: "Poetry" },
+  { key: "category-literature-science-fiction-and-fantasy", label: "Sci-Fi & Fantasy" },
+  { key: "category-literature-romance", label: "Romance" },
+  { key: "category-literature-biographies", label: "Biographies" },
 ];
 
 interface CollectionsMenuProps {

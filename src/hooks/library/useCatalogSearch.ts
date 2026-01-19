@@ -35,7 +35,9 @@ export function useCatalogSearch() {
   const catalogSearch = catalogQuery.trim();
   const catalogTopic = activeCatalog.kind === "category" ? activeCatalog.topic ?? null : null;
   const canQueryCatalog =
-    activeCatalog.kind === "collection" || catalogSearch.length > 0 || Boolean(catalogTopic);
+    activeCatalog.kind === "collection" || activeCatalog.kind === "category" || catalogSearch.length > 0 || Boolean(catalogTopic);
+
+
 
   // Reset page when search or catalog changes
   const [prevCatalogKey, setPrevCatalogKey] = React.useState(catalogKey);
@@ -63,6 +65,8 @@ export function useCatalogSearch() {
         topic: catalogTopic,
       }),
     enabled: canQueryCatalog,
+    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
   function handleSearch(query: string) {
