@@ -43,10 +43,10 @@ Decompose the AI assistant sidebar.
 ## Phase 4: Utilities & Cleanup
 Address remaining offenders and ensure project-wide compliance.
 
-- [~] Task: Refactor `src/components/ui/loader.tsx`.
-    - [ ] Split into smaller component modules if necessary.
-- [ ] Task: Refactor `src/hooks/useLibrary.ts`.
-    - [ ] Split into sub-hooks or smaller logic units.
-- [ ] Task: Final Line Count Verification.
-    - [ ] Run a project-wide script to confirm all files in `src/` are < 400 lines.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+- [x] Task: Refactor `src/components/ui/loader.tsx`. (0b6eabb)
+    - [x] Split into smaller component modules if necessary.
+- [x] Task: Refactor `src/hooks/useLibrary.ts`. (0b6eabb)
+    - [x] Split into sub-hooks or smaller logic units.
+- [x] Task: Final Line Count Verification. (0b6eabb)
+    - [x] Run a project-wide script to confirm all files in `src/` are < 400 lines.
+- [~] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
