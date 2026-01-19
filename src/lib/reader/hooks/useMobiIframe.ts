@@ -4,6 +4,7 @@ import { DEBOUNCE_SELECTION } from "@/lib/reader/constants";
 import { getNodePath } from "@/lib/readerUtils";
 import { getEventTargetElement, findHighlightFromEvent } from "@/lib/reader/dom";
 import { createLinkClickHandler } from "@/lib/reader/links";
+import { handleReaderKeyboard } from "@/lib/reader/keyboard";
 
 export function useMobiIframe(params: {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -41,6 +42,7 @@ export function useMobiIframe(params: {
   const scrollHandlerRef = useRef<((event: Event) => void) | null>(null);
   const wheelHandlerRef = useRef<((event: WheelEvent) => void) | null>(null);
   const selectionHandlerRef = useRef<(() => void) | null>(null);
+  const keyboardHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
   const highlightClickRef = useRef<((event: Event) => void) | null>(null);
   const linkClickRef = useRef<((event: MouseEvent) => void) | null>(null);
 
@@ -155,6 +157,12 @@ export function useMobiIframe(params: {
     doc.addEventListener("mouseup", handleSelection);
     doc.addEventListener("keyup", handleSelection);
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      handleReaderKeyboard(event, pagination);
+    };
+    keyboardHandlerRef.current = handleKeyDown;
+    doc.addEventListener("keydown", handleKeyDown);
+
     const handleHighlightClick = (event: Event) => {
       const target = getEventTargetElement(event.target);
       if (target && target.tagName === "IMG") {
@@ -213,6 +221,9 @@ export function useMobiIframe(params: {
       if (doc && selectionHandlerRef.current) {
         doc.removeEventListener("mouseup", selectionHandlerRef.current);
         doc.removeEventListener("keyup", selectionHandlerRef.current);
+      }
+      if (doc && keyboardHandlerRef.current) {
+        doc.removeEventListener("keydown", keyboardHandlerRef.current);
       }
       if (doc && linkClickRef.current) {
         doc.removeEventListener("click", linkClickRef.current, true);

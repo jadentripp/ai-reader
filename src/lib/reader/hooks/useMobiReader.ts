@@ -6,6 +6,7 @@ import { processGutenbergContent, wrapBody, injectHead } from "@/lib/readerHtml"
 import { buildReaderCss } from "@/lib/reader/styles";
 import { computePageGap, computeReaderWidth } from "@/lib/reader/pagination";
 import { findTextRange } from "@/lib/readerUtils";
+import { handleReaderKeyboard } from "@/lib/reader/keyboard";
 
 import {
   useIframeDocument,
@@ -184,19 +185,11 @@ export function useMobiReader(bookId: number) {
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target && /input|textarea|select|button/i.test(target.tagName)) return;
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        pagination.prev();
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        pagination.next();
-      }
+      handleReaderKeyboard(event, pagination);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [pagination.totalPages]);
+  }, [pagination.totalPages, pagination.prev, pagination.next]);
 
   useEffect(() => {
     const handleVisibility = () => {
