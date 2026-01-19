@@ -5,7 +5,7 @@
 - [x] Task: Update `package.json` scripts to strictly use `bun test` (e.g., `"test": "bun test"`). [5050021]
 - [x] Task: Audit and remove any `vite.config.ts` or `vitest.config.ts` files if they are solely for testing configuration. [5050021]
 - [x] Task: Update `src/tests/setup.ts` imports to replace any lingering Vitest globals if present (though `bun:test` should be compatible). [5050021]
-- [ ] Task: Conductor - User Manual Verification 'Environment & Tooling Cleanup' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Environment & Tooling Cleanup' (Protocol in workflow.md) [426bc8e]
 
 ## Phase 2: Global State Isolation & Pollution Fixes
 - [ ] Task: Enhance `src/tests/setup.ts` to clear `localStorage` and `sessionStorage` in `afterEach`.
