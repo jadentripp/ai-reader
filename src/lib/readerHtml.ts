@@ -24,6 +24,7 @@ export function normalizeHtmlFragment(html: string): string {
     .replace(/<\?xml[\s\S]*?\?>/gi, "")
     .replace(/<!doctype[\s\S]*?>/gi, "")
     .replace(/<\/?(html|head|body)[^>]*>/gi, "")
+    .replace(/<(\s+class=["'])/gi, "<p$1") // Fix malformed < class=" tags
     .trim();
 }
 

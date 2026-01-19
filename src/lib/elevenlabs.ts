@@ -43,36 +43,64 @@ export class ElevenLabsService {
     return this.client;
   }
 
-  async textToSpeech(text: string, voiceId: string = "Xb7hH8MSUJpSbSDYk0k2", settings?: VoiceSettings): Promise<any> {
+  async textToSpeech(text: string, voiceId: string, settings?: VoiceSettings): Promise<any> {
+    console.log(`[ElevenLabs] textToSpeech called for text: "${text.substring(0, 30)}..." with voiceId: ${voiceId}`);
     const client = await this.getClient();
-    return await client.textToSpeech.convert(voiceId, {
-      text,
-      modelId: "eleven_multilingual_v2",
-      output_format: "mp3_44100_128",
-      voice_settings: settings ? {
-        stability: settings.stability,
-        similarity_boost: settings.similarity_boost,
-        style: settings.style,
-        use_speaker_boost: settings.use_speaker_boost,
-      } : undefined,
-    });
+    try {
+      const response = await client.textToSpeech.convert(voiceId, {
+              text,
+              modelId: "eleven_flash_v2_5", // Faster and more modern
+              outputFormat: "mp3_44100_128",
+              voiceSettings: settings ? {
+                stability: settings.stability,
+                similarityBoost: settings.similarity_boost,
+                style: settings.style,
+                useSpeakerBoost: settings.use_speaker_boost,
+              } : undefined,
+            });
+      console.log(`[ElevenLabs] textToSpeech conversion successful`);
+      return response;
+    } catch (e: any) {
+      if (e.message?.includes("famous_voice_not_permitted")) {
+        console.error(`[ElevenLabs] VOICE RESTRICTED: The selected voice is restricted by ElevenLabs and cannot be used via API.`);
+        throw new Error("This voice is restricted by ElevenLabs for API use. Please try a different voice.");
+      }
+      console.error(`[ElevenLabs] textToSpeech conversion failed:`, e);
+      throw e;
+    }
   }
 
   async getVoices(): Promise<Voice[]> {
+    console.log(`[ElevenLabs] getVoices called`);
     const client = await this.getClient();
-    const response = await client.voices.getAll();
-    return response.voices.map((v: any, index: number) => ({
-      voice_id: v.voice_id || `voice-${index}`,
-      name: v.name || 'Unnamed Voice',
-      category: v.category,
-      preview_url: v.preview_url,
-    }));
-  }
+    try {
+      const response = await client.voices.getAll();
+      console.log(`[ElevenLabs] getVoices successful, found ${response.voices.length} voices`);
+      
+      if (response.voices.length > 0) {
+        console.log(`[ElevenLabs] Sample voice object structure:`, {
+          has_voice_id: 'voice_id' in response.voices[0],
+          has_voiceId: 'voiceId' in response.voices[0],
+          raw_keys: Object.keys(response.voices[0])
+        });
+      }
 
-  async testSpeech(): Promise<void> {
-    const client = await this.getClient();
-    // Try to get voices as a test of the API key
-    await client.voices.getAll();
+      return response.voices.map((v: any, index: number) => {
+        const id = v.voice_id || v.voiceId;
+        if (!id) {
+          console.warn(`[ElevenLabs] Voice at index ${index} missing ID:`, v.name);
+        }
+        return {
+          voice_id: id || `voice-err-${index}`,
+          name: v.name || 'Unnamed Voice',
+          category: v.category,
+          preview_url: v.preview_url || v.previewUrl,
+        };
+      });
+    } catch (e) {
+      console.error(`[ElevenLabs] getVoices failed:`, e);
+      throw e;
+    }
   }
 }
 
@@ -93,7 +121,9 @@ export class AudioPlayer {
 
   private initContext() {
     if (!this.context) {
+      console.log(`[AudioPlayer] Initializing AudioContext`);
       this.context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      console.log(`[AudioPlayer] AudioContext state: ${this.context.state}`);
     }
     return this.context;
   }
@@ -103,22 +133,38 @@ export class AudioPlayer {
   }
 
   setState(state: PlaybackState) {
+    console.log(`[AudioPlayer] State transition: ${this.state} -> ${state}`);
     this.state = state;
     this.onStateChange?.(state);
   }
 
   async play(text: string, voiceId?: string, settings?: VoiceSettings) {
+    console.log(`[AudioPlayer] play requested for text length: ${text.length}`);
     const ctx = this.initContext();
     if (ctx.state === 'suspended') {
+      console.log(`[AudioPlayer] Resuming suspended AudioContext`);
       await ctx.resume();
     }
 
     this.setState('buffering');
 
     try {
+      let finalVoiceId = voiceId;
+      if (!finalVoiceId) {
+        finalVoiceId = await getSetting("elevenlabs_voice_id") || undefined;
+        console.log(`[AudioPlayer] Resolved voiceId from database: ${finalVoiceId}`);
+      }
+
+      if (!finalVoiceId) {
+        // Fallback to a sensible default if nothing found (e.g. Rachel)
+        finalVoiceId = "21m00Tcm4TbcDqnu8SRw"; 
+        console.log(`[AudioPlayer] No voiceId found, falling back to Rachel: ${finalVoiceId}`);
+      }
+
       // If settings not provided, try to load from database
       let finalSettings = settings;
       if (!finalSettings) {
+        console.log(`[AudioPlayer] Loading voice settings from database`);
         const stability = await getSetting("elevenlabs_stability");
         const similarity = await getSetting("elevenlabs_similarity");
         const style = await getSetting("elevenlabs_style");
@@ -131,12 +177,22 @@ export class AudioPlayer {
             style: parseFloat(style ?? "0") || 0,
             use_speaker_boost: boost === "true"
           };
+          console.log(`[AudioPlayer] Settings loaded:`, finalSettings);
+        } else {
+          console.log(`[AudioPlayer] No settings found in database, using defaults`);
         }
       }
 
-      const audioStream = await elevenLabsService.textToSpeech(text, voiceId, finalSettings);
+      console.log(`[AudioPlayer] Calling elevenLabsService.textToSpeech with voiceId: ${finalVoiceId}`);
+      const audioStream = await elevenLabsService.textToSpeech(text, finalVoiceId, finalSettings);
+      
+      console.log(`[AudioPlayer] Converting stream to buffer`);
       const audioData = await this.streamToBuffer(audioStream);
+      console.log(`[AudioPlayer] Audio data received, size: ${audioData.byteLength} bytes`);
+      
+      console.log(`[AudioPlayer] Decoding audio data`);
       const audioBuffer = await ctx.decodeAudioData(audioData);
+      console.log(`[AudioPlayer] Audio decoded successfully, duration: ${audioBuffer.duration.toFixed(2)}s`);
 
       this.stop(); // Stop any current playback
       
@@ -144,20 +200,23 @@ export class AudioPlayer {
       this.currentSource.buffer = audioBuffer;
       this.currentSource.connect(ctx.destination);
       this.currentSource.onended = () => {
+        console.log(`[AudioPlayer] Playback ended`);
         if (this.state === 'playing') {
           this.setState('idle');
         }
       };
       
+      console.log(`[AudioPlayer] Starting playback`);
       this.currentSource.start(0);
       this.setState('playing');
     } catch (e) {
-      console.error('Audio playback error:', e);
+      console.error('[AudioPlayer] Audio playback error:', e);
       this.setState('error');
     }
   }
 
   pause() {
+    console.log(`[AudioPlayer] Pause requested`);
     if (this.state === 'playing') {
       this.context?.suspend();
       this.setState('paused');
@@ -165,6 +224,7 @@ export class AudioPlayer {
   }
 
   resume() {
+    console.log(`[AudioPlayer] Resume requested`);
     if (this.state === 'paused') {
       this.context?.resume();
       this.setState('playing');
@@ -173,6 +233,7 @@ export class AudioPlayer {
 
   stop() {
     if (this.currentSource) {
+      console.log(`[AudioPlayer] Stopping current source`);
       try {
         this.currentSource.stop();
       } catch (e) {
@@ -184,6 +245,7 @@ export class AudioPlayer {
   }
 
   private async streamToBuffer(stream: ReadableStream): Promise<ArrayBuffer> {
+    console.log(`[AudioPlayer] Reading stream`);
     const reader = stream.getReader();
     const chunks: Uint8Array[] = [];
     while (true) {
@@ -192,6 +254,7 @@ export class AudioPlayer {
       chunks.push(value);
     }
     const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    console.log(`[AudioPlayer] Stream read complete, total chunks: ${chunks.length}, total length: ${totalLength}`);
     const result = new Uint8Array(totalLength);
     let offset = 0;
     for (const chunk of chunks) {

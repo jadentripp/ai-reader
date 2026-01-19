@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  Select,
+import { Select,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -14,19 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { getSetting, openAiKeyStatus, setSetting } from "../lib/tauri";
 import { listModels } from "@/lib/openai";
 import { cn } from "@/lib/utils";
 import {
-  ChevronLeft,
-  ChevronRight,
   Settings2,
-  Columns2,
   BookOpen,
   Play,
-  Pause,
-  Square,
   Loader2,
   Headphones,
   Volume2,
@@ -120,7 +113,7 @@ function StatusBadge({ status, type }: { status: string; type: "success" | "info
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState("");
   const [elevenLabsApiKey, setElevenLabsApiKey] = useState("");
-  const [voiceId, setVoiceId] = useState("Xb7hH8MSUJpSbSDYk0k2");
+  const [voiceId, setVoiceId] = useState("");
   const [voices, setVoices] = useState<Voice[]>([]);
   const [stability, setStability] = useState(0.5);
   const [similarity, setSimilarity] = useState(0.75);
@@ -134,10 +127,36 @@ export default function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [showElevenLabsApiKey, setShowElevenLabsApiKey] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [testLoading, setTestLoading] = useState(false);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("appearance");
+
+  useEffect(() => {
+    console.log("[Settings] voiceId changed:", voiceId);
+  }, [voiceId]);
+
+  useEffect(() => {
+    if (elevenLabsApiKey.trim()) {
+      loadVoices();
+    }
+  }, [elevenLabsApiKey]);
+
+  // Set default voice if none is selected and voices are loaded
+  useEffect(() => {
+    // If we have voices but no voiceId, or if the current voiceId isn't in the list (stale/invalid)
+    if (voices.length > 0) {
+      const isValid = voices.some(v => v.voice_id === voiceId);
+      
+      if (!voiceId || !isValid) {
+        console.log("[Settings:DefaultVoice] Current voiceId is invalid or missing. Selecting default...");
+        const firstValid = voices.find(v => v.voice_id && v.category?.toLowerCase() !== 'famous');
+        if (firstValid) {
+          console.log("[Settings:DefaultVoice] Selected:", firstValid.name);
+          setVoiceId(firstValid.voice_id);
+        }
+      }
+    }
+  }, [voices, voiceId]);
 
   // Appearance state
   const [fontSize, setFontSize] = useState(18);
@@ -217,9 +236,13 @@ export default function SettingsPage() {
       }
       if (savedElevenLabsKey) {
         setElevenLabsApiKey(savedElevenLabsKey);
-        loadVoices();
       }
-      if (savedVoiceId) setVoiceId(savedVoiceId);
+      console.log("[Settings] Loading saved voice ID:", savedVoiceId);
+      if (savedVoiceId) {
+        setVoiceId(savedVoiceId);
+      } else {
+        console.log("[Settings] No saved voice ID, will use default when voices load");
+      }
       if (savedStability) setStability(parseFloat(savedStability));
       if (savedSimilarity) setSimilarity(parseFloat(savedSimilarity));
       if (savedStyle) setStyle(parseFloat(savedStyle));
@@ -314,19 +337,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function onTestElevenLabs() {
-    setTestLoading(true);
-    setStatus(null);
-    try {
-      await elevenLabsService.testSpeech();
-      setStatus({ message: "ElevenLabs connection successful!", type: "success" });
-    } catch (e: any) {
-      setStatus({ message: `Connection failed: ${e.message}`, type: "error" });
-    } finally {
-      setTestLoading(false);
-    }
-  }
-
   async function loadModels() {
     console.log("[Settings] loadModels called");
     setModelsStatus(null);
@@ -354,7 +364,8 @@ export default function SettingsPage() {
 
   const groupedVoices = useMemo(() => {
     const groups: Record<string, Voice[]> = {};
-    voices.filter(v => v.voice_id).forEach(v => {
+    // Filter out "famous" voices as they are usually restricted via API
+    voices.filter(v => v.voice_id && v.category?.toLowerCase() !== 'famous').forEach(v => {
       const cat = v.category || 'Other';
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(v);
@@ -647,11 +658,9 @@ export default function SettingsPage() {
                                                                 <SelectItemText>
                                                                   <span className="font-medium text-sm">{name}</span>
                                                                 </SelectItemText>
-                                                                {description && (
-                                                                  <span className="text-[10px] text-muted-foreground line-clamp-1">
-                                                                    {description}
-                                                                  </span>
-                                                                )}
+                                                                <span className="text-[10px] text-muted-foreground line-clamp-1">
+                                                                  {v.category ? `${v.category} • ` : ""}{description}
+                                                                </span>
                                                               </div>
                                                             </SelectItem>
                                                           );
@@ -685,19 +694,6 @@ export default function SettingsPage() {
                       <SettingsRow label="Similarity Boost" description={similarity.toFixed(2)} vertical>
                         <Slider value={[similarity]} onValueChange={([v]) => setSimilarity(v)} min={0} max={1} step={0.01} />
                       </SettingsRow>
-                    </div>
-
-                    <div className="flex justify-end pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onTestElevenLabs}
-                        disabled={testLoading || !elevenLabsKeyConfigured}
-                        className="gap-2"
-                      >
-                        {testLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Volume2 className="h-4 w-4" />}
-                        Test Connection
-                      </Button>
                     </div>
                   </div>
                 </SettingsSection>
