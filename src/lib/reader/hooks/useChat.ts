@@ -12,7 +12,7 @@ import {
   clearDefaultBookMessages,
   getThreadMaxCitationIndex,
 } from "@/lib/tauri";
-import { chat } from "@/lib/openai";
+import { chat, generateThreadTitle } from "@/lib/openai";
 import { getPageContent, type PageMetrics } from "@/lib/readerUtils";
 import { buildChatSystemPrompt, processCitationsInResponse, parseContextMapFromMessage, type CitationMapping } from "../citations";
 
@@ -186,6 +186,42 @@ export function useChat(
       await queryClient.invalidateQueries({
         queryKey: ["bookMessages", bookId, threadId],
       });
+
+      console.log("[Chat:Title] sendChat finished assistant response. threadId:", threadId);
+
+      // AI Title Generation: If this is a real thread (not default chat)
+      if (threadId !== null) {
+        // We look for the thread in the cache, but even if not found (stale cache), 
+        // we can proceed if we know we just sent the first interaction.
+        const thread = bookChatThreadsQ.data?.find((t: any) => t.id === threadId);
+        
+        console.log("[Chat:Title] Checking conditions...", { 
+          threadFound: !!thread, 
+          title: thread?.title,
+          isNewChat: thread?.title === "New Chat"
+        });
+
+        // If we don't have the thread in cache yet, or it's named "New Chat", 
+        // we should attempt to generate a title if this is the first interaction.
+        // We'll trust the logic that if we just got processedContent and it's a thread, 
+        // and we haven't renamed it yet, it's time.
+        if (!thread || thread.title === "New Chat") {
+          console.log("[Chat:Title] Triggering AI title generation...");
+          try {
+            const aiTitle = await generateThreadTitle([
+              { role: "user", content: input },
+              { role: "assistant", content: processedContent }
+            ]);
+            
+            if (aiTitle) {
+              console.log("[Chat:Title] Success. Renaming thread to:", aiTitle);
+              await handleRenameThread(threadId, aiTitle);
+            }
+          } catch (e) {
+            console.error("[Chat:Title] Failed to generate AI title:", e);
+          }
+        }
+      }
     } catch (error: any) {
       const errorMessage = String(error?.message ?? error);
       await addBookMessage({
@@ -216,7 +252,7 @@ export function useChat(
 
   const handleNewChat = useCallback(async () => {
     if (selectedHighlight) return;
-    const title = `Chat ${new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+    const title = "New Chat";
     const thread = await createBookChatThread({ bookId, title });
     setCurrentThreadId(thread.id);
     await queryClient.invalidateQueries({ queryKey: ["bookChatThreads", bookId] });

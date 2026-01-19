@@ -97,6 +97,27 @@ class OpenAIService {
       content,
     };
   }
+
+  async generateThreadTitle(messages: ChatMessage[]): Promise<string> {
+    console.log("[OpenAI] Generating thread title...");
+    const prompt = [
+      {
+        role: "system",
+        content: "Generate a very short, concise, and descriptive title (max 5-6 words) for this chat conversation based on the user's first message and the assistant's response. Do not use quotes or special characters. Return only the title text."
+      },
+      ...messages.slice(0, 2) // Just the first interaction is usually enough for a title
+    ];
+
+    try {
+      const result = await this.chat(prompt, 'gpt-4o-mini'); // Use a faster/cheaper model for titles
+      const title = result.content.trim().replace(/^["']|["']$/g, '');
+      console.log("[OpenAI] Title generated:", title);
+      return title;
+    } catch (e) {
+      console.error("[OpenAI] Failed to generate title:", e);
+      throw e;
+    }
+  }
 }
 
 export const openAIService = new OpenAIService();
@@ -105,4 +126,6 @@ export const openAIService = new OpenAIService();
 export const listModels = () => openAIService.listModels();
 export const chat = (messages: ChatMessage[], model_override?: string) => 
   openAIService.chat(messages, model_override);
+export const generateThreadTitle = (messages: ChatMessage[]) => 
+  openAIService.generateThreadTitle(messages);
 export { OpenAIService };
