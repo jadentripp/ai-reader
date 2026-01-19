@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { audioPlayer, PlaybackState } from '@/lib/elevenlabs';
 import { getPageContent, PageMetrics } from '@/lib/readerUtils';
+import { getSetting } from '@/lib/tauri';
 
 interface UseTTSOptions {
   getDoc: () => Document | null;
@@ -12,6 +13,13 @@ interface UseTTSOptions {
 export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }: UseTTSOptions) {
   const [state, setState] = useState<PlaybackState>('idle');
   const [autoNext, setAutoNext] = useState(false);
+  const [voiceId, setVoiceId] = useState<string | undefined>();
+
+  useEffect(() => {
+    getSetting('elevenlabs_voice_id').then(id => {
+      if (id) setVoiceId(id);
+    });
+  }, []);
 
   useEffect(() => {
     return audioPlayer.subscribe((newState) => {
@@ -49,9 +57,9 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     const text = getPageText(currentPage);
     if (text) {
       setAutoNext(true);
-      await audioPlayer.play(text);
+      await audioPlayer.play(text, voiceId);
     }
-  }, [currentPage, getPageText]);
+  }, [currentPage, getPageText, voiceId]);
 
   const pause = useCallback(() => {
     audioPlayer.pause();

@@ -13,7 +13,7 @@ import {
 import { getSetting, openAiKeyStatus, setSetting } from "../lib/tauri";
 import { listModels } from "@/lib/openai";
 import { cn } from "@/lib/utils";
-import { elevenLabsService } from "@/lib/elevenlabs";
+import { elevenLabsService, Voice } from "@/lib/elevenlabs";
 
 function SettingsSection({
   icon,
@@ -99,6 +99,8 @@ function StatusBadge({ status, type }: { status: string; type: "success" | "info
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState("");
   const [elevenLabsApiKey, setElevenLabsApiKey] = useState("");
+  const [voiceId, setVoiceId] = useState("Xb7hH8MSUJpSbSDYk0k2");
+  const [voices, setVoices] = useState<Voice[]>([]);
   const [model, setModel] = useState("gpt-4.1-mini");
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [models, setModels] = useState<string[]>([]);
@@ -114,10 +116,15 @@ export default function SettingsPage() {
     (async () => {
       const savedKey = await getSetting("openai_api_key");
       const savedElevenLabsKey = await getSetting("elevenlabs_api_key");
+      const savedVoiceId = await getSetting("elevenlabs_voice_id");
       const savedModel = await getSetting("openai_model");
       const savedKeyStatus = await openAiKeyStatus();
       if (savedKey) setApiKey(savedKey);
-      if (savedElevenLabsKey) setElevenLabsApiKey(savedElevenLabsKey);
+      if (savedElevenLabsKey) {
+        setElevenLabsApiKey(savedElevenLabsKey);
+        loadVoices();
+      }
+      if (savedVoiceId) setVoiceId(savedVoiceId);
       if (savedModel) setModel(savedModel);
       setKeyStatus(savedKeyStatus);
       if (savedKeyStatus.has_env_key || savedKeyStatus.has_saved_key || savedKey) {
@@ -125,6 +132,15 @@ export default function SettingsPage() {
       }
     })();
   }, []);
+
+  async function loadVoices() {
+    try {
+      const list = await elevenLabsService.getVoices();
+      setVoices(list);
+    } catch (e) {
+      console.error("Failed to load voices:", e);
+    }
+  }
 
   useEffect(() => {
     setCustomModel(model);
@@ -138,6 +154,7 @@ export default function SettingsPage() {
     try {
       await setSetting({ key: "openai_api_key", value: apiKey.trim() });
       await setSetting({ key: "elevenlabs_api_key", value: elevenLabsApiKey.trim() });
+      await setSetting({ key: "elevenlabs_voice_id", value: voiceId });
       await setSetting({ key: "openai_model", value: model });
       const savedKeyStatus = await openAiKeyStatus();
       setKeyStatus(savedKeyStatus);
@@ -413,6 +430,48 @@ export default function SettingsPage() {
                       Clear
                     </Button>
                   )}
+                </div>
+              </SettingsRow>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+
+              {/* Voice Selection */}
+              <SettingsRow
+                label="Narrator Voice"
+                description="Select the AI voice for audiobook narration"
+                vertical
+              >
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Select
+                      value={voiceId}
+                      onValueChange={setVoiceId}
+                      disabled={!elevenLabsKeyConfigured || voices.length === 0}
+                    >
+                      <SelectTrigger className="h-11 flex-1 rounded-lg border-border/50 bg-background/50 transition-colors hover:bg-background">
+                        <SelectValue placeholder="Select a voice" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg">
+                        {voices.map((v) => (
+                          <SelectItem key={v.voice_id} value={v.voice_id} className="rounded-md">
+                            {v.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      onClick={loadVoices}
+                      disabled={!elevenLabsKeyConfigured}
+                      className="h-11 gap-2"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh
+                    </Button>
+                  </div>
                 </div>
               </SettingsRow>
 
