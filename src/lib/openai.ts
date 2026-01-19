@@ -83,7 +83,11 @@ class OpenAIService {
           }
         }
       } else if (item.type === 'reasoning') {
-        reasoning_summary = item.summary;
+        if (Array.isArray(item.summary)) {
+          reasoning_summary = item.summary.map((s: any) => s.text).join('');
+        } else if (typeof item.summary === 'string') {
+          reasoning_summary = item.summary;
+        }
       }
     }
 

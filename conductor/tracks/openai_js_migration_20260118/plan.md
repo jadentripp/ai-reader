@@ -35,12 +35,12 @@ This plan outlines the migration of AI logic from the Rust backend to the React 
 - [ ] Task: Conductor - User Manual Verification 'Integration & UI Update' (Protocol in workflow.md)
 
 ## Phase 4: Backend Cleanup
-- [~] Task: Remove Rust AI code.
+- [x] Task: Remove Rust AI code. ed1cca4
     - [ ] Research with `deepwiki` the safest way to remove Tauri commands without breaking the build.
     - [ ] Delete `src-tauri/src/openai.rs`.
     - [ ] Remove `openai` module and command registrations from `src-tauri/src/lib.rs` and `src-tauri/src/main.rs`.
     - [ ] Remove `reqwest` if no longer used for other features.
-- [ ] Task: Final verification and build.
+- [x] Task: Final verification and build. ae85dba
     - [ ] Ensure the app builds successfully (`npm run build`).
     - [ ] Run all frontend tests.
 - [ ] Task: Conductor - User Manual Verification 'Backend Cleanup' (Protocol in workflow.md)

@@ -8,7 +8,7 @@ export interface FootnoteResult {
 
 export interface LinkClickContext {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLElement | null>;
   navigation: { jumpToElement: (el: HTMLElement) => void };
   toc: { findHeadingByLinkText: (text: string, anchor: HTMLAnchorElement) => HTMLElement | null };
   onFootnote: (result: FootnoteResult) => void;
@@ -97,7 +97,7 @@ export function findFootnoteTarget(ownerDoc: Document, targetId: string): HTMLEl
 export function computeFootnoteRect(
   anchor: HTMLAnchorElement,
   iframeRef: React.RefObject<HTMLIFrameElement | null>,
-  containerRef: React.RefObject<HTMLDivElement | null>
+  containerRef: React.RefObject<HTMLElement | null>
 ): { top: number; left: number; width: number; height: number } | null {
   const rect = anchor.getBoundingClientRect();
   const iframeRect = iframeRef.current?.getBoundingClientRect();
