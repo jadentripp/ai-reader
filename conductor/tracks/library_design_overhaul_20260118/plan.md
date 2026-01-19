@@ -20,17 +20,17 @@ Focus on creating a unified design language for both local library and catalog s
 ## Phase 2: 3D Environment & Tactile Materials
 Transform the 3D void into a curated "Reading Room" using WebGPU.
 
-- [ ] Task: Build the "Reading Room" environment geometry.
-    - [ ] Consult `deepwiki` for WebGPU-specific scene optimization and environment mapping.
-    - [ ] Write Tests: Ensure the environment meshes (walls, floor) load correctly.
-    - [ ] Implement: Add wall meshes with subtle textures and a refined rug mesh to `ThreeDLibraryPage.tsx`.
-- [ ] Task: Enhance `BookMesh.tsx` for tactile fidelity.
-    - [ ] Consult `deepwiki` for realistic material shaders and mesh deformation in Three.js.
-    - [ ] Write Tests: Verify mesh generation with curved spine geometry.
-    - [ ] Implement: Update book geometry (curved spines, page blocks) and apply physically-based materials.
-- [ ] Task: Implement "Themed Lighting" system.
-    - [ ] Write Tests: Ensure light intensities/colors change when app theme toggles.
-    - [ ] Implement: Create a light rig that syncs with "Natural Day" and "Warm Night" theme states.
+- [x] Task: Build the "Reading Room" environment geometry. 2f754e7
+    - [x] Consult `deepwiki` for WebGPU-specific scene optimization and environment mapping.
+    - [x] Write Tests: Ensure the environment meshes (walls, floor) load correctly.
+    - [x] Implement: Add wall meshes with subtle textures and a refined rug mesh to `ThreeDLibraryPage.tsx`.
+- [x] Task: Enhance `BookMesh.tsx` for tactile fidelity. 2f754e7
+    - [x] Consult `deepwiki` for realistic material shaders and mesh deformation in Three.js.
+    - [x] Write Tests: Verify mesh generation with curved spine geometry.
+    - [x] Implement: Update book geometry (curved spines, page blocks) and apply physically-based materials.
+- [x] Task: Implement "Themed Lighting" system. 2f754e7
+    - [x] Write Tests: Ensure light intensities/colors change when app theme toggles.
+    - [x] Implement: Create a light rig that syncs with "Natural Day" and "Warm Night" theme states.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: 3D Environment & Tactile Materials' (Protocol in workflow.md)
 
 ## Phase 3: Reactive Interaction & cinematic Polish
