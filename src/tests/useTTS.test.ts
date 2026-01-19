@@ -49,6 +49,6 @@ describe('useTTS', () => {
       await result.current.playCurrentPage();
     });
 
-    expect(audioPlayer.play).toHaveBeenCalledWith('Mocked page text');
+    expect(audioPlayer.play).toHaveBeenCalledWith('Mocked page text', undefined, undefined);
   });
 });

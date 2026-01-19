@@ -10,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { getSetting, openAiKeyStatus, setSetting } from "../lib/tauri";
 import { listModels } from "@/lib/openai";
 import { cn } from "@/lib/utils";
@@ -101,12 +103,15 @@ export default function SettingsPage() {
   const [elevenLabsApiKey, setElevenLabsApiKey] = useState("");
   const [voiceId, setVoiceId] = useState("Xb7hH8MSUJpSbSDYk0k2");
   const [voices, setVoices] = useState<Voice[]>([]);
-  const [model, setModel] = useState("gpt-4.1-mini");
+  const [stability, setStability] = useState(0.5);
+  const [similarity, setSimilarity] = useState(0.75);
+  const [style, setStyle] = useState(0.0);
+  const [speakerBoost, setSpeakerBoost] = useState(true);
+  const [model, setModel] = useState("gpt-5.2");
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [models, setModels] = useState<string[]>([]);
   const [modelsStatus, setModelsStatus] = useState<string | null>(null);
   const [keyStatus, setKeyStatus] = useState<{ has_env_key: boolean; has_saved_key: boolean } | null>(null);
-  const [customModel, setCustomModel] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [showElevenLabsApiKey, setShowElevenLabsApiKey] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -114,21 +119,45 @@ export default function SettingsPage() {
 
   useEffect(() => {
     (async () => {
+      console.log("[Settings] Initializing...");
       const savedKey = await getSetting("openai_api_key");
       const savedElevenLabsKey = await getSetting("elevenlabs_api_key");
       const savedVoiceId = await getSetting("elevenlabs_voice_id");
+      const savedStability = await getSetting("elevenlabs_stability");
+      const savedSimilarity = await getSetting("elevenlabs_similarity");
+      const savedStyle = await getSetting("elevenlabs_style");
+      const savedSpeakerBoost = await getSetting("elevenlabs_speaker_boost");
       const savedModel = await getSetting("openai_model");
-      const savedKeyStatus = await openAiKeyStatus();
-      if (savedKey) setApiKey(savedKey);
+      
+      let savedKeyStatus = { has_env_key: false, has_saved_key: false };
+      try {
+        savedKeyStatus = await openAiKeyStatus();
+        console.log("[Settings] openAiKeyStatus result:", savedKeyStatus);
+      } catch (e) {
+        console.error("[Settings] openAiKeyStatus failed:", e);
+      }
+
+      if (savedKey) {
+        console.log("[Settings] Found saved OpenAI key");
+        setApiKey(savedKey);
+      }
       if (savedElevenLabsKey) {
         setElevenLabsApiKey(savedElevenLabsKey);
         loadVoices();
       }
       if (savedVoiceId) setVoiceId(savedVoiceId);
+      if (savedStability) setStability(parseFloat(savedStability));
+      if (savedSimilarity) setSimilarity(parseFloat(savedSimilarity));
+      if (savedStyle) setStyle(parseFloat(savedStyle));
+      if (savedSpeakerBoost !== null) setSpeakerBoost(savedSpeakerBoost === "true");
       if (savedModel) setModel(savedModel);
+      
       setKeyStatus(savedKeyStatus);
       if (savedKeyStatus.has_env_key || savedKeyStatus.has_saved_key || savedKey) {
+        console.log("[Settings] Key detected, loading models...");
         loadModels();
+      } else {
+        console.log("[Settings] No key detected");
       }
     })();
   }, []);
@@ -142,12 +171,6 @@ export default function SettingsPage() {
     }
   }
 
-  useEffect(() => {
-    setCustomModel(model);
-  }, [model]);
-
-  const hasCustomModel = useMemo(() => !models.includes(model), [models, model]);
-
   async function onSave() {
     setStatus(null);
     setLoading(true);
@@ -155,9 +178,19 @@ export default function SettingsPage() {
       await setSetting({ key: "openai_api_key", value: apiKey.trim() });
       await setSetting({ key: "elevenlabs_api_key", value: elevenLabsApiKey.trim() });
       await setSetting({ key: "elevenlabs_voice_id", value: voiceId });
+      await setSetting({ key: "elevenlabs_stability", value: stability.toString() });
+      await setSetting({ key: "elevenlabs_similarity", value: similarity.toString() });
+      await setSetting({ key: "elevenlabs_style", value: style.toString() });
+      await setSetting({ key: "elevenlabs_speaker_boost", value: speakerBoost.toString() });
       await setSetting({ key: "openai_model", value: model });
-      const savedKeyStatus = await openAiKeyStatus();
-      setKeyStatus(savedKeyStatus);
+      
+      try {
+        const savedKeyStatus = await openAiKeyStatus();
+        setKeyStatus(savedKeyStatus);
+      } catch (e) {
+        console.error("[Settings] onSave: openAiKeyStatus failed", e);
+      }
+      
       setStatus({ message: "Settings saved successfully", type: "success" });
     } catch {
       setStatus({ message: "Failed to save settings", type: "error" });
@@ -172,8 +205,14 @@ export default function SettingsPage() {
     try {
       await setSetting({ key: "openai_api_key", value: "" });
       setApiKey("");
-      const savedKeyStatus = await openAiKeyStatus();
-      setKeyStatus(savedKeyStatus);
+      
+      try {
+        const savedKeyStatus = await openAiKeyStatus();
+        setKeyStatus(savedKeyStatus);
+      } catch (e) {
+        console.error("[Settings] onClearKey: openAiKeyStatus failed", e);
+      }
+      
       setStatus({ message: "API key cleared", type: "success" });
     } catch {
       setStatus({ message: "Failed to clear API key", type: "error" });
@@ -210,21 +249,28 @@ export default function SettingsPage() {
   }
 
   async function loadModels() {
+    console.log("[Settings] loadModels called");
     setModelsStatus(null);
     try {
       const list = await listModels();
+      console.log("[Settings] listModels result:", list);
       setModels(list);
-      if (list.length && !list.includes(model)) {
-        setCustomModel(model);
-      }
       setModelsStatus(list.length ? `${list.length} models available` : "No models found");
     } catch (e: unknown) {
+      console.error("[Settings] loadModels error:", e);
       const message = e instanceof Error ? e.message : String(e);
       setModelsStatus(message);
     }
   }
   const keyConfigured = keyStatus?.has_env_key || keyStatus?.has_saved_key || apiKey.trim();
   const elevenLabsKeyConfigured = elevenLabsApiKey.trim();
+
+  // Combine fetched models with current model if not present, to avoid empty selection
+  const allModels = useMemo(() => {
+    const set = new Set(models);
+    if (model) set.add(model);
+    return Array.from(set);
+  }, [models, model]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -314,28 +360,14 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                   <div className="flex gap-2">
                     <Select
-                      value={hasCustomModel ? "__custom__" : model}
-                      onValueChange={(value) => {
-                        if (value === "__custom__") {
-                          setModel(customModel || model);
-                        } else {
-                          setModel(value);
-                        }
-                      }}
+                      value={model}
+                      onValueChange={setModel}
                     >
                       <SelectTrigger className="h-11 flex-1 rounded-lg border-border/50 bg-background/50 transition-colors hover:bg-background">
                         <SelectValue placeholder="Select a model" />
                       </SelectTrigger>
                       <SelectContent className="rounded-lg">
-                        <SelectItem value="__custom__" className="rounded-md">
-                          <span className="flex items-center gap-2">
-                            <svg className="h-3.5 w-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Custom model
-                          </span>
-                        </SelectItem>
-                        {models.map((modelId) => (
+                        {allModels.map((modelId) => (
                           <SelectItem key={modelId} value={modelId} className="rounded-md">
                             <span className="font-mono text-sm">{modelId}</span>
                           </SelectItem>
@@ -354,18 +386,6 @@ export default function SettingsPage() {
                       Refresh
                     </Button>
                   </div>
-
-                  {hasCustomModel && (
-                    <Input
-                      value={customModel}
-                      onChange={(e) => {
-                        setCustomModel(e.currentTarget.value);
-                        setModel(e.currentTarget.value);
-                      }}
-                      placeholder="Enter custom model ID (e.g., gpt-4.1-mini)"
-                      className="h-11 rounded-lg border-border/50 bg-background/50 font-mono text-sm"
-                    />
-                  )}
 
                   {modelsStatus && (
                     <p className="text-xs text-muted-foreground">{modelsStatus}</p>
@@ -474,6 +494,76 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </SettingsRow>
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+
+              {/* Voice Settings */}
+              <div className="space-y-6 pt-2">
+                <SettingsRow
+                  label="Stability"
+                  description={`Value: ${stability.toFixed(2)}`}
+                  vertical
+                >
+                  <Slider
+                    value={[stability]}
+                    onValueChange={([v]) => setStability(v)}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    className="w-full"
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Higher values result in more consistent output.
+                  </p>
+                </SettingsRow>
+
+                <SettingsRow
+                  label="Similarity Boost"
+                  description={`Value: ${similarity.toFixed(2)}`}
+                  vertical
+                >
+                  <Slider
+                    value={[similarity]}
+                    onValueChange={([v]) => setSimilarity(v)}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    className="w-full"
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Controls how closely the output matches the original voice.
+                  </p>
+                </SettingsRow>
+
+                <SettingsRow
+                  label="Style Exaggeration"
+                  description={`Value: ${style.toFixed(2)}`}
+                  vertical
+                >
+                  <Slider
+                    value={[style]}
+                    onValueChange={([v]) => setStyle(v)}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    className="w-full"
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Exaggerates the speaking style of the voice.
+                  </p>
+                </SettingsRow>
+
+                <SettingsRow
+                  label="Speaker Boost"
+                  description="Enhances voice clarity and quality"
+                >
+                  <Switch
+                    checked={speakerBoost}
+                    onCheckedChange={setSpeakerBoost}
+                  />
+                </SettingsRow>
+              </div>
 
               {/* Test Button */}
               <div className="flex justify-end">
