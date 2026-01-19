@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { useLibraryCore } from "./library/useLibraryCore";
 import { useCatalogSearch } from "./library/useCatalogSearch";
-import { useDownloadQueue } from "./library/useDownloadQueue";
+import { useDownloadQueue, type DownloadTask, type BulkScanState } from "./library/useDownloadQueue";
+
+export type { DownloadTask, BulkScanState };
 
 export function useLibrary() {
   const libraryCore = useLibraryCore();

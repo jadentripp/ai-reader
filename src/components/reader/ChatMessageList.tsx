@@ -7,7 +7,7 @@ import {
 import { Message, MessageAvatar, MessageContent, MessageAction } from "@/components/ui/message";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
-import { Trash2, Feather, Quote, MessageSquare } from "lucide-react";
+import { Trash2, Feather, Quote } from "lucide-react";
 import { ChatReasoningTrace } from "./ChatReasoningTrace";
 import type { LocalChatMessage } from "@/lib/readerTypes";
 
