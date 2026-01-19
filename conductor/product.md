@@ -16,6 +16,7 @@ AI Reader transforms the experience of reading public domain literature from a p
 - **Local Library Management:** Efficient download and storage of books for offline reading.
 - **Premium Reading Experience:** A paginated, customizable reader supporting single or two-column layouts.
 - **Rich Media Support:** Integrated inline illustration and image extraction from MOBI files, providing a more faithful and visually engaging reading experience for classic literature.
+- **Audiobook Narration:** High-quality AI-powered text-to-speech using ElevenLabs, allowing users to listen to books seamlessly with automatic page-turning or hear specific selections read aloud.
 - **Active Reading Tools:** Robust highlighting and note-taking capabilities with easy browsing.
 - **AI-Powered Insights:** Context-aware chat assistant for summaries, explanations, and analysis. Features include interactive citations that link directly to the source text, reasoning traces for transparent AI logic, and persistent thread-specific reading positions for seamless continuity.
 - **Interactive Media Features:** Click-to-zoom lightbox for detailed inspection of illustrations and the ability to save images locally.
