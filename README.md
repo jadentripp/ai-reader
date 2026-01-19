@@ -85,12 +85,34 @@ bun install
 ### Development
 
 ```bash
-# Web dev server (browser only)
+# Web-only dev server (browser preview)
 bun run dev
 
-# Desktop app in dev mode
+# Full desktop app in dev mode (recommended)
 bun run tauri dev
 ```
+
+### Development Modes
+
+| Mode | Command | Description |
+| --- | --- | --- |
+| **Web Preview** | `bun run dev` | Quick browser preview for UI development. Limited functionality. |
+| **Desktop App** | `bun run tauri dev` | Full Tauri desktop app with all features. Requires Rust. |
+
+#### Feature Comparison
+
+| Feature | Web Preview (`bun dev`) | Desktop App (`tauri dev`) |
+| --- | :---: | :---: |
+| Browse Gutenberg catalog | ✅ | ✅ |
+| 3D Library visualization | ✅ | ✅ |
+| Real book downloads | ❌ (mocked) | ✅ |
+| MOBI file parsing | ❌ | ✅ |
+| SQLite database | ❌ (localStorage) | ✅ |
+| Offline reading | ❌ | ✅ |
+| AI Assistant | ✅ | ✅ |
+| Text-to-Speech | ✅ | ✅ |
+
+> **Note**: The web preview mode uses CORS proxies and localStorage as fallbacks. For the full reading experience with real book downloads and offline access, use `bun run tauri dev` or download the production release.
 
 ### Production Build
 

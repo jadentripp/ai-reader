@@ -25,7 +25,7 @@ export async function gutendexCatalogPage(params: {
   }
 
   // Browse-only fallback for standard browsers
-  console.log("Using web-fetch fallback for Gutendex");
+  console.log("[Gutendex] Web fallback:", params.topic || params.catalogKey);
   let urlStr = params.pageUrl;
 
   if (!urlStr) {
@@ -38,7 +38,7 @@ export async function gutendexCatalogPage(params: {
     };
 
     // Default to 'all' if key not found
-    const base = bases[params.catalogKey] || bases["collection-all"];
+    const base = bases[params.catalogKey] || bases["all"];
     const url = new URL(base);
 
     if (params.searchQuery) {
