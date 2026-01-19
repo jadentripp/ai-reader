@@ -6,7 +6,7 @@ This plan outlines the migration of AI logic from the Rust backend to the React 
 - [x] Task: Research OpenAI JS SDK Responses API implementation via `deepwiki`. aabea8e
     - [ ] Use `deepwiki` to find the exact syntax for the Responses API in `openai-node`.
     - [ ] Research best practices for handling OpenAI API keys in a Tauri/React frontend.
-- [ ] Task: Install `openai` npm package and configure environment variables.
+- [x] Task: Install `openai` npm package and configure environment variables. 86be48d
     - [ ] Run `bun add openai`.
     - [ ] Ensure `VITE_OPENAI_API_KEY` or similar is supported in `.env`.
 - [ ] Task: Conductor - User Manual Verification 'Foundation & Research' (Protocol in workflow.md)
