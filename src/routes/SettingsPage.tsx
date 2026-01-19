@@ -6,7 +6,10 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectItemText,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -349,6 +352,16 @@ export default function SettingsPage() {
     return Array.from(set);
   }, [models, model]);
 
+  const groupedVoices = useMemo(() => {
+    const groups: Record<string, Voice[]> = {};
+    voices.filter(v => v.voice_id).forEach(v => {
+      const cat = v.category || 'Other';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(v);
+    });
+    return groups;
+  }, [voices]);
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -400,12 +413,11 @@ export default function SettingsPage() {
                         <SelectTrigger className="w-40">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="serif">Serif (Classic)</SelectItem>
-                          <SelectItem value="sans">Sans-serif (Modern)</SelectItem>
-                          <SelectItem value="mono">Monospace</SelectItem>
-                        </SelectContent>
-                      </Select>
+                                                  <SelectContent>
+                                                    <SelectItem value="serif"><SelectItemText>Serif (Classic)</SelectItemText></SelectItem>
+                                                    <SelectItem value="sans"><SelectItemText>Sans-serif (Modern)</SelectItemText></SelectItem>
+                                                    <SelectItem value="mono"><SelectItemText>Monospace</SelectItemText></SelectItem>
+                                                  </SelectContent>                      </Select>
                     </SettingsRow>
 
                     <SettingsRow
@@ -437,12 +449,11 @@ export default function SettingsPage() {
                       <SelectTrigger className="w-40">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="system">System</SelectItem>
-                      </SelectContent>
-                    </Select>
+                                          <SelectContent>
+                                            <SelectItem value="light"><SelectItemText>Light</SelectItemText></SelectItem>
+                                            <SelectItem value="dark"><SelectItemText>Dark</SelectItemText></SelectItem>
+                                            <SelectItem value="system"><SelectItemText>System</SelectItemText></SelectItem>
+                                          </SelectContent>                    </Select>
                   </SettingsRow>
                 </SettingsSection>
 
@@ -533,14 +544,15 @@ export default function SettingsPage() {
                           <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Select a model" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {allModels.map((modelId) => (
-                              <SelectItem key={modelId} value={modelId}>
-                                <span className="font-mono text-sm">{modelId}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                                                      <SelectContent>
+                                                        {allModels.map((modelId) => (
+                                                          <SelectItem key={modelId} value={modelId}>
+                                                            <SelectItemText>
+                                                              <span className="font-mono text-sm">{modelId}</span>
+                                                            </SelectItemText>
+                                                          </SelectItem>
+                                                        ))}
+                                                      </SelectContent>                        </Select>
                         <Button variant="outline" onClick={loadModels} disabled={!keyConfigured}>
                           Refresh
                         </Button>
@@ -613,22 +625,41 @@ export default function SettingsPage() {
                       vertical
                     >
                       <div className="flex gap-2">
-                        <Select
-                          value={voiceId}
-                          onValueChange={setVoiceId}
-                          disabled={!elevenLabsKeyConfigured || voices.length === 0}
-                        >
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Select a voice" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {voices.map((v) => (
-                              <SelectItem key={v.voice_id} value={v.voice_id}>
-                                {v.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                                                <Select
+                                                  value={voiceId}
+                                                  onValueChange={setVoiceId}
+                                                  disabled={!elevenLabsKeyConfigured || voices.length === 0}
+                                                >
+                                                  <SelectTrigger className="flex-1">
+                                                    <SelectValue placeholder="Select a voice" />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {Object.entries(groupedVoices).map(([category, categoryVoices]) => (
+                                                      <SelectGroup key={category}>
+                                                        <SelectLabel className="capitalize text-[10px] tracking-widest opacity-70">{category}</SelectLabel>
+                                                        {categoryVoices.map((v) => {
+                                                          const [name, ...descParts] = v.name.split(' - ');
+                                                          const description = descParts.join(' - ');
+                                                          
+                                                          return (
+                                                            <SelectItem key={v.voice_id} value={v.voice_id} className="py-2.5">
+                                                              <div className="flex flex-col gap-0.5">
+                                                                <SelectItemText>
+                                                                  <span className="font-medium text-sm">{name}</span>
+                                                                </SelectItemText>
+                                                                {description && (
+                                                                  <span className="text-[10px] text-muted-foreground line-clamp-1">
+                                                                    {description}
+                                                                  </span>
+                                                                )}
+                                                              </div>
+                                                            </SelectItem>
+                                                          );
+                                                        })}
+                                                      </SelectGroup>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
                         
                         {selectedVoice?.preview_url && (
                           <Button

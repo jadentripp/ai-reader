@@ -4,6 +4,7 @@ import { getSetting } from "./tauri/settings";
 export interface Voice {
   voice_id: string;
   name: string;
+  category?: string;
   preview_url?: string;
 }
 
@@ -60,9 +61,10 @@ export class ElevenLabsService {
   async getVoices(): Promise<Voice[]> {
     const client = await this.getClient();
     const response = await client.voices.getAll();
-    return response.voices.map((v: any) => ({
-      voice_id: v.voice_id,
-      name: v.name,
+    return response.voices.map((v: any, index: number) => ({
+      voice_id: v.voice_id || `voice-${index}`,
+      name: v.name || 'Unnamed Voice',
+      category: v.category,
       preview_url: v.preview_url,
     }));
   }
