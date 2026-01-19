@@ -1,59 +1,78 @@
 # AI Reader
 
-AI Reader is an AI-powered desktop reader for public-domain books and long-form literature. Browse Project Gutenberg via Gutendex, download .mobi files locally, and read with a focused, paginated layout. Highlights, notes, and AI chat help you study and explore the text.
+AI Reader is an AI-powered desktop application for reading and interacting with public-domain literature. Browse Project Gutenberg's vast catalog, download books locally, and enjoy a modern reading experience with AI-assisted analysis, text-to-speech narration, and an immersive 3D library interface.
 
 [DeepWiki](https://deepwiki.com/jadentripp/ai-reader)
 
-## Quickstart (non-technical)
+## Quickstart
 
-1) Download the latest macOS build from the GitHub Releases page.  
+1) Download the latest macOS build from the [GitHub Releases](https://github.com/jadentripp/ai-reader/releases) page.  
 2) Open the `.dmg` file and drag **AI Reader** into **Applications**.  
 3) Open **Applications** and launch **AI Reader**.  
-4) If macOS says it “can’t be opened,” right‑click **AI Reader** → **Open** → **Open**.  
-   If you don’t see that, go to **System Settings → Privacy & Security** and click **Open Anyway**.  
+4) If macOS says it "can't be opened," right‑click **AI Reader** → **Open** → **Open**.  
+   If you don't see that, go to **System Settings → Privacy & Security** and click **Open Anyway**.  
 5) In the app, search for a book or pick a featured collection, download it, and start reading.  
-6) Optional: open **Settings** and paste your OpenAI API key to enable the AI Assistant.
+6) Optional: open **Settings** to configure your OpenAI API key (for AI Assistant) and ElevenLabs API key (for text-to-speech).
 
 ## Features
 
-### Library and discovery
+### 3D Library
+- Immersive 3D bookshelf visualization
+- Drag-and-drop book organization
+- Visual book covers rendered on 3D models
+- Smooth animations and transitions
+
+### Library & Discovery
 - Search Project Gutenberg (via Gutendex) with curated collections and categories
-- Download queue with local library management
-- Cover art, author metadata, and popularity sorting
+- Download queue with progress tracking
+- Local library management with cover art and metadata
+- Popularity sorting and filtering
 
-### Reading experience
+### Reading Experience
 - Paginated reader with single or two-column spreads
-- Appearance controls for font, line height, and margins
+- Appearance controls for font family, size, line height, and margins
 - Table of contents generated from document headings
-- Progress saved per book
+- Reading progress saved per book
+- Dark mode support
 
-### Highlights and notes
-- Highlight passages and attach notes
-- Browse highlights with page references
+### Highlights & Notes
+- Highlight passages with customizable colors
+- Attach notes to highlights
+- Browse all highlights with page references
 
-### AI assistant
-- Chat about the current page or a selected highlight
+### AI Assistant
+- Chat about the current page or selected highlights
 - One-click summaries in modern English
 - Model selection from your OpenAI account
+- Context-aware responses based on book content
+
+### Text-to-Speech
+- ElevenLabs integration for natural narration
+- Voice selection and customization
+- Playback controls with auto-advance
 
 ## Tech Stack
 
 | Layer | Technology |
 | --- | --- |
-| Frontend | React 19, TypeScript, Vite |
-| Routing/data | TanStack Router, TanStack Query |
-| Styling | Tailwind CSS, Radix UI |
-| Desktop | Tauri 2 (Rust) |
-| Database | SQLite (via Tauri) |
+| Desktop Shell | Tauri 2 (Rust) |
+| Frontend | React 19, TypeScript |
+| Build Tool | Bun (native bundler & dev server) |
+| Routing & Data | TanStack Router, TanStack Query |
+| Styling | Tailwind CSS 4, Radix UI |
+| 3D Graphics | Three.js, React Three Fiber, @react-three/drei |
+| Database | SQLite (via Tauri/rusqlite) |
 | AI | OpenAI API |
-| Package manager | Bun |
+| TTS | ElevenLabs API |
+| Testing | Bun Test, React Testing Library |
 
 ## Getting Started
 
 ### Prerequisites
-- Bun (v1.0+)
-- Rust toolchain (for Tauri)
-- OpenAI API key (for AI features)
+- [Bun](https://bun.sh/) (v1.0+)
+- [Rust toolchain](https://rustup.rs/) (for Tauri)
+- OpenAI API key (optional, for AI features)
+- ElevenLabs API key (optional, for TTS features)
 
 ### Install
 
@@ -66,14 +85,14 @@ bun install
 ### Development
 
 ```bash
-# Web dev server
+# Web dev server (browser only)
 bun run dev
 
 # Desktop app in dev mode
 bun run tauri dev
 ```
 
-### Production build
+### Production Build
 
 ```bash
 # Build web assets
@@ -85,51 +104,56 @@ bun run tauri build
 
 ## Scripts
 
-- `bun run dev`: Vite dev server
-- `bun run tauri dev`: Tauri desktop app (dev)
-- `bun run build`: Type-check and build web assets
-- `bun run tauri build`: Build the desktop app
-- `bun run preview`: Preview production build
-- `bun run db:reset`: Clear local database and downloaded books
-- `bun run test`: Run Vitest
+| Command | Description |
+| --- | --- |
+| `bun run dev` | Start the Bun dev server |
+| `bun run tauri dev` | Run Tauri desktop app (dev mode) |
+| `bun run build` | Build web assets |
+| `bun run tauri build` | Build the production desktop app |
+| `bun run test` | Run the test suite |
+| `bun run db:reset` | Clear local database and downloaded books |
 
 ## Configuration
 
-### OpenAI API key
+### API Keys
 
-Set your API key in Settings, or via environment variable:
+Configure your API keys in **Settings** within the app:
+- **OpenAI API Key**: Enables the AI Assistant for chat, summaries, and analysis
+- **ElevenLabs API Key**: Enables text-to-speech narration
 
-```bash
-export OPENAI_API_KEY="your-key-here"
-```
+### Data Storage
 
-### Data storage
-
-- SQLite database lives under `tmp/` by default in development.
-- Downloaded books are stored under `tmp/books`.
-- To override the database path, set `SHAKESPEARE_DB_PATH` (legacy env var name).
+- SQLite database: `tmp/ai-reader.sqlite` (development)
+- Downloaded books: `tmp/books/`
+- Run `bun run db:reset` to clear all local data
 
 ## Project Structure
 
 ```
 ai-reader/
-├── src/                    # React application
-│   ├── components/         # UI components
-│   │   ├── reader/         # Reader-specific components
-│   │   └── ui/             # Shared UI primitives
-│   ├── routes/             # Route components
-│   ├── lib/                # Utilities and hooks
-│   └── assets/             # Static assets
-├── src-tauri/              # Tauri desktop shell
-│   ├── src/                # Rust source code
-│   └── capabilities/       # App permissions
-├── public/                 # Public static files
-└── dist/                   # Build output
+├── src/                      # React frontend
+│   ├── components/           # UI components
+│   │   ├── library/          # Library & catalog UI
+│   │   ├── reader/           # Reading experience
+│   │   ├── three/            # 3D library components
+│   │   └── ui/               # Shared UI primitives (Radix)
+│   ├── routes/               # Page components
+│   ├── lib/                  # Utilities, hooks, API clients
+│   │   ├── reader/           # Reader logic & state
+│   │   └── tauri/            # Tauri command wrappers
+│   └── tests/                # Test suite
+├── src-tauri/                # Tauri desktop shell (Rust)
+│   ├── src/                  # Rust backend logic
+│   └── capabilities/         # App permissions
+├── conductor/                # Project specs & tracks
+├── dev-server.ts             # Bun dev server config
+├── build.ts                  # Bun build config
+└── bunfig.toml               # Bun configuration
 ```
 
 ## Acknowledgments
 
-This project is built to read and explore works from Project Gutenberg, the digital library that makes tens of thousands of free eBooks available to the public.
+This project is built to read and explore works from [Project Gutenberg](https://www.gutenberg.org/), the digital library that makes tens of thousands of free eBooks available to the public.
 
 ## License
 
