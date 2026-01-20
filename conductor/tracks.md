@@ -1,11 +1,11 @@
 # Active Tracks
 
-- [x] **Track: AI Context Visibility & Multi-Segment Selection**
-*Link: [./tracks/ai_context_visibility_20260119/](./tracks/ai_context_visibility_20260119/)*
-
 ---
 
 # Archived Tracks
+
+- [x] **Track: AI Context Visibility & Multi-Segment Selection**
+*Link: [./archive/ai_context_visibility_20260119/](./archive/ai_context_visibility_20260119/)*
 
 - [x] **Track: Reader UI Bauhaus Alignment**
 *Link: [./archive/reader_ui_bauhaus_20260119/](./archive/reader_ui_bauhaus_20260119/)*
