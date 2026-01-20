@@ -124,6 +124,10 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     await setSetting({ key: 'tts_volume', value: volume.toString() });
   }, []);
 
+  const seek = useCallback((position: number) => {
+    audioPlayer.seek(position);
+  }, []);
+
   return {
     state,
     progress,
@@ -136,5 +140,6 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     autoNext,
     setPlaybackRate,
     setVolume,
+    seek,
   };
 }
