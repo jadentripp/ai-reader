@@ -26,7 +26,7 @@
     - [x] Update integration tests for `LibraryPage`
 - [x] Task: Conductor - User Manual Verification 'Top-Down Navigation & Header' (Protocol in workflow.md) [a448979]
 
-## Phase 3: Global Bauhaus Styling & Polish
+## Phase 3: Global Bauhaus Styling & Polish [checkpoint: 12dc328]
 - [x] Task: Update Global Colors & Typography [c1cfd45]
     - [x] Define Bauhaus accent color (e.g., #E02E2E) in Tailwind config (or CSS variables)
     - [x] Enforce geometric sans-serif for UI elements in the library view
@@ -35,4 +35,4 @@
     - [x] Remove unused sidebar components if no longer needed
     - [x] Ensure responsive behavior (grid adapts, header scales)
     - [x] Verify accessibility (contrast, focus states)
-- [~] Task: Conductor - User Manual Verification 'Global Bauhaus Styling & Polish' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Global Bauhaus Styling & Polish' (Protocol in workflow.md) [12dc328]
