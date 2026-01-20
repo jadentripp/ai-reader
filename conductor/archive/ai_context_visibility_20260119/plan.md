@@ -27,4 +27,5 @@ Ensure the staged snippets are correctly passed to the OpenAI API and maintained
 - [x] Task: Modify `buildChatSystemPrompt` in `citations.ts` to handle multiple focused snippets in a clean, structured way. 084faaa
 - [x] Task: Implement the "Clear Context" functionality to wipe the tray. 084faaa
 - [x] Task: Fix synchronization issue where blue highlights persist after removal. 244b98b
+- [x] Task: Standardize context headers and fix selected highlight ID passing to improve AI visibility. 289798b
 - [x] Task: Conductor - User Manual Verification 'AI Context Integration' (Protocol in workflow.md) a2d85c7
