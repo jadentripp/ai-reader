@@ -10,13 +10,13 @@ Implement the foundational logic for managing multiple context snippets and crea
 - [x] Task: Integrate `ContextTray` into `ChatSidebar.tsx` above the chat input. 8f315cb
 - [x] Task: Conductor - User Manual Verification 'Core Staging Logic & Context Tray UI' (Protocol in workflow.md) 7b6264b
 
-## Phase 2: Reader Visualization & Interaction
+## Phase 2: Reader Visualization & Interaction [checkpoint: 7390c7b]
 Update the reader's visual feedback to show staged snippets in "Bauhaus Blue" and integrate the selection menu.
 
-- [~] Task: Create `src/tests/readerContextVisualization.test.tsx` to verify blue highlight rendering.
-- [ ] Task: Update `readerStyles.ts` to include the `readerContextSnippet` class with Bauhaus Blue (#0055A4).
-- [ ] Task: Modify `renderHighlights` in `useHighlights.ts` to render staged snippets with the new blue style.
-- [ ] Task: Update the floating selection menu in `ReaderPane.tsx` to change "Chat" to "Add to Chat" and ensure it triggers the staging logic.
+- [x] Task: Create `src/tests/readerContextVisualization.test.tsx` to verify blue highlight rendering. 7390c7b
+- [x] Task: Update `readerStyles.ts` to include the `readerContextSnippet` class with Bauhaus Blue (#0055A4). 7390c7b
+- [x] Task: Modify `renderHighlights` in `useHighlights.ts` to render staged snippets with the new blue style. 7390c7b
+- [x] Task: Update the floating selection menu in `ReaderPane.tsx` to change "Chat" to "Add to Chat" and ensure it triggers the staging logic. 7390c7b
 - [ ] Task: Conductor - User Manual Verification 'Reader Visualization & Interaction' (Protocol in workflow.md)
 
 ## Phase 3: AI Context Integration
