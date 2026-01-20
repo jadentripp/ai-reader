@@ -1,13 +1,13 @@
 # Implementation Plan - Reader UI Bauhaus Alignment
 
-## Phase 1: Top Bar & Global Reader Styling
+## Phase 1: Top Bar & Global Reader Styling [checkpoint: 7257522]
 - [x] Task: Update `ReaderTopBar.tsx` for Bauhaus aesthetic 412fcd0
     - [ ] Create/Update tests in `src/tests/ReaderTopBar.test.tsx` to verify sharp edges, bold borders, and Bauhaus typography
     - [ ] Implement sharp corners (remove border-radius)
     - [ ] Add 2px solid bottom border (monochromatic)
     - [ ] Update book title and author to bold geometric sans-serif
     - [ ] Update AI Reader branding to the boxed Bauhaus style
-- [ ] Task: Update Global Reader Accent Colors
+- [x] Task: Update Global Reader Accent Colors aa08874
     - [ ] Update progress bar in `ReaderTopBar.tsx` to Bauhaus Red (`#E02E2E`) and sharp edges
     - [ ] Update interactive highlights and active button states in the reader view to use Bauhaus Red
 - [ ] Task: Conductor - User Manual Verification 'Top Bar & Global Reader Styling' (Protocol in workflow.md)
