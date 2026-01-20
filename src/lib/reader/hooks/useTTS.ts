@@ -34,7 +34,9 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
       getSetting('elevenlabs_similarity'),
       getSetting('elevenlabs_style'),
       getSetting('elevenlabs_speaker_boost'),
-    ]).then(([id, stability, similarity, style, boost]) => {
+      getSetting('tts_playback_speed'),
+      getSetting('tts_volume'),
+    ]).then(([id, stability, similarity, style, boost, speed, volume]) => {
       if (id) setVoiceId(id);
       if (stability) {
         setVoiceSettings({
@@ -43,6 +45,14 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
           style: parseFloat(style ?? "0") || 0,
           use_speaker_boost: boost === "true"
         });
+      }
+
+      // Initialize player with persisted speed/volume
+      if (speed) {
+        audioPlayer.setPlaybackRate(parseFloat(speed));
+      }
+      if (volume) {
+        audioPlayer.setVolume(parseFloat(volume));
       }
     });
   }, []);
@@ -102,6 +112,18 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     audioPlayer.stop();
   }, []);
 
+  const setPlaybackRate = useCallback(async (rate: number) => {
+    audioPlayer.setPlaybackRate(rate);
+    const { setSetting } = await import('@/lib/tauri');
+    await setSetting({ key: 'tts_playback_speed', value: rate.toString() });
+  }, []);
+
+  const setVolume = useCallback(async (volume: number) => {
+    audioPlayer.setVolume(volume);
+    const { setSetting } = await import('@/lib/tauri');
+    await setSetting({ key: 'tts_volume', value: volume.toString() });
+  }, []);
+
   return {
     state,
     progress,
@@ -112,5 +134,7 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     stop,
     getPageText,
     autoNext,
+    setPlaybackRate,
+    setVolume,
   };
 }
