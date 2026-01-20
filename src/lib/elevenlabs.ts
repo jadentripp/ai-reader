@@ -419,13 +419,22 @@ export class AudioPlayer {
 
   /**
    * Get progress info (currentTime, duration, isBuffering)
+   * Returns a cached object if values haven't changed to satisfy useSyncExternalStore equality checks
    */
+  private _cachedProgress: AudioProgress = { currentTime: 0, duration: 0, isBuffering: false };
+
   getProgress(): AudioProgress {
-    return {
-      currentTime: this.getCurrentTime(),
-      duration: this.getDuration(),
-      isBuffering: this.state === 'buffering',
-    };
+    const currentTime = this.getCurrentTime();
+    const duration = this.getDuration();
+    const isBuffering = this.state === 'buffering';
+
+    if (currentTime !== this._cachedProgress.currentTime ||
+      duration !== this._cachedProgress.duration ||
+      isBuffering !== this._cachedProgress.isBuffering) {
+      this._cachedProgress = { currentTime, duration, isBuffering };
+    }
+
+    return this._cachedProgress;
   }
 
   private async streamToBuffer(stream: ReadableStream): Promise<ArrayBuffer> {
