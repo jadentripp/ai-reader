@@ -207,7 +207,7 @@ export function useMobiReader(bookId: number) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [pagination]);
+  }, [pagination.totalPages]);
 
   useEffect(() => {
     const handleVisibility = () => {
