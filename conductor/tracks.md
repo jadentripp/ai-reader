@@ -1,11 +1,11 @@
 # Active Tracks
 
-- [ ] **Track: Remove global application header from App.tsx**
-*Link: [./tracks/remove_global_header_20260119/](./tracks/remove_global_header_20260119/)*
-
 ---
 
 # Archived Tracks
+
+- [x] **Track: Remove global application header from App.tsx**
+*Link: [./archive/remove_global_header_20260119/](./archive/remove_global_header_20260119/)*
 
 - [x] **Track: AI Context Visibility & Multi-Segment Selection**
 *Link: [./archive/ai_context_visibility_20260119/](./archive/ai_context_visibility_20260119/)*
