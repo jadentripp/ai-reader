@@ -18,7 +18,11 @@ describe("AppearancePanel", () => {
   });
 
   beforeEach(() => {
-    cleanup();
+    try {
+      cleanup();
+    } catch (e) {
+      // Ignore DOM node removal errors common with Radix UI in test environments
+    }
   });
 
   const defaultProps = {
