@@ -81,7 +81,7 @@ describe("TTSPanel", () => {
     const panel = screen.getByTestId("tts-panel-container");
     fireEvent.click(panel);
     
-    expect(panel).toHaveClass("h-48");
+    expect(panel).toHaveClass("h-auto");
   });
 
   it("collapses when collapse button is clicked", () => {
@@ -90,7 +90,7 @@ describe("TTSPanel", () => {
     const panel = screen.getByTestId("tts-panel-container");
     fireEvent.click(panel);
     
-    expect(panel).toHaveClass("h-48");
+    expect(panel).toHaveClass("h-auto");
     
     const collapseButton = screen.getByRole("button", { name: /collapse/i });
     fireEvent.click(collapseButton);
@@ -147,7 +147,7 @@ describe("TTSPanel", () => {
       
       // First expand the panel
       fireEvent.click(panel);
-      expect(panel).toHaveClass("h-48");
+      expect(panel).toHaveClass("h-auto");
       
       // Use pointer events to simulate swipe down gesture
       fireEvent.pointerDown(panel, { clientY: 200 });
@@ -165,7 +165,7 @@ describe("TTSPanel", () => {
       
       // First expand the panel
       fireEvent.click(panel);
-      expect(panel).toHaveClass("h-48");
+      expect(panel).toHaveClass("h-auto");
       
       // Use pointer events to simulate swipe up (should not trigger collapse)
       fireEvent.pointerDown(panel, { clientY: 200 });
@@ -173,7 +173,7 @@ describe("TTSPanel", () => {
       fireEvent.pointerUp(panel, { clientY: 140 });
       
       // Panel should remain expanded
-      expect(panel).toHaveClass("h-48");
+      expect(panel).toHaveClass("h-auto");
     });
 
     it("should have touch-action CSS property for gesture handling", () => {
@@ -198,7 +198,7 @@ describe("TTSPanel", () => {
       fireEvent.click(panel);
       
       // Should now be expanded
-      expect(panel).toHaveClass("h-48");
+      expect(panel).toHaveClass("h-auto");
       expect(screen.getByText("Speed")).toBeInTheDocument();
     });
 
@@ -215,7 +215,7 @@ describe("TTSPanel", () => {
       fireEvent.click(playButton);
       
       // Panel should still be expanded (controls have stopPropagation)
-      expect(panel).toHaveClass("h-48");
+      expect(panel).toHaveClass("h-auto");
     });
   });
 });

@@ -1,13 +1,24 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, Gauge, ChevronUp } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Volume1, ChevronUp, RotateCcw, ListOrdered } from "lucide-react";
 import { useTTS } from "@/lib/hooks/useTTS";
 import { cn } from "@/lib/utils";
 
 interface TTSPanelProps {
   className?: string;
 }
+
+const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+type PlaybackSpeed = typeof SPEED_OPTIONS[number];
+
+const getSpeedLabel = (speed: PlaybackSpeed): string => `${speed}x`;
+
+const VolumeIcon = ({ volume }: { volume: number }) => {
+  if (volume === 0) return <VolumeX className="h-4 w-4" />;
+  if (volume < 0.5) return <Volume1 className="h-4 w-4" />;
+  return <Volume2 className="h-4 w-4" />;
+};
 
 export function TTSPanel({ className }: TTSPanelProps) {
   const {
@@ -18,6 +29,7 @@ export function TTSPanel({ className }: TTSPanelProps) {
     resume,
     setPlaybackRate,
     setVolume,
+    seek,
   } = useTTS({
     getDoc: () => null,
     getPageMetrics: () => ({ 
@@ -31,8 +43,9 @@ export function TTSPanel({ className }: TTSPanelProps) {
   });
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [playbackRate, setPlaybackRateLocal] = useState(1);
+  const [playbackRate, setPlaybackRateLocal] = useState<PlaybackSpeed>(1);
   const [volume, setVolumeLocal] = useState(1);
+  const [showSpeedSelector, setShowSpeedSelector] = useState(false);
 
   const touchStartY = useRef<number>(0);
   const touchStartExpanded = useRef<boolean>(false);
@@ -73,16 +86,33 @@ export function TTSPanel({ className }: TTSPanelProps) {
     }
   };
 
-  const handleSpeedChange = (value: number[]) => {
-    const newRate = value[0];
-    setPlaybackRateLocal(newRate);
-    setPlaybackRate(newRate);
+  const handleSpeedSelect = (speed: PlaybackSpeed) => {
+    setPlaybackRateLocal(speed);
+    setPlaybackRate(speed);
+    setShowSpeedSelector(false);
   };
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
     setVolumeLocal(newVolume);
     setVolume(newVolume);
+  };
+
+  const handleSkipBackward = () => {
+    const skipAmount = 15;
+    const newTime = Math.max(0, progress.currentTime - skipAmount);
+    seek(newTime);
+  };
+
+  const handleSkipForward = () => {
+    const skipAmount = 15;
+    const newTime = progress.currentTime + skipAmount;
+    
+    if (newTime >= progress.duration) {
+      seek(progress.duration);
+    } else {
+      seek(newTime);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -109,13 +139,14 @@ export function TTSPanel({ className }: TTSPanelProps) {
         "shadow-lg transition-all duration-300 ease-out",
         "animate-in slide-in-from-bottom-0",
         "touch-none",
-        isExpanded ? "h-48" : "h-16",
+        isExpanded ? "h-auto pb-4" : "h-16",
         className
       )}
     >
       {/* Progress bar at top */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-muted">
         <div 
+          data-testid="tts-progress-fill"
           className="h-full bg-primary transition-all duration-100"
           style={{ width: `${progressPercent}%` }}
         />
@@ -152,6 +183,11 @@ export function TTSPanel({ className }: TTSPanelProps) {
           </p>
         </div>
 
+        {/* Volume icon */}
+        <div className="text-muted-foreground">
+          <VolumeIcon volume={volume} />
+        </div>
+
         {/* Expand indicator */}
         {!isExpanded && (
           <div className="flex items-center gap-1 text-muted-foreground text-xs">
@@ -164,26 +200,82 @@ export function TTSPanel({ className }: TTSPanelProps) {
       {/* Expanded controls */}
       {isExpanded && (
         <div className="px-4 py-3 space-y-4">
+          {/* Skip controls */}
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSkipBackward();
+              }}
+              aria-label="Skip backward 15 seconds"
+              className="h-10 w-10 rounded-full"
+            >
+              <RotateCcw className="h-5 w-5" />
+              <span className="sr-only">-15s</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSkipForward();
+              }}
+              aria-label="Skip forward 15 seconds"
+              className="h-10 w-10 rounded-full"
+            >
+              <RotateCcw className="h-5 w-5 scale-x-[-1]" />
+              <span className="sr-only">+15s</span>
+            </Button>
+          </div>
+
           {/* Speed control */}
-          <div className="flex items-center gap-3">
-            <Gauge className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="relative flex items-center gap-3">
+            <ListOrdered className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="text-sm font-medium w-12">Speed</span>
-            <Slider
-              value={[playbackRate]}
-              onValueChange={handleSpeedChange}
-              min={0.5}
-              max={2}
-              step={0.25}
-              className="flex-1"
-            />
-            <span className="text-sm text-muted-foreground w-10 text-right">
-              {playbackRate}x
-            </span>
+            
+            <Button
+              data-testid="speed-button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSpeedSelector(!showSpeedSelector);
+              }}
+              className="flex-1 justify-between h-8"
+            >
+              <span>{getSpeedLabel(playbackRate)}</span>
+            </Button>
+
+            {/* Speed selector dropdown */}
+            {showSpeedSelector && (
+              <div 
+                data-testid="speed-selector"
+                className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-10 p-1 grid grid-cols-4 gap-1"
+              >
+                {SPEED_OPTIONS.map((speed) => (
+                  <Button
+                    key={speed}
+                    variant={playbackRate === speed ? "default" : "ghost"}
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSpeedSelect(speed);
+                    }}
+                    className="h-8 text-xs"
+                  >
+                    {getSpeedLabel(speed)}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Volume control */}
           <div className="flex items-center gap-3">
-            <Volume2 className="h-4 w-4 text-muted-foreground shrink-0" />
+            <VolumeIcon volume={volume} />
             <span className="text-sm font-medium w-12">Volume</span>
             <Slider
               value={[volume]}
