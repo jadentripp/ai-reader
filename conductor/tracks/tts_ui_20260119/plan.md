@@ -26,7 +26,7 @@
 
 ## Phase 2: TTS Panel Component - Structure & Styling
 
-- [~] Task: Create TTSPanel component shell
+- [x] Task: Create TTSPanel component shell bcdebc4
     - [x] Write tests for TTSPanel rendering in collapsed and expanded states
     - [x] Create `src/components/reader/TTSPanel.tsx` with collapsed mini-player state
     - [x] Implement expanded state with full controls layout
