@@ -134,6 +134,7 @@ export function useMobiReader(bookId: number) {
       currentPage: pagination.currentPage,
       selectedHighlight: highlightsHook.selectedHighlight,
       attachedHighlights: highlightsHook.attachedHighlights,
+      stagedSnippets: highlightsHook.stagedSnippets,
     },
     navigation,
     scrollToQuote,

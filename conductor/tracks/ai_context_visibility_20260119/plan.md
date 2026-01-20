@@ -17,12 +17,12 @@ Update the reader's visual feedback to show staged snippets in "Bauhaus Blue" an
 - [x] Task: Update `readerStyles.ts` to include the `readerContextSnippet` class with Bauhaus Blue (#0055A4). 7390c7b
 - [x] Task: Modify `renderHighlights` in `useHighlights.ts` to render staged snippets with the new blue style. 7390c7b
 - [x] Task: Update the floating selection menu in `ReaderPane.tsx` to change "Chat" to "Add to Chat" and ensure it triggers the staging logic. 7390c7b
-- [ ] Task: Conductor - User Manual Verification 'Reader Visualization & Interaction' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Reader Visualization & Interaction' (Protocol in workflow.md) 1e0562c
 
 ## Phase 3: AI Context Integration
 Ensure the staged snippets are correctly passed to the OpenAI API and maintained across conversation turns.
 
-- [ ] Task: Update `src/tests/aiContextIntegration.test.ts` to verify prompt construction with multiple snippets.
+- [~] Task: Update `src/tests/aiContextIntegration.test.ts` to verify prompt construction with multiple snippets.
 - [ ] Task: Update `useChat.ts` to pull from the new "staged snippets" state instead of just the single `selectedHighlight`.
 - [ ] Task: Modify `buildChatSystemPrompt` in `citations.ts` to handle multiple focused snippets in a clean, structured way.
 - [ ] Task: Implement the "Clear Context" functionality to wipe the tray.

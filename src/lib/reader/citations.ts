@@ -8,9 +8,10 @@ export interface CitationMapping {
 export const buildChatSystemPrompt = (options: {
   selectedHighlight?: { text: string; note?: string } | null;
   attachedHighlights?: Array<{ id: number; text: string; note?: string }>;
+  stagedSnippets?: Array<{ text: string }>;
   pageContent?: Array<{ text: string; blockIndex: number; pageNumber: number }>;
 }): string[] => {
-  const { selectedHighlight, attachedHighlights = [], pageContent = [] } = options;
+  const { selectedHighlight, attachedHighlights = [], stagedSnippets = [], pageContent = [] } = options;
 
   const contextBlocks = [
     "You are a thoughtful literary companion, helping readers explore and understand the books they're reading.",
@@ -48,6 +49,14 @@ export const buildChatSystemPrompt = (options: {
     if (selectedHighlight.note) {
       contextBlocks.push(`User's Note on Highlight: "${selectedHighlight.note}"`);
     }
+    contextBlocks.push("");
+  }
+
+  if (stagedSnippets.length > 0) {
+    contextBlocks.push("Staged Context Snippets:");
+    stagedSnippets.forEach((s) => {
+      contextBlocks.push(`"${s.text}"`);
+    });
     contextBlocks.push("");
   }
 

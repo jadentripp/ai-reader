@@ -24,6 +24,7 @@ export interface UseChatOptions {
   currentPage: number;
   selectedHighlight: { id?: number; text: string; note?: string } | null;
   attachedHighlights: Array<{ id: number; text: string; note?: string }>;
+  stagedSnippets: Array<{ text: string }>;
 }
 
 export interface ChatMessage {
@@ -74,6 +75,7 @@ export function useChat(
     currentPage,
     selectedHighlight,
     attachedHighlights,
+    stagedSnippets,
   } = options;
 
   const queryClient = useQueryClient();
@@ -155,6 +157,7 @@ export function useChat(
       const contextBlocks = buildChatSystemPrompt({
         selectedHighlight: selectedHighlight ? { text: selectedHighlight.text, note: selectedHighlight.note } : null,
         attachedHighlights: attachedHighlights.map((h) => ({ id: h.id, text: h.text, note: h.note })),
+        stagedSnippets: stagedSnippets.map((s) => ({ text: s.text })),
         pageContent,
       });
 
@@ -247,6 +250,7 @@ export function useChat(
     currentPage,
     selectedHighlight,
     attachedHighlights,
+    stagedSnippets,
     bookMessagesQ.data,
     queryClient,
   ]);
