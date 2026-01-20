@@ -36,8 +36,8 @@ describe("BauhausHeader", () => {
 
   it("should render the horizontal filter bar with collections", () => {
     render(<BauhausHeader {...defaultProps} />);
-    // "All Books" is always present in horizontal nav
-    expect(screen.getByText("All Books")).toBeDefined();
+    // "All Books" is present in subtitle AND horizontal nav
+    expect(screen.getAllByText("All Books").length).toBeGreaterThan(0);
     // Featured collections like "Shakespeare" should be there
     expect(screen.getByText("Shakespeare")).toBeDefined();
   });

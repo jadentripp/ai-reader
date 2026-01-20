@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useLibrary } from "../hooks/useLibrary";
 import { BauhausHeader } from "../components/library/BauhausHeader";
+import { LibraryCollections } from "../components/library/LibraryCollections";
 import { DownloadStatusBar } from "../components/library/DownloadStatusBar";
 import { CatalogResults } from "../components/library/CatalogResults";
 import { YourLibrary } from "../components/library/YourLibrary";
@@ -86,6 +87,13 @@ export default function LibraryPage() {
           )}
 
           <div className="space-y-20">
+            <LibraryCollections
+              catalogKey={catalogKey}
+              setCatalogKey={setCatalogKey}
+              showAllCategories={showAllCategories}
+              setShowAllCategories={setShowAllCategories}
+            />
+
             {showDiscoverFirst ? (
               <>
                 <CatalogResults

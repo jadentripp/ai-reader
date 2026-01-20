@@ -28,10 +28,10 @@ export function LibraryEmptyState({ type, title, description }: LibraryEmptyStat
   const { icon: Icon, title: t, description: d } = configs[type];
 
   return (
-    <div className={`rounded-2xl border border-dashed border-border/60 bg-muted/20 text-center ${type === 'catalog' || type === 'library' ? 'py-16' : 'py-12'}`}>
-      <Icon className="mx-auto h-12 w-12 text-muted-foreground/40" />
-      <h3 className={`mt-4 font-medium text-foreground ${type !== 'search' ? 'font-serif text-lg' : ''}`}>{t}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{d}</p>
+    <div className={`border-4 border-black bg-stone-50 text-center dark:border-white dark:bg-stone-900 ${type === 'catalog' || type === 'library' ? 'py-20' : 'py-12'}`}>
+      <Icon className="mx-auto h-12 w-12 text-black dark:text-white" />
+      <h3 className="mt-6 font-sans text-xl font-black uppercase tracking-tighter text-foreground">{t}</h3>
+      <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{d}</p>
     </div>
   );
 }
