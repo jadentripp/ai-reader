@@ -25,7 +25,7 @@ export function ChatMessageList({
 }: ChatMessageListProps) {
   return (
     <ChatContainerRoot className="flex-1 min-h-0">
-      <ChatContainerContent className="gap-4 p-4">
+      <ChatContainerContent className="gap-6 p-4">
         {messages.length ? (
           <>
             {messages.map((message: any) => {
@@ -40,10 +40,10 @@ export function ChatMessageList({
                       alt={isUser ? "You" : "Assistant"}
                       fallback={isUser ? "U" : "✦"}
                       className={cn(
-                        "h-7 w-7 text-[10px] font-medium shadow-sm",
+                        "h-8 w-8 text-[10px] font-black rounded-none shadow-none border-2",
                         isUser 
-                          ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground" 
-                          : "bg-gradient-to-br from-muted to-muted/60 border border-border/30"
+                          ? "bg-[#E02E2E] text-white border-[#E02E2E]" 
+                          : "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
                       )}
                     />
                     <div className={cn("flex max-w-[85%] flex-col", isUser && "items-end")}>
@@ -51,10 +51,10 @@ export function ChatMessageList({
                         markdown={!isUser}
                         onCitationClick={message.onCitationClick ?? onCitationClick}
                         className={cn(
-                          "w-full text-[13px] leading-relaxed py-2.5 px-3.5 shadow-sm",
+                          "w-full text-xs font-medium leading-relaxed py-3 px-4 shadow-none rounded-none border-2",
                           isUser 
-                            ? "rounded-2xl rounded-tr-md bg-gradient-to-br from-primary to-primary/90 text-primary-foreground" 
-                            : "rounded-2xl rounded-tl-md bg-gradient-to-br from-muted/70 to-muted/40 border border-border/20"
+                            ? "bg-[#E02E2E]/5 border-[#E02E2E] text-foreground" 
+                            : "bg-black/5 dark:bg-white/5 border-black/20 dark:border-white/20 text-foreground"
                         )}
                       >
                         {message.content}
@@ -63,8 +63,8 @@ export function ChatMessageList({
                   </Message>
                   {onDeleteMessage && (
                     <div className={cn(
-                      "absolute -top-1 opacity-0 group-hover/msg:opacity-100 transition-all duration-200",
-                      isUser ? "left-8" : "right-8"
+                      "absolute -top-2 opacity-0 group-hover/msg:opacity-100 transition-all duration-200",
+                      isUser ? "left-10" : "right-10"
                     )}>
                       <MessageAction
                         tooltip="Delete message"
@@ -73,7 +73,7 @@ export function ChatMessageList({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-5 w-5 rounded-full bg-background/90 text-muted-foreground shadow-sm backdrop-blur-sm hover:bg-destructive/10 hover:text-destructive"
+                          className="h-6 w-6 rounded-none bg-background border-2 border-black/20 dark:border-white/20 text-muted-foreground hover:bg-red-500 hover:text-white hover:border-red-500"
                           onClick={() => {
                             const confirmed = message.role === 'assistant' 
                               ? window.confirm("Are you sure you want to delete this AI response?")
@@ -83,7 +83,7 @@ export function ChatMessageList({
                             }
                           }}
                         >
-                          <Trash2 className="h-2.5 w-2.5" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </MessageAction>
                     </div>
@@ -97,42 +97,39 @@ export function ChatMessageList({
                   src=""
                   alt="Assistant"
                   fallback="✦"
-                  className="h-7 w-7 text-[10px] font-medium bg-gradient-to-br from-muted to-muted/60 border border-border/30 shadow-sm"
+                  className="h-8 w-8 text-[10px] font-black rounded-none bg-black text-white dark:bg-white dark:text-black border-2 border-black dark:border-white shadow-none"
                 />
-                <div className="rounded-2xl rounded-tl-md py-3 px-4 bg-gradient-to-br from-muted/70 to-muted/40 border border-border/20 shadow-sm">
-                  <Loader variant="loading-dots" size="sm" text="Thinking" />
+                <div className="rounded-none py-3 px-4 bg-black/5 dark:bg-white/5 border-2 border-black/20 dark:border-white/20 shadow-none">
+                  <Loader variant="loading-dots" size="sm" text="Thinking" className="font-bold uppercase tracking-widest text-[10px]" />
                 </div>
               </Message>
             )}
           </>
         ) : (
           <div className="flex h-full items-center justify-center py-12">
-            <div className="relative text-center max-w-[260px]">
-              {/* Decorative background */}
-              <div className="absolute inset-0 -z-10 mx-auto h-32 w-32 rounded-full bg-gradient-to-br from-primary/5 via-transparent to-accent/5 blur-2xl" />
-              
-              {/* Icon with layered rings */}
-              <div className="relative mx-auto mb-6 h-16 w-16">
-                <div className="absolute inset-0 rounded-full border border-border/20" />
-                <div className="absolute inset-2 rounded-full border border-border/30" />
-                <div className="absolute inset-4 flex items-center justify-center rounded-full bg-gradient-to-br from-muted/80 to-muted">
-                  <Feather className="h-5 w-5 text-muted-foreground/70" />
+            <div className="relative text-center max-w-[280px]">
+              {/* Icon with sharp Bauhaus box */}
+              <div className="relative mx-auto mb-8 h-20 w-20">
+                <div className="absolute inset-0 border-4 border-black dark:border-white" />
+                <div className="absolute inset-2 border-2 border-black/20 dark:border-white/20" />
+                <div className="absolute inset-4 flex items-center justify-center bg-[#E02E2E]">
+                  <Feather className="h-8 w-8 text-white" />
                 </div>
               </div>
               
               {/* Typography */}
-              <h3 className="mb-2 font-serif text-base font-medium tracking-tight text-foreground/90">
-                Literary Assistant
+              <h3 className="mb-3 font-sans text-sm font-black uppercase tracking-tighter text-foreground">
+                LITERARY ASSISTANT
               </h3>
-              <p className="text-[13px] leading-relaxed text-muted-foreground/80">
-                Ask questions, request summaries, or explore deeper interpretations of the text.
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] leading-relaxed text-muted-foreground">
+                EXPLORE DEEPER INTERPRETATIONS OF THE TEXT.
               </p>
               
-              {/* Decorative divider */}
-              <div className="mx-auto mt-5 flex items-center justify-center gap-2">
-                <div className="h-px w-8 bg-gradient-to-r from-transparent to-border/50" />
-                <Quote className="h-3 w-3 text-muted-foreground/30" />
-                <div className="h-px w-8 bg-gradient-to-l from-transparent to-border/50" />
+              {/* Geometric divider */}
+              <div className="mx-auto mt-8 flex items-center justify-center gap-4">
+                <div className="h-1 w-12 bg-black dark:bg-white" />
+                <Quote className="h-4 w-4 text-[#E02E2E] fill-current" />
+                <div className="h-1 w-12 bg-black dark:bg-white" />
               </div>
             </div>
           </div>
