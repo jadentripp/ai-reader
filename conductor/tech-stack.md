@@ -18,7 +18,7 @@
 - **Capabilities:** System notifications, file system access, window management.
 
 ## Data & Backend
-- **Database:** SQLite (managed via Rust/rusqlite)
+- **Database:** SQLite (default, via Rust/rusqlite) or PostgreSQL (via sqlx, enabled with `AI_READER_POSTGRES=1`)
 - **Networking:** reqwest (Rust), TanStack Query (Frontend)
 
 ## AI & Services
