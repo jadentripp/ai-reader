@@ -14,8 +14,8 @@ export function DownloadQueue({ queue, setQueue }: DownloadQueueProps) {
   return (
     <section className="border-2 border-black bg-background p-8 dark:border-white">
       <div className="mb-8 flex items-end justify-between border-b-2 border-black pb-4 dark:border-white">
-        <h3 className="font-sans text-2xl font-black uppercase tracking-tighter text-foreground">Queue</h3>
-        <span className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">{queue.length} items</span>
+        <h3 className="font-sans text-2xl font-black uppercase tracking-tighter text-foreground [text-wrap:balance]">Queue</h3>
+        <span className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground tabular-nums">{queue.length} items</span>
       </div>
       <ScrollArea className="h-64">
         <div className="space-y-4 pr-6">
@@ -29,13 +29,12 @@ export function DownloadQueue({ queue, setQueue }: DownloadQueueProps) {
                   {t.title}
                 </div>
                 <div className="mt-1 flex items-center gap-3 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  <span>#{t.gutenbergId}</span>
-                  <span className={`px-2 py-0.5 border rounded-none ${
-                    t.status === "failed" ? "border-red-600 text-red-600 bg-red-50 dark:bg-red-950/20" :
-                    t.status === "done" ? "border-stone-400 text-stone-500" :
-                    t.status === "downloading" ? "border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950/20" :
-                    "border-stone-200 text-stone-400"
-                  }`}>
+                  <span className="tabular-nums">#{t.gutenbergId}</span>
+                  <span className={`px-2 py-0.5 border rounded-none ${t.status === "failed" ? "border-red-600 text-red-600 bg-red-50 dark:bg-red-950/20" :
+                      t.status === "done" ? "border-stone-400 text-stone-500" :
+                        t.status === "downloading" ? "border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950/20" :
+                          "border-stone-200 text-stone-400"
+                    }`}>
                     {t.status}
                   </span>
                 </div>

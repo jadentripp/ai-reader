@@ -59,7 +59,7 @@ export function LibraryHeader({
         </div>
 
         <div className="relative mx-auto mt-6 max-w-2xl">
-          <div className={`relative transition-all duration-300 ${searchFocused ? "scale-[1.02]" : ""}`}>
+          <div className={`relative transition-[transform] duration-300 ${searchFocused ? "scale-[1.02]" : ""}`}>
             <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/20 via-orange-400/20 to-amber-400/20 opacity-0 blur-xl transition-opacity duration-300" style={{ opacity: searchFocused ? 0.6 : 0 }} />
             <div className="relative">
               {catalogQ.isFetching ? (
@@ -70,7 +70,7 @@ export function LibraryHeader({
               <Input
                 ref={searchInputRef}
                 type="search"
-                placeholder="Search by title, author, or subject..."
+                placeholder="Search by title, author, or subject…"
                 value={catalogQuery}
                 onChange={(e) => setCatalogQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
@@ -81,12 +81,13 @@ export function LibraryHeader({
                     searchInputRef.current?.blur();
                   }
                 }}
-                className="h-14 rounded-2xl border-2 border-border/40 bg-background pl-14 pr-12 text-base shadow-lg shadow-amber-500/5 transition-all placeholder:text-muted-foreground/50 focus:border-amber-400 focus:shadow-amber-500/10 focus:ring-0 dark:shadow-amber-900/10"
+                className="h-14 rounded-2xl border-2 border-border/40 bg-background pl-14 pr-12 text-base shadow-lg shadow-amber-500/5 transition-[border-color,box-shadow] placeholder:text-muted-foreground/50 focus:border-amber-400 focus:shadow-amber-500/10 focus:ring-0 dark:shadow-amber-900/10"
               />
               {catalogQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Clear search term"
                   className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 rounded-xl hover:bg-muted"
                   onClick={() => setCatalogQuery("")}
                 >
@@ -144,7 +145,7 @@ export function LibraryHeader({
                           e.preventDefault();
                           handleSearch(search);
                         }}
-                        className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 px-3 py-1.5 text-sm font-medium text-amber-800 transition-all hover:from-amber-200 hover:to-orange-200 hover:shadow-sm dark:from-amber-900/40 dark:to-orange-900/30 dark:text-amber-200 dark:hover:from-amber-900/60 dark:hover:to-orange-900/50"
+                        className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 px-3 py-1.5 text-sm font-medium text-amber-800 transition-[background-color,shadow,transform] hover:from-amber-200 hover:to-orange-200 hover:shadow-sm dark:from-amber-900/40 dark:to-orange-900/30 dark:text-amber-200 dark:hover:from-amber-900/60 dark:hover:to-orange-900/50"
                       >
                         {search}
                       </button>
@@ -167,6 +168,7 @@ export function LibraryHeader({
                 {activeCatalog.kind === "collection" ? "📚" : "📁"} {activeCatalog.label}
                 <button
                   onClick={() => setCatalogKey("collection-all")}
+                  aria-label="Remove category filter"
                   className="ml-1 rounded-full p-0.5 hover:bg-amber-200/50 dark:hover:bg-amber-800/50"
                 >
                   <X className="h-3 w-3" />
@@ -182,6 +184,7 @@ export function LibraryHeader({
                 "{catalogSearch}"
                 <button
                   onClick={() => setCatalogQuery("")}
+                  aria-label="Remove search filter"
                   className="ml-1 rounded-full p-0.5 hover:bg-muted"
                 >
                   <X className="h-3 w-3" />

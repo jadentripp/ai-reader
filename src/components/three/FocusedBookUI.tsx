@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
 import { BookOpen, Download, Trash2, X, Loader2 } from "lucide-react";
 import type { BookStatus } from "./BookMesh";
 
@@ -30,7 +31,7 @@ export const FocusedBookUI: React.FC<FocusedBookUIProps> = ({
   return (
     <div className="absolute inset-0 z-40 pointer-events-none">
       {/* Subtle backdrop - only dims slightly */}
-      <div 
+      <div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/40 pointer-events-auto"
         onClick={onClose}
       />
@@ -40,12 +41,15 @@ export const FocusedBookUI: React.FC<FocusedBookUIProps> = ({
         <div className="w-full bg-stone-950/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-black/50 overflow-hidden animate-in slide-in-from-right-4 fade-in duration-300">
           {/* Compact header with cover */}
           <div className="relative p-4 pb-0">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              className="absolute top-3 right-3 z-10 h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 transition-[background-color,color]"
+              aria-label="Close"
             >
               <X className="h-3.5 w-3.5 text-white/70" />
-            </button>
+            </Button>
 
             <div className="flex gap-4">
               {/* Cover thumbnail */}
@@ -54,6 +58,8 @@ export const FocusedBookUI: React.FC<FocusedBookUIProps> = ({
                   <img
                     src={book.cover_url}
                     alt={book.title}
+                    width={80}
+                    height={112}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -71,7 +77,7 @@ export const FocusedBookUI: React.FC<FocusedBookUIProps> = ({
                 {book.author && (
                   <p className="text-white/40 text-xs mb-2 truncate">{book.author}</p>
                 )}
-                
+
                 {/* Status badge */}
                 {status === 'local' && (
                   <span className="inline-flex px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold uppercase tracking-wide">
@@ -103,8 +109,8 @@ export const FocusedBookUI: React.FC<FocusedBookUIProps> = ({
                   <span className="text-amber-400 font-semibold">{Math.round(progress)}%</span>
                 </div>
                 <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-300"
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-[width] duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -115,37 +121,40 @@ export const FocusedBookUI: React.FC<FocusedBookUIProps> = ({
             <div className="flex gap-2">
               {status === 'local' ? (
                 <>
-                  <button
+                  <Button
                     onClick={onRead}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 h-10 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-[transform,box-shadow,background-color]"
                   >
                     <BookOpen className="h-4 w-4" />
                     {progress > 0 ? "Continue" : "Read"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onDelete}
-                    className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 transition-all"
+                    className="h-10 w-10 p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10 transition-[color,border-color,background-color]"
                     title="Delete"
+                    aria-label="Delete"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </>
               ) : status === 'downloading' ? (
-                <button
+                <Button
                   disabled
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 text-white/40 cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 h-10 px-3 rounded-xl bg-white/5 border border-white/10 text-white/40 cursor-not-allowed"
                 >
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Downloading...
-                </button>
+                  Downloading…
+                </Button>
               ) : (
-                <button
+                <Button
                   onClick={onDownload}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 h-10 px-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-[transform,box-shadow,background-color]"
                 >
                   <Download className="h-4 w-4" />
                   Download
-                </button>
+                </Button>
               )}
             </div>
           </div>

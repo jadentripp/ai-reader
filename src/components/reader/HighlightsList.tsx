@@ -134,7 +134,7 @@ export default function HighlightsList({
                     )}
                     value={noteDraft}
                     onChange={(e) => onNoteDraftChange(e.currentTarget.value)}
-                    placeholder="Add a note..."
+                    placeholder="Add a note…"
                   />
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -183,8 +183,8 @@ export default function HighlightsList({
                 type="button"
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-none transition-colors border border-transparent",
-                  isAttached 
-                    ? "bg-black text-white dark:bg-white dark:text-black" 
+                  isAttached
+                    ? "bg-black text-white dark:bg-white dark:text-black"
                     : "text-muted-foreground/60 hover:text-black hover:border-black dark:hover:text-white dark:hover:border-white"
                 )}
                 onClick={(e) => {

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { Select,
+import {
+  Select,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -18,7 +19,6 @@ import { listModels } from "@/lib/openai";
 import { cn } from "@/lib/utils";
 import {
   Settings2,
-  BookOpen,
   Play,
   Loader2,
   Headphones,
@@ -65,7 +65,7 @@ function SettingsRow({
   vertical = false,
 }: {
   label: string;
-  description?: string;
+  description?: React.ReactNode;
   children: React.ReactNode;
   vertical?: boolean;
 }) {
@@ -146,7 +146,7 @@ export default function SettingsPage() {
     // If we have voices but no voiceId, or if the current voiceId isn't in the list (stale/invalid)
     if (voices.length > 0) {
       const isValid = voices.some(v => v.voice_id === voiceId);
-      
+
       if (!voiceId || !isValid) {
         console.log("[Settings:DefaultVoice] Current voiceId is invalid or missing. Selecting default...");
         const firstValid = voices.find(v => v.voice_id && v.category?.toLowerCase() !== 'famous');
@@ -186,7 +186,7 @@ export default function SettingsPage() {
 
   async function onPreviewVoice(voice: Voice) {
     if (!voice.preview_url) return;
-    
+
     if (previewingId === voice.voice_id) {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -202,7 +202,7 @@ export default function SettingsPage() {
     const audio = new Audio(voice.preview_url);
     audioRef.current = audio;
     setPreviewingId(voice.voice_id);
-    
+
     audio.play().catch(e => {
       console.error("Failed to play preview:", e);
       setPreviewingId(null);
@@ -221,7 +221,7 @@ export default function SettingsPage() {
       const savedStyle = await getSetting("elevenlabs_style");
       const savedSpeakerBoost = await getSetting("elevenlabs_speaker_boost");
       const savedModel = await getSetting("openai_model");
-      
+
       let savedKeyStatus = { has_env_key: false, has_saved_key: false };
       try {
         savedKeyStatus = await openAiKeyStatus();
@@ -248,7 +248,7 @@ export default function SettingsPage() {
       if (savedStyle) setStyle(parseFloat(savedStyle));
       if (savedSpeakerBoost !== null) setSpeakerBoost(savedSpeakerBoost === "true");
       if (savedModel) setModel(savedModel);
-      
+
       setKeyStatus(savedKeyStatus);
       if (savedKeyStatus.has_env_key || savedKeyStatus.has_saved_key || savedKey) {
         console.log("[Settings] Key detected, loading models...");
@@ -280,19 +280,19 @@ export default function SettingsPage() {
       await setSetting({ key: "elevenlabs_style", value: style.toString() });
       await setSetting({ key: "elevenlabs_speaker_boost", value: speakerBoost.toString() });
       await setSetting({ key: "openai_model", value: model });
-      
+
       // Save appearance settings
       await setSetting({ key: "appearance_font_size", value: fontSize.toString() });
       await setSetting({ key: "appearance_font_family", value: fontFamily });
       await setSetting({ key: "appearance_theme", value: theme });
-      
+
       try {
         const savedKeyStatus = await openAiKeyStatus();
         setKeyStatus(savedKeyStatus);
       } catch (e) {
         console.error("[Settings] onSave: openAiKeyStatus failed", e);
       }
-      
+
       setStatus({ message: "Settings saved successfully", type: "success" });
     } catch {
       setStatus({ message: "Failed to save settings", type: "error" });
@@ -307,14 +307,14 @@ export default function SettingsPage() {
     try {
       await setSetting({ key: "openai_api_key", value: "" });
       setApiKey("");
-      
+
       try {
         const savedKeyStatus = await openAiKeyStatus();
         setKeyStatus(savedKeyStatus);
       } catch (e) {
         console.error("[Settings] onClearKey: openAiKeyStatus failed", e);
       }
-      
+
       setStatus({ message: "API key cleared", type: "success" });
     } catch {
       setStatus({ message: "Failed to clear API key", type: "error" });
@@ -376,7 +376,7 @@ export default function SettingsPage() {
   return (
     <div className="flex h-full bg-background overflow-hidden">
       <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      
+
       <main className="flex-1 overflow-y-auto" key={activeTab}>
         <div className="max-w-3xl mx-auto px-4 md:px-8 py-10 space-y-8 animate-in fade-in duration-300">
           {/* Header */}
@@ -391,7 +391,7 @@ export default function SettingsPage() {
                 {activeTab === 'audio' && "Configure ElevenLabs for narration"}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {status && (
                 <StatusBadge status={status.message} type={status.type} />
@@ -424,11 +424,11 @@ export default function SettingsPage() {
                         <SelectTrigger className="w-40">
                           <SelectValue />
                         </SelectTrigger>
-                                                  <SelectContent>
-                                                    <SelectItem value="serif"><SelectItemText>Serif (Classic)</SelectItemText></SelectItem>
-                                                    <SelectItem value="sans"><SelectItemText>Sans-serif (Modern)</SelectItemText></SelectItem>
-                                                    <SelectItem value="mono"><SelectItemText>Monospace</SelectItemText></SelectItem>
-                                                  </SelectContent>                      </Select>
+                        <SelectContent>
+                          <SelectItem value="serif"><SelectItemText>Serif (Classic)</SelectItemText></SelectItem>
+                          <SelectItem value="sans"><SelectItemText>Sans-serif (Modern)</SelectItemText></SelectItem>
+                          <SelectItem value="mono"><SelectItemText>Monospace</SelectItemText></SelectItem>
+                        </SelectContent>                      </Select>
                     </SettingsRow>
 
                     <SettingsRow
@@ -460,30 +460,29 @@ export default function SettingsPage() {
                       <SelectTrigger className="w-40">
                         <SelectValue />
                       </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="light"><SelectItemText>Light</SelectItemText></SelectItem>
-                                            <SelectItem value="dark"><SelectItemText>Dark</SelectItemText></SelectItem>
-                                            <SelectItem value="system"><SelectItemText>System</SelectItemText></SelectItem>
-                                          </SelectContent>                    </Select>
+                      <SelectContent>
+                        <SelectItem value="light"><SelectItemText>Light</SelectItemText></SelectItem>
+                        <SelectItem value="dark"><SelectItemText>Dark</SelectItemText></SelectItem>
+                        <SelectItem value="system"><SelectItemText>System</SelectItemText></SelectItem>
+                      </SelectContent>                    </Select>
                   </SettingsRow>
                 </SettingsSection>
 
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-8 text-center">
-                  <div 
+                  <div
                     className={cn(
-                      "mx-auto max-w-sm p-6 rounded-lg border bg-card shadow-sm transition-all",
+                      "mx-auto max-w-sm p-6 rounded-lg border bg-card shadow-sm transition-[color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform]",
                       theme === 'dark' && "dark"
                     )}
-                    style={{ 
+                    style={{
                       fontSize: `${fontSize}px`,
                       fontFamily: fontFamily === 'serif' ? 'serif' : fontFamily === 'mono' ? 'monospace' : 'sans-serif'
                     }}
                   >
                     <p className="text-foreground leading-relaxed">
-                      "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness..."
+                      “It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness…”
                     </p>
                   </div>
-                  <p className="mt-4 text-xs text-muted-foreground">Preview of your reading settings</p>
                 </div>
               </div>
             )}
@@ -520,16 +519,17 @@ export default function SettingsPage() {
                             type={showApiKey ? "text" : "password"}
                             value={apiKey}
                             onChange={(e) => setApiKey(e.currentTarget.value)}
-                            placeholder="sk-..."
+                            placeholder="sk-…"
                             className="font-mono text-sm"
                           />
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setShowApiKey(!showApiKey)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
                           >
                             {showApiKey ? "Hide" : "Show"}
-                          </button>
+                          </Button>
                         </div>
                         {keyStatus?.has_saved_key && (
                           <Button variant="outline" onClick={onClearKey}>Clear</Button>
@@ -555,15 +555,15 @@ export default function SettingsPage() {
                           <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Select a model" />
                           </SelectTrigger>
-                                                      <SelectContent>
-                                                        {allModels.map((modelId) => (
-                                                          <SelectItem key={modelId} value={modelId}>
-                                                            <SelectItemText>
-                                                              <span className="font-mono text-sm">{modelId}</span>
-                                                            </SelectItemText>
-                                                          </SelectItem>
-                                                        ))}
-                                                      </SelectContent>                        </Select>
+                          <SelectContent>
+                            {allModels.map((modelId) => (
+                              <SelectItem key={modelId} value={modelId}>
+                                <SelectItemText>
+                                  <span className="font-mono text-sm">{modelId}</span>
+                                </SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>                        </Select>
                         <Button variant="outline" onClick={loadModels} disabled={!keyConfigured}>
                           Refresh
                         </Button>
@@ -608,13 +608,14 @@ export default function SettingsPage() {
                             placeholder="Enter your API key"
                             className="font-mono text-sm"
                           />
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setShowElevenLabsApiKey(!showElevenLabsApiKey)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
                           >
                             {showElevenLabsApiKey ? "Hide" : "Show"}
-                          </button>
+                          </Button>
                         </div>
                         {elevenLabsKeyConfigured && (
                           <Button variant="outline" onClick={onClearElevenLabsKey}>Clear</Button>
@@ -636,40 +637,40 @@ export default function SettingsPage() {
                       vertical
                     >
                       <div className="flex gap-2">
-                                                <Select
-                                                  value={voiceId}
-                                                  onValueChange={setVoiceId}
-                                                  disabled={!elevenLabsKeyConfigured || voices.length === 0}
-                                                >
-                                                  <SelectTrigger className="flex-1">
-                                                    <SelectValue placeholder="Select a voice" />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                    {Object.entries(groupedVoices).map(([category, categoryVoices]) => (
-                                                      <SelectGroup key={category}>
-                                                        <SelectLabel className="capitalize text-[10px] tracking-widest opacity-70">{category}</SelectLabel>
-                                                        {categoryVoices.map((v) => {
-                                                          const [name, ...descParts] = v.name.split(' - ');
-                                                          const description = descParts.join(' - ');
-                                                          
-                                                          return (
-                                                            <SelectItem key={v.voice_id} value={v.voice_id} className="py-2.5">
-                                                              <div className="flex flex-col gap-0.5">
-                                                                <SelectItemText>
-                                                                  <span className="font-medium text-sm">{name}</span>
-                                                                </SelectItemText>
-                                                                <span className="text-[10px] text-muted-foreground line-clamp-1">
-                                                                  {v.category ? `${v.category} • ` : ""}{description}
-                                                                </span>
-                                                              </div>
-                                                            </SelectItem>
-                                                          );
-                                                        })}
-                                                      </SelectGroup>
-                                                    ))}
-                                                  </SelectContent>
-                                                </Select>
-                        
+                        <Select
+                          value={voiceId}
+                          onValueChange={setVoiceId}
+                          disabled={!elevenLabsKeyConfigured || voices.length === 0}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select a voice" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(groupedVoices).map(([category, categoryVoices]) => (
+                              <SelectGroup key={category}>
+                                <SelectLabel className="capitalize text-[10px] tracking-widest opacity-70">{category}</SelectLabel>
+                                {categoryVoices.map((v) => {
+                                  const [name, ...descParts] = v.name.split(' - ');
+                                  const description = descParts.join(' - ');
+
+                                  return (
+                                    <SelectItem key={v.voice_id} value={v.voice_id} className="py-2.5">
+                                      <div className="flex flex-col gap-0.5">
+                                        <SelectItemText>
+                                          <span className="font-medium text-sm">{name}</span>
+                                        </SelectItemText>
+                                        <span className="text-[10px] text-muted-foreground line-clamp-1">
+                                          {v.category ? `${v.category} • ` : ""}{description}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectGroup>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
                         {selectedVoice?.preview_url && (
                           <Button
                             variant="outline"
@@ -688,10 +689,10 @@ export default function SettingsPage() {
                     </SettingsRow>
 
                     <div className="space-y-4 pt-4 border-t border-border/40">
-                      <SettingsRow label="Stability" description={stability.toFixed(2)} vertical>
+                      <SettingsRow label="Stability" description={<span className="tabular-nums">{stability.toFixed(2)}</span>} vertical>
                         <Slider value={[stability]} onValueChange={([v]) => setStability(v)} min={0} max={1} step={0.01} />
                       </SettingsRow>
-                      <SettingsRow label="Similarity Boost" description={similarity.toFixed(2)} vertical>
+                      <SettingsRow label="Similarity Boost" description={<span className="tabular-nums">{similarity.toFixed(2)}</span>} vertical>
                         <Slider value={[similarity]} onValueChange={([v]) => setSimilarity(v)} min={0} max={1} step={0.01} />
                       </SettingsRow>
                     </div>

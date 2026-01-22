@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   CATALOG_BY_KEY,
@@ -16,8 +17,43 @@ import {
 } from "@/lib/gutenbergUtils";
 
 export function useCatalogSearch() {
-  const [catalogKey, setCatalogKey] = React.useState<string>(DEFAULT_CATALOG_KEY);
-  const [catalogQuery, setCatalogQuery] = React.useState("");
+  const routerState = useRouterState();
+  const currentPath = routerState.location.pathname;
+  const isOnIndexRoute = currentPath === "/";
+  const urlSearchParams = routerState.location.search as { q?: string; category?: string };
+  
+  const navigate = useNavigate();
+
+  const [localCatalogKey, setLocalCatalogKey] = React.useState(DEFAULT_CATALOG_KEY);
+  const [localCatalogQuery, setLocalCatalogQuery] = React.useState("");
+
+  const catalogKey = isOnIndexRoute ? (urlSearchParams.category || DEFAULT_CATALOG_KEY) : localCatalogKey;
+  const catalogQuery = isOnIndexRoute ? (urlSearchParams.q || "") : localCatalogQuery;
+
+  const setCatalogKey = (key: string) => {
+    if (isOnIndexRoute) {
+      navigate({
+        to: "/",
+        search: (prev: any) => ({ ...prev, category: key, q: "" }),
+      });
+    } else {
+      setLocalCatalogKey(key);
+      setLocalCatalogQuery("");
+    }
+  };
+
+  const setCatalogQuery = (q: string) => {
+    if (isOnIndexRoute) {
+      navigate({
+        to: "/",
+        search: (prev: any) => ({ ...prev, q }),
+        replace: true,
+      });
+    } else {
+      setLocalCatalogQuery(q);
+    }
+  };
+
   const [showAllCategories, setShowAllCategories] = React.useState(false);
   const [sortBy, setSortBy] = React.useState<SortOption>("relevance");
   const [searchFocused, setSearchFocused] = React.useState(false);
@@ -70,7 +106,14 @@ export function useCatalogSearch() {
   });
 
   function handleSearch(query: string) {
-    setCatalogQuery(query);
+    if (isOnIndexRoute) {
+      navigate({
+        to: "/",
+        search: (prev: any) => ({ ...prev, q: query }),
+      });
+    } else {
+      setLocalCatalogQuery(query);
+    }
     if (query.trim().length >= 2) {
       addRecentSearch(query);
       setRecentSearches(getRecentSearches());

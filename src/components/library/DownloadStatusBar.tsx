@@ -58,25 +58,25 @@ export function DownloadStatusBar({
             {counts.downloading > 0 && (
               <span className="flex items-center gap-2">
                 <span className="h-2 w-2 animate-pulse bg-amber-500" />
-                <span>{counts.downloading} Active</span>
+                <span className="tabular-nums">{counts.downloading} Active</span>
               </span>
             )}
             {counts.queued > 0 && (
               <span className="flex items-center gap-2 text-stone-400">
                 <Clock className="h-3.5 w-3.5" />
-                <span>{counts.queued} Queued</span>
+                <span className="tabular-nums">{counts.queued} Queued</span>
               </span>
             )}
             {counts.done > 0 && (
               <span className="flex items-center gap-2 text-stone-500">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>{counts.done} Done</span>
+                <span className="tabular-nums">{counts.done} Done</span>
               </span>
             )}
             {counts.failed > 0 && (
               <span className="flex items-center gap-2 text-red-600">
                 <span className="h-2 w-2 bg-red-600" />
-                <span>{counts.failed} Failed</span>
+                <span className="tabular-nums">{counts.failed} Failed</span>
               </span>
             )}
           </div>

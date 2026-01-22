@@ -51,11 +51,11 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
   return (
     <div className="relative z-30 pointer-events-auto w-full">
       <form onSubmit={onSubmit} className="relative">
-        <div 
+        <div
           className={`
-            relative overflow-hidden rounded-full backdrop-blur-xl transition-all duration-300
-            ${isFocused 
-              ? "bg-stone-900/95 shadow-xl ring-1 ring-amber-400/50" 
+            relative overflow-hidden rounded-full backdrop-blur-xl transition-[background-color,box-shadow,border-color,--tw-ring-color] duration-300
+            ${isFocused
+              ? "bg-stone-900/95 shadow-xl ring-1 ring-amber-400/50"
               : "bg-stone-900/80 shadow-lg"
             }
           `}
@@ -69,7 +69,9 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search catalog..."
+              name="catalog-search"
+              aria-label="Search catalog"
+              placeholder="Search catalog…"
               value={catalogQuery}
               onChange={(e) => setCatalogQuery(e.target.value)}
               onFocus={() => setIsFocused(true)}
@@ -94,6 +96,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                   setCatalogQuery("");
                   if (catalogSearch) onClearSearch();
                 }}
+                aria-label="Clear search"
                 className="p-1 rounded-full hover:bg-white/10 transition-colors"
               >
                 <X className="h-3.5 w-3.5 text-stone-400" />
@@ -133,7 +136,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                           e.preventDefault();
                           onQuickSearch(search);
                         }}
-                        className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-stone-300 transition-all hover:bg-amber-500/20 hover:text-amber-200"
+                        className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-stone-300 transition-[background-color,color] hover:bg-amber-500/20 hover:text-amber-200"
                       >
                         {search}
                       </button>
@@ -156,7 +159,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({
                         e.preventDefault();
                         onQuickSearch(search);
                       }}
-                      className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs text-amber-200/80 transition-all hover:bg-amber-500/20 hover:text-amber-200"
+                      className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs text-amber-200/80 transition-[background-color,color] hover:bg-amber-500/20 hover:text-amber-200"
                     >
                       {search}
                     </button>

@@ -52,10 +52,10 @@ export function ChatModelSelector({
           variant="ghost"
           size="sm"
           disabled={modelsLoading || disabled}
-          className="h-7 gap-1.5 rounded-none border-2 border-black/20 dark:border-white/20 bg-background px-3 text-[10px] font-bold uppercase tracking-widest transition-all hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+          className="h-7 gap-1.5 rounded-none border-2 border-black/20 dark:border-white/20 bg-background px-3 text-[10px] font-bold uppercase tracking-widest transition-[color,background-color,border-color] hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
         >
           <div className="h-2 w-2 rounded-none bg-emerald-500" />
-          {modelsLoading ? "..." : formatModelName(currentModel)}
+          {modelsLoading ? "…" : formatModelName(currentModel)}
           <ChevronDown className="h-3 w-3 opacity-60" />
         </Button>
       </PopoverTrigger>
@@ -71,43 +71,46 @@ export function ChatModelSelector({
                 <div className="mb-1 px-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                   Recommended
                 </div>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => handleSelect(RECOMMENDED_MODEL)}
                   className={cn(
-                    "flex w-full items-center justify-between rounded-none px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black",
+                    "flex w-full items-center h-auto justify-between rounded-none px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black",
                     currentModel === RECOMMENDED_MODEL && "bg-black text-white dark:bg-white dark:text-black"
                   )}
                 >
                   <span>{formatModelName(RECOMMENDED_MODEL)}</span>
                   {currentModel === RECOMMENDED_MODEL && <Check className="h-3 w-3" />}
-                </button>
+                </Button>
               </>
             )}
 
             {otherModels.length > 0 && (
               <>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setShowMore((v) => !v)}
-                  className="mt-2 flex w-full items-center gap-1.5 rounded-none px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground border border-transparent hover:border-black dark:hover:border-white hover:text-foreground"
+                  className="mt-2 flex w-full items-center h-auto gap-1.5 rounded-none px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground border border-transparent hover:border-black dark:hover:border-white hover:text-foreground hover:bg-transparent"
                 >
                   <Settings2 className="h-3 w-3" />
                   {showMore ? "Hide" : `Show all models (${otherModels.length})`}
-                </button>
+                </Button>
 
                 {showMore && (
                   <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
                     {otherModels.map((model) => (
-                      <button
+                      <Button
                         key={model}
+                        variant="ghost"
                         onClick={() => handleSelect(model)}
                         className={cn(
-                          "flex w-full items-center justify-between rounded-none px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black",
+                          "flex w-full items-center h-auto justify-between rounded-none px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black",
                           currentModel === model && "bg-black text-white dark:bg-white dark:text-black"
                         )}
                       >
                         <span>{formatModelName(model)}</span>
                         {currentModel === model && <Check className="h-3 w-3" />}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}

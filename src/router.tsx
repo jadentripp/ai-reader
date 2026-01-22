@@ -17,6 +17,12 @@ const indexRoute = new Route({
   getParentRoute: () => rootRoute,
   path: "/",
   component: LibraryPage,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      q: (search.q as string) || "",
+      category: (search.category as string) || "collection-all",
+    };
+  },
 });
 
 const threeDLibraryRoute = new Route({

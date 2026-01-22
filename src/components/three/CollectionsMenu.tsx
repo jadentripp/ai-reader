@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ChevronDown, Sparkles, BookOpen, Feather, Globe, FlaskConical } from "lucide-react";
 import { CATALOG_GROUPS, type CatalogEntry } from "../../lib/gutenberg";
 
@@ -42,11 +44,13 @@ export const CollectionsMenu: React.FC<CollectionsMenuProps> = ({
         {QUICK_COLLECTIONS.map(({ key, icon: Icon, label }) => {
           const isActive = catalogKey === key;
           return (
-            <button
+            <Button
               key={key}
+              variant="ghost"
+              size="sm"
               onClick={() => handleSelect(key)}
               className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200
+                flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-full transition-[color,background-color] duration-200
                 ${isActive
                   ? "bg-amber-500/20 text-amber-300"
                   : "text-white/50 hover:text-white/80 hover:bg-white/5"
@@ -55,17 +59,19 @@ export const CollectionsMenu: React.FC<CollectionsMenuProps> = ({
             >
               <Icon className="h-3.5 w-3.5" />
               <span className="text-[11px] font-medium">{label}</span>
-            </button>
+            </Button>
           );
         })}
 
         <div className="w-px h-4 bg-white/10 mx-1" />
 
         {/* More Categories Toggle */}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
           className={`
-            flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200
+            flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-full transition-[color,background-color] duration-200
             ${isExpanded
               ? "bg-white/10 text-white"
               : "text-white/50 hover:text-white/80 hover:bg-white/5"
@@ -75,7 +81,7 @@ export const CollectionsMenu: React.FC<CollectionsMenuProps> = ({
           <FlaskConical className="h-3.5 w-3.5" />
           <span className="text-[11px] font-medium">More</span>
           <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
-        </button>
+        </Button>
       </div>
 
       {/* Expanded Categories Panel */}
@@ -87,11 +93,13 @@ export const CollectionsMenu: React.FC<CollectionsMenuProps> = ({
               {CATEGORY_SHORTCUTS.map(({ key, label }) => {
                 const isActive = catalogKey === key;
                 return (
-                  <button
+                  <Button
                     key={key}
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleSelect(key)}
                     className={`
-                      px-2.5 py-1 rounded-full text-[11px] font-medium transition-all
+                      px-2.5 py-1 h-auto rounded-full text-[11px] font-medium transition-[color,background-color]
                       ${isActive
                         ? "bg-amber-500/20 text-amber-300"
                         : "bg-white/5 text-stone-400 hover:text-white hover:bg-white/10"
@@ -99,7 +107,7 @@ export const CollectionsMenu: React.FC<CollectionsMenuProps> = ({
                     `}
                   >
                     {label}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -110,19 +118,19 @@ export const CollectionsMenu: React.FC<CollectionsMenuProps> = ({
                 group.items.slice(0, 6).map((cat) => {
                   const isActive = catalogKey === cat.key;
                   return (
-                    <button
+                    <Button
                       key={cat.key}
+                      variant="ghost"
                       onClick={() => handleSelect(cat.key)}
-                      className={`
-                        text-left py-1 px-1.5 rounded text-[11px] transition-colors truncate
-                        ${isActive
+                      className={cn(
+                        "text-left py-1 px-1.5 h-auto rounded text-[11px] transition-colors truncate justify-start",
+                        isActive
                           ? "text-amber-300"
-                          : "text-stone-500 hover:text-white"
-                        }
-                      `}
+                          : "text-stone-500 hover:text-white hover:bg-white/5"
+                      )}
                     >
                       {cat.label}
-                    </button>
+                    </Button>
                   );
                 })
               )}

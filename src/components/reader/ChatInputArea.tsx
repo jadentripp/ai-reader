@@ -23,7 +23,7 @@ export function ChatInputArea({
   onSend,
   chatSending,
   chatInputRef,
-  placeholder = "Ask about the text...",
+  placeholder = "Ask about the text…",
 }: ChatInputAreaProps) {
   return (
     <div className="shrink-0 border-t-2 border-black dark:border-white bg-background p-4">
@@ -32,7 +32,7 @@ export function ChatInputArea({
         onValueChange={onChatInputChange}
         onSubmit={onSend}
         isLoading={chatSending}
-        className="rounded-none border-2 border-black/20 dark:border-white/20 bg-background shadow-none backdrop-blur-sm transition-all focus-within:border-black dark:focus-within:border-white"
+        className="rounded-none border-2 border-black/20 dark:border-white/20 bg-background shadow-none backdrop-blur-sm transition-[border-color] focus-within:border-black dark:focus-within:border-white"
       >
         <PromptInputTextarea
           ref={chatInputRef}
@@ -50,7 +50,7 @@ export function ChatInputArea({
               size="sm"
               onClick={onSend}
               disabled={chatSending || !chatInput.trim()}
-              className="h-9 gap-2 rounded-none bg-[#E02E2E] px-4 font-bold uppercase tracking-widest text-[10px] text-white shadow-none transition-all hover:bg-black disabled:opacity-40"
+              className="h-9 gap-2 rounded-none bg-[#E02E2E] px-4 font-bold uppercase tracking-widest text-[10px] text-white shadow-none transition-[background-color,opacity] hover:bg-black disabled:opacity-40"
             >
               <Send className="h-3.5 w-3.5" />
               <span>Send</span>

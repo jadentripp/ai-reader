@@ -152,12 +152,12 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   }, [syncPageMetrics, lockToPage, updatePagination]);
 
   const prev = useCallback(() => {
-    scrollToPage(Math.max(1, pageLockRef.current - 1));
-  }, [scrollToPage]);
+    scrollToPage(Math.max(1, pageLockRef.current - columns));
+  }, [scrollToPage, columns]);
 
   const next = useCallback(() => {
-    scrollToPage(Math.min(totalPages, pageLockRef.current + 1));
-  }, [scrollToPage, totalPages]);
+    scrollToPage(Math.min(totalPages, pageLockRef.current + columns));
+  }, [scrollToPage, totalPages, columns]);
 
   const cleanup = useCallback(() => {
     if (rafRef.current !== null) {
