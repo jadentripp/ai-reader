@@ -89,8 +89,8 @@ export default function ChatPanel({
                     {isUser ? (
                       <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
                     ) : (
-                      <Markdown 
-                        className="leading-relaxed" 
+                      <Markdown
+                        className="leading-relaxed"
                         onCitationClick={message.onCitationClick}
                       >
                         {message.content}
@@ -120,7 +120,7 @@ export default function ChatPanel({
               onSend();
             }
           }}
-          placeholder="Ask about the meaning, context, or interpretation..."
+          placeholder="Ask about the meaning, context, or interpretation…"
         />
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">Press Cmd/Ctrl + Enter to send</span>

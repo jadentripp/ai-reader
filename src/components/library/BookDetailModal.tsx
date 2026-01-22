@@ -70,7 +70,9 @@ export function BookDetailModal({
                                 {cover ? (
                                     <img
                                         src={cover}
-                                        alt=""
+                                        alt={book.title}
+                                        width={128}
+                                        height={192}
                                         className="h-full w-full object-cover"
                                     />
                                 ) : (
@@ -119,7 +121,7 @@ export function BookDetailModal({
                                     {downloadStr && (
                                         <div className="flex items-center gap-1.5">
                                             <Download className="h-3.5 w-3.5 text-stone-400" />
-                                            <span className="font-mono text-xs font-bold text-stone-300">
+                                            <span className="font-mono text-xs font-bold text-stone-300 tabular-nums">
                                                 {downloadStr} downloads
                                             </span>
                                         </div>
@@ -211,7 +213,7 @@ export function BookDetailModal({
                             <div className="flex items-center gap-2 text-amber-600">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 <span className="font-mono text-xs font-bold uppercase tracking-widest">
-                                    Downloading...
+                                    Downloading…
                                 </span>
                             </div>
                         ) : canDownload ? (

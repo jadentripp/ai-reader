@@ -39,7 +39,7 @@ export function LibraryCollections({
         </div>
         <button
           onClick={() => setShowAllCategories(!showAllCategories)}
-          className="group flex items-center gap-3 font-mono text-[10px] font-bold uppercase tracking-widest text-foreground transition-all hover:text-amber-500"
+          className="group flex items-center gap-3 font-mono text-[10px] font-bold uppercase tracking-widest text-foreground transition-colors hover:text-amber-500"
         >
           <span>
             {showAllCategories ? "Close Menu" : "All Categories"}
@@ -71,7 +71,7 @@ export function LibraryCollections({
                             setCatalogKey(cat.key);
                             setShowAllCategories(false);
                           }}
-                          className={`px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest border-2 transition-all ${isActive
+                          className={`px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest border-2 transition-[background-color,border-color,color] ${isActive
                             ? "bg-black border-black text-white dark:bg-white dark:border-white dark:text-black"
                             : "bg-transparent border-stone-200 text-stone-500 hover:border-black hover:text-black dark:border-stone-800 dark:hover:border-white dark:hover:text-white"
                             }`}

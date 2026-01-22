@@ -1,6 +1,4 @@
-import React from "react";
-import { Search, X, Loader2, Box, Settings } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Search, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { type CatalogEntry } from "../../lib/gutenberg";
@@ -39,7 +37,7 @@ export function BauhausHeader({
       <div className="mx-auto max-w-6xl px-6">
         {/* Massive Typographic Header */}
         <div className="mb-12 border-b-8 border-black pb-4 dark:border-white">
-          <h1 className="select-none font-sans text-[80px] font-black uppercase leading-none tracking-tighter text-foreground md:text-[120px]">
+          <h1 className="select-none font-sans text-[80px] font-black uppercase leading-none tracking-tighter text-foreground md:text-[120px] [text-wrap:balance]">
             LIBRARY
           </h1>
           <div className="mt-2 flex items-center justify-between">
@@ -60,7 +58,9 @@ export function BauhausHeader({
               <Input
                 ref={searchInputRef}
                 type="search"
-                placeholder="SEARCH COLLECTION..."
+                name="catalog-search"
+                aria-label="Search project gutenberg collection"
+                placeholder="SEARCH COLLECTION…"
                 value={catalogQuery}
                 onChange={(e) => setCatalogQuery(e.target.value)}
                 onKeyDown={(e) => {
@@ -81,6 +81,7 @@ export function BauhausHeader({
                   <Button
                     variant="ghost"
                     size="icon"
+                    aria-label="Clear search"
                     className="h-8 w-8 hover:bg-stone-100 dark:hover:bg-stone-800"
                     onClick={() => setCatalogQuery("")}
                   >
@@ -99,9 +100,8 @@ export function BauhausHeader({
                 <button
                   key={fc.key}
                   onClick={() => setCatalogKey(isActive && fc.key !== 'collection-all' ? "collection-all" : fc.key)}
-                  className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:text-amber-500 ${
-                    isActive ? "text-amber-500 underline underline-offset-8" : "text-stone-400"
-                  }`}
+                  className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] transition-[color,text-decoration-color] hover:text-amber-500 ${isActive ? "text-amber-500 underline underline-offset-8" : "text-stone-400"
+                    }`}
                 >
                   {fc.label}
                 </button>
@@ -113,16 +113,16 @@ export function BauhausHeader({
         {/* Active Search Badge */}
         {catalogSearch && (
           <div className="mt-8 flex items-center gap-4 bg-stone-100 p-4 dark:bg-stone-900">
-             <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-500">Active Search:</div>
-             <div className="font-sans text-sm font-black uppercase tracking-tight text-foreground">
-               "{catalogSearch}"
-             </div>
-             <button 
+            <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-500">Active Search:</div>
+            <div className="font-sans text-sm font-black uppercase tracking-tight text-foreground">
+              "{catalogSearch}"
+            </div>
+            <button
               onClick={() => setCatalogQuery("")}
               className="ml-auto text-[10px] font-bold uppercase tracking-widest text-red-600 hover:underline"
-             >
-               Clear
-             </button>
+            >
+              Clear
+            </button>
           </div>
         )}
       </div>

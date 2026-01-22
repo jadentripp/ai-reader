@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit2 } from "lucide-react";
 
@@ -51,16 +52,19 @@ export function ChatThreadItem({
   return (
     <div className="flex-1 flex items-center gap-1 group/title min-w-0">
       <span className="truncate">{title}</span>
-      <button
-        onClick={(e) => {
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(e: React.MouseEvent) => {
           e.stopPropagation();
           setIsEditing(true);
         }}
-        className="opacity-0 group-hover/title:opacity-100 p-0.5 hover:text-[#E02E2E] transition-all"
+        className="opacity-0 group-hover/title:opacity-100 h-5 w-5 p-0.5 hover:text-[#E02E2E] transition-[color,opacity,background-color] rounded-none"
         title="Rename thread"
+        aria-label="Rename thread"
       >
         <Edit2 className="h-2.5 w-2.5" />
-      </button>
+      </Button>
     </div>
   );
 }

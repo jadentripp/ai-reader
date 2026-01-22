@@ -60,7 +60,9 @@ export function BookCardMinimal({
         {coverUrl ? (
           <img
             src={coverUrl}
-            alt=""
+            alt={title}
+            width={300}
+            height={450}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
@@ -81,7 +83,7 @@ export function BookCardMinimal({
         {/* Download Count Badge */}
         {downloadCount && !popular && (
           <div className="absolute left-2 top-2 bg-stone-900/80 px-2 py-1 backdrop-blur-sm">
-            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-white">
+            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-white tabular-nums">
               {downloadCount}
             </span>
           </div>
@@ -116,7 +118,7 @@ export function BookCardMinimal({
                     <AlertDialogHeader>
                       <AlertDialogTitle className="font-sans text-xl font-bold uppercase">Delete Book?</AlertDialogTitle>
                       <AlertDialogDescription className="font-mono text-xs">
-                        This action cannot be undone. This will permanently delete "{title}" from your library.
+                        This action cannot be undone. This will permanently delete “{title}” from your library.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -147,7 +149,7 @@ export function BookCardMinimal({
             <div className="flex items-center gap-2 px-4 py-2">
               <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
               <span className="font-mono text-xs font-bold uppercase tracking-widest text-amber-500">
-                Downloading...
+                Downloading…
               </span>
             </div>
           ) : alreadyInLibrary ? (
@@ -170,7 +172,7 @@ export function BookCardMinimal({
         {progress !== undefined && progress > 0 && (
           <div className="absolute bottom-0 left-0 h-1.5 w-full bg-stone-800/50 backdrop-blur-sm">
             <div
-              className="h-full bg-amber-500 transition-all duration-300"
+              className="h-full bg-amber-500 transition-[width] duration-300"
               style={{ width: `${Math.min(100, progress)}%` }}
               role="progressbar"
               aria-valuenow={progress}
@@ -181,7 +183,7 @@ export function BookCardMinimal({
 
       {/* Typography Info */}
       <div className="mt-3 select-none">
-        <h3 className="line-clamp-1 font-sans text-lg font-bold leading-none tracking-tight text-foreground transition-colors group-hover:text-amber-600">
+        <h3 className="line-clamp-1 font-sans text-lg font-bold leading-none tracking-tight text-foreground transition-[color] group-hover:text-amber-600 [text-wrap:balance]">
           {title}
         </h3>
         <p className="mt-1 line-clamp-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

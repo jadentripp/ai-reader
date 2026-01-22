@@ -25,7 +25,7 @@ export function ContinueReading({ booksInProgress, progressByBookId }: ContinueR
           >
             <div className="relative h-44 w-32 bg-stone-100 shadow-md transition-transform group-hover:scale-105 dark:bg-stone-800">
               {b.cover_url ? (
-                <img src={b.cover_url} alt="" className="h-full w-full object-cover" />
+                <img src={b.cover_url} alt={b.title} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center p-3">
                   <BookOpen className="h-10 w-10 text-stone-400" />
@@ -33,9 +33,9 @@ export function ContinueReading({ booksInProgress, progressByBookId }: ContinueR
               )}
               {/* Progress Line */}
               <div className="absolute bottom-0 left-0 h-1.5 w-full bg-black/20">
-                <div 
-                  className="h-full bg-amber-500" 
-                  style={{ width: `${Math.min(100, progressByBookId.get(b.id) || 0)}%` }} 
+                <div
+                  className="h-full bg-amber-500"
+                  style={{ width: `${Math.min(100, progressByBookId.get(b.id) || 0)}%` }}
                 />
               </div>
             </div>

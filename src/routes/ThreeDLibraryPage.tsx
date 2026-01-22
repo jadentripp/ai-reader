@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { TrendingUp, AlignLeft, User, Search, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import Bookcase from '../components/three/Bookcase';
 import BookMesh, { type BookStatus } from '../components/three/BookMesh';
@@ -209,7 +210,7 @@ const TrashBin: React.FC<{ isHovered: boolean; position: [number, number, number
       />
 
       <Html position={[0, 1.2, 0]} center>
-        <div className={`transition-all duration-500 ${isHovered ? 'opacity-100 scale-110' : 'opacity-40 scale-100'}`}>
+        <div className={`transition-[opacity,transform] duration-500 ${isHovered ? 'opacity-100 scale-110' : 'opacity-40 scale-100'}`}>
           <div className="flex flex-col items-center gap-1.5 pointer-events-none">
             <div className={`p-2.5 rounded-full backdrop-blur-md border ${isHovered ? 'bg-red-500/20 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.4)]' : 'bg-white/5 border-white/10'}`}>
               <Trash2 className={`w-5 h-5 ${isHovered ? 'text-red-400 animate-bounce' : 'text-white/40'}`} />
@@ -241,11 +242,13 @@ const SortSwitcher: React.FC<{
         const Icon = opt.icon;
         const isActive = current === opt.value;
         return (
-          <button
+          <Button
             key={opt.value}
+            variant="ghost"
+            size="sm"
             onClick={() => onSelect(opt.value)}
             className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-300
+              flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-full transition-[color,background-color] duration-300
               ${isActive
                 ? "bg-white/10 text-white shadow-inner"
                 : "text-white/40 hover:text-white/70 hover:bg-white/5"
@@ -254,7 +257,7 @@ const SortSwitcher: React.FC<{
           >
             <Icon className={`h-3 w-3 ${isActive ? 'text-amber-400' : ''}`} />
             <span className="text-[10px] font-bold tracking-widest uppercase">{opt.label}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

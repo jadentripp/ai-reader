@@ -62,7 +62,9 @@ export function BookCard({
       {coverUrl ? (
         <img
           src={coverUrl}
-          alt=""
+          alt={title}
+          width={240}
+          height={360}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
@@ -76,8 +78,8 @@ export function BookCard({
         </div>
       )}
       {progress !== undefined && progress > 0 && (
-        <div 
-          className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-all duration-300" 
+        <div
+          className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-[width] duration-300"
           style={{ width: `${Math.min(100, progress)}%` }}
           role="progressbar"
           aria-valuenow={progress}
@@ -90,7 +92,7 @@ export function BookCard({
 
   if (effectiveVariant === "grid") {
     return (
-      <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border/40 bg-card transition-all duration-500 hover:-translate-y-1 hover:border-border/80 hover:shadow-2xl">
+      <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border/40 bg-card transition-[transform,border-color,box-shadow] duration-500 hover:-translate-y-1 hover:border-border/80 hover:shadow-2xl">
         <Link to="/book/$bookId" params={{ bookId: String(id) }} className="block flex-1">
           <CoverImage className="aspect-[2/3] w-full" />
           <div className="p-4">
@@ -101,12 +103,12 @@ export function BookCard({
             {progress !== undefined && progress > 0 && (
               <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400">
                 <div className="h-1 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
-                  <div 
-                    className="h-full bg-current transition-all duration-300" 
+                  <div
+                    className="h-full bg-current transition-[width] duration-300"
                     style={{ width: `${Math.min(100, progress)}%` }}
                   />
                 </div>
-                <span>{progress}%</span>
+                <span className="tabular-nums">{progress}%</span>
               </div>
             )}
           </div>
@@ -131,7 +133,7 @@ export function BookCard({
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete "{title}"?</AlertDialogTitle>
+                <AlertDialogTitle>Delete “{title}”?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This will permanently delete this book and its downloaded files.
                 </AlertDialogDescription>
@@ -155,11 +157,11 @@ export function BookCard({
   // List Variant (Default for Catalog)
   return (
     <div
-      className={`group flex gap-4 rounded-xl border p-4 transition-all duration-300 hover:shadow-md ${resultType === "primary" && popular
-          ? "border-amber-200/60 bg-amber-50/10 dark:border-amber-800/40 dark:bg-amber-900/5"
-          : resultType === "tangential"
-            ? "border-border/20 opacity-75"
-            : "border-border/40 bg-card"
+      className={`group flex gap-4 rounded-xl border p-4 transition-[box-shadow,border-color,background-color] duration-300 hover:shadow-md ${resultType === "primary" && popular
+        ? "border-amber-200/60 bg-amber-50/10 dark:border-amber-800/40 dark:bg-amber-900/5"
+        : resultType === "tangential"
+          ? "border-border/20 opacity-75"
+          : "border-border/40 bg-card"
         }`}
     >
       <CoverImage className="h-28 w-20 flex-shrink-0 rounded-lg" />
@@ -196,7 +198,7 @@ export function BookCard({
           {downloadCount && (
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <Download className="h-3 w-3" />
-              {downloadCount}
+              <span className="tabular-nums">{downloadCount}</span>
             </span>
           )}
           {alreadyInLibrary && (

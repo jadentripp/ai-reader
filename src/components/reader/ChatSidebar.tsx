@@ -73,7 +73,7 @@ export default function ChatSidebar({
   onClearDefaultChat,
   onClearThreadChat,
   onDeleteMessage,
-  placeholder = "Ask about the text...",
+  placeholder = "Ask about the text…",
   isHighlightContext = false,
   attachedContext = [],
   onRemoveContext,
@@ -146,7 +146,7 @@ export default function ChatSidebar({
                               e.stopPropagation();
                               onClearDefaultChat();
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-[opacity,color]"
                             title="Clear default chat"
                           >
                             <Eraser className="h-3 w-3" />
@@ -185,7 +185,7 @@ export default function ChatSidebar({
                                   e.stopPropagation();
                                   onClearThreadChat(thread.id);
                                 }}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-[opacity,color]"
                                 title="Clear thread messages"
                               >
                                 <Eraser className="h-3 w-3" />
@@ -197,7 +197,7 @@ export default function ChatSidebar({
                                   e.stopPropagation();
                                   onDeleteThread(thread.id);
                                 }}
-                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-[opacity,color]"
                                 title="Delete thread"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -247,7 +247,7 @@ export default function ChatSidebar({
                   key={prompt.label}
                   variant="ghost"
                   size="sm"
-                  className="group h-8 gap-2 rounded-none border-2 border-black/20 dark:border-white/20 bg-background px-3 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
+                  className="group h-8 gap-2 rounded-none border-2 border-black/20 dark:border-white/20 bg-background px-3 text-[10px] font-bold uppercase tracking-widest transition-[border-color,background-color,color] duration-200 hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
                   onClick={() => {
                     onPromptSelect(prompt.prompt);
                     chatInputRef.current?.focus();
@@ -263,17 +263,17 @@ export default function ChatSidebar({
           </div>
         )}
 
-        <ChatMessageList 
-          messages={messages} 
-          chatSending={chatSending} 
-          onDeleteMessage={onDeleteMessage} 
+        <ChatMessageList
+          messages={messages}
+          chatSending={chatSending}
+          onDeleteMessage={onDeleteMessage}
           onCitationClick={onCitationClick}
         />
 
         {onRemoveSnippet && onClearSnippets && (
-          <ContextTray 
-            snippets={stagedSnippets} 
-            onRemove={onRemoveSnippet} 
+          <ContextTray
+            snippets={stagedSnippets}
+            onRemove={onRemoveSnippet}
             onClear={onClearSnippets}
             className="border-x-0 border-t-2 border-b-0 mb-0"
           />
@@ -304,12 +304,12 @@ export default function ChatSidebar({
           </div>
         )}
 
-        <ChatInputArea 
-          chatInput={chatInput} 
-          onChatInputChange={onChatInputChange} 
-          onSend={onSend} 
-          chatSending={chatSending} 
-          chatInputRef={chatInputRef} 
+        <ChatInputArea
+          chatInput={chatInput}
+          onChatInputChange={onChatInputChange}
+          onSend={onSend}
+          chatSending={chatSending}
+          chatInputRef={chatInputRef}
           placeholder={placeholder}
         />
       </div>

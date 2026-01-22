@@ -40,9 +40,13 @@ export function ReaderToolbar({ reader, onTtsSettings }: ReaderToolbarProps) {
       jumpPage={jumpPage}
       onJumpPageChange={setJumpPage}
       onJumpPageGo={() => {
-        const value = Number(jumpPage);
+        // Extract the first number from the input (handles "42", "42-43", etc.)
+        const match = jumpPage.match(/\d+/);
+        const value = match ? Number(match[0]) : NaN;
+
         if (Number.isFinite(value) && value >= 1) {
           pagination.scrollToPage(Math.min(value, pagination.totalPages));
+          setJumpPage(""); // Clear after jumping to show the current page(s) in the placeholder
         }
       }}
       onBack={() => window.history.back()}

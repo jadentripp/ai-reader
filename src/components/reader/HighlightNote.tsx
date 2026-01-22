@@ -101,7 +101,7 @@ export default function HighlightNote({
               )}
               value={noteDraft}
               onChange={(e) => onNoteChange(e.currentTarget.value)}
-              placeholder="Add your thoughts..."
+              placeholder="Add your thoughts…"
             />
 
             {/* Save button */}

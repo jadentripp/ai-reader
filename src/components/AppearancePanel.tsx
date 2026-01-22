@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -66,7 +67,7 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
             </Label>
           </div>
           <Select value={fontFamily} onValueChange={onFontFamilyChange}>
-            <SelectTrigger className="h-11 w-full rounded-none border-2 border-black/20 dark:border-white/20 bg-background transition-all hover:border-black dark:hover:border-white focus:ring-0">
+            <SelectTrigger className="h-11 w-full rounded-none border-2 border-black/20 dark:border-white/20 bg-background transition-[border-color] hover:border-black dark:hover:border-white focus:ring-0">
               <SelectValue placeholder="Select a font" />
             </SelectTrigger>
             <SelectContent className="rounded-none border-2 border-black dark:border-white">
@@ -81,14 +82,14 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
               ))}
             </SelectContent>
           </Select>
-          
+
           {/* Font Preview */}
           <div
             className="rounded-none border-2 border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-4 py-4 text-center"
             style={{ fontFamily }}
           >
             <span className="text-lg font-medium text-foreground">
-              The quick brown fox...
+              The quick brown fox…
             </span>
           </div>
         </div>
@@ -113,25 +114,26 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
                 Line Spacing
               </Label>
             </div>
-            <span className="bg-black text-white dark:bg-white dark:text-black px-2 py-0.5 font-mono text-[10px] font-bold">
+            <span className="bg-black text-white dark:bg-white dark:text-black px-2 py-0.5 font-mono text-[10px] font-bold tabular-nums">
               {lineHeight.toFixed(1)}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => onLineHeightChange(Math.max(1, lineHeight - 0.1))}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-none border-2 border-black/20 dark:border-white/20",
-                "bg-background text-foreground transition-all",
+                "h-9 w-9 rounded-none border-2 border-black/20 dark:border-white/20",
+                "bg-background text-foreground transition-[background-color,color,border-color,transform]",
                 "hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black hover:border-black dark:hover:border-white active:scale-95"
               )}
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path d="M5 12h14" />
               </svg>
-            </button>
+            </Button>
             <Slider
               min={1}
               max={3}
@@ -140,32 +142,33 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
               onValueChange={(value) => onLineHeightChange(value[0])}
               className="flex-1"
             />
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => onLineHeightChange(Math.min(3, lineHeight + 0.1))}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-none border-2 border-black/20 dark:border-white/20",
-                "bg-background text-foreground transition-all",
+                "h-9 w-9 rounded-none border-2 border-black/20 dark:border-white/20",
+                "bg-background text-foreground transition-[background-color,color,border-color,transform]",
                 "hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black hover:border-black dark:hover:border-white active:scale-95"
               )}
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-            </button>
+            </Button>
           </div>
-          
+
           {/* Line Height Visual */}
           <div className="flex justify-between gap-2 pt-1">
             {[1.2, 1.6, 2.0].map((lh) => (
-              <button
+              <Button
                 key={lh}
-                type="button"
+                variant="ghost"
                 onClick={() => onLineHeightChange(lh)}
                 className={cn(
-                  "group flex flex-1 flex-col items-center gap-2 rounded-none border-2 py-2 transition-all",
+                  "group flex flex-1 flex-col items-center gap-2 h-auto rounded-none border-2 py-2 transition-[background-color,color,border-color]",
                   Math.abs(lineHeight - lh) < 0.15
-                    ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
+                    ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white hover:bg-black/90 dark:hover:bg-white/90"
                     : "border-black/10 dark:border-white/10 hover:border-black dark:hover:border-white"
                 )}
               >
@@ -185,7 +188,7 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
                 <span className="text-[9px] font-bold uppercase tracking-widest">
                   {lh === 1.2 ? "Tight" : lh === 1.6 ? "Normal" : "Relaxed"}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -211,25 +214,26 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
                 Page Margins
               </Label>
             </div>
-            <span className="bg-[#E02E2E] text-white px-2 py-0.5 font-mono text-[10px] font-bold">
+            <span className="bg-[#E02E2E] text-white px-2 py-0.5 font-mono text-[10px] font-bold tabular-nums">
               {margin}PX
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => onMarginChange(Math.max(0, margin - 10))}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-none border-2 border-black/20 dark:border-white/20",
-                "bg-background text-foreground transition-all",
+                "h-9 w-9 rounded-none border-2 border-black/20 dark:border-white/20",
+                "bg-background text-foreground transition-[background-color,color,border-color,transform]",
                 "hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black hover:border-black dark:hover:border-white active:scale-95"
               )}
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path d="M5 12h14" />
               </svg>
-            </button>
+            </Button>
             <Slider
               min={0}
               max={200}
@@ -238,19 +242,20 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
               onValueChange={(value) => onMarginChange(value[0])}
               className="flex-1"
             />
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => onMarginChange(Math.min(200, margin + 10))}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-none border-2 border-black/20 dark:border-white/20",
-                "bg-background text-foreground transition-all",
+                "h-9 w-9 rounded-none border-2 border-black/20 dark:border-white/20",
+                "bg-background text-foreground transition-[background-color,color,border-color,transform]",
                 "hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black hover:border-black dark:hover:border-white active:scale-95"
               )}
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-            </button>
+            </Button>
           </div>
 
           {/* Margin Visual */}
@@ -260,14 +265,14 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
               { value: 80, label: "Medium" },
               { value: 150, label: "Wide" },
             ].map(({ value, label }) => (
-              <button
+              <Button
                 key={value}
-                type="button"
+                variant="ghost"
                 onClick={() => onMarginChange(value)}
                 className={cn(
-                  "group flex flex-1 flex-col items-center gap-2 rounded-none border-2 py-2 transition-all",
+                  "group flex flex-1 flex-col items-center gap-2 h-auto rounded-none border-2 py-2 transition-[background-color,color,border-color]",
                   Math.abs(margin - value) < 25
-                    ? "bg-[#E02E2E] text-white border-[#E02E2E]"
+                    ? "bg-[#E02E2E] text-white border-[#E02E2E] hover:bg-[#E02E2E]/90"
                     : "border-black/10 dark:border-white/10 hover:border-black dark:hover:border-white"
                 )}
               >
@@ -292,7 +297,7 @@ const AppearancePanel: React.FC<AppearancePanelProps> = ({
                 <span className="text-[9px] font-bold uppercase tracking-widest">
                   {label}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>

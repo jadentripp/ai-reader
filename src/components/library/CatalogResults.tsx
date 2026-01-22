@@ -60,7 +60,9 @@ function CatalogBookCard({
         {cover ? (
           <img
             src={cover}
-            alt=""
+            alt={book.title}
+            width={300}
+            height={450}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
@@ -113,7 +115,7 @@ function CatalogBookCard({
 
       {/* Typography Info */}
       <div className="mt-3 select-none">
-        <h3 className="line-clamp-1 font-sans text-lg font-bold leading-none tracking-tight text-foreground transition-colors group-hover:text-amber-600">
+        <h3 className="line-clamp-1 font-sans text-lg font-bold leading-none tracking-tight text-foreground transition-[color] group-hover:text-amber-600 [text-wrap:balance]">
           {book.title}
         </h3>
         <p className="mt-1 line-clamp-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -168,17 +170,17 @@ export function CatalogResults({
 
   return (
     <>
-      <section className="border-2 border-black bg-background p-8 dark:border-white">
+      <section className="border-2 border-black bg-background p-8 dark:border-white touch-action-manipulation">
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b-2 border-black pb-6 dark:border-white">
           <div className="space-y-1.5">
-            <h2 className="font-sans text-3xl font-black uppercase tracking-tighter text-foreground">
+            <h2 className="font-sans text-3xl font-black uppercase tracking-tighter text-foreground [text-wrap:balance]">
               {catalogSearch ? `Results: ${catalogSearch}` : activeCatalog.label}
             </h2>
             {!catalogSearch && activeCatalog.kind !== "all" ? (
               <p className="max-w-2xl font-mono text-xs uppercase tracking-widest text-muted-foreground leading-relaxed">{activeCatalog.description}</p>
             ) : (
               <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                {catalogQ.isLoading ? "Loading..." : `${catalogQ.data?.count ?? 0} Titles Found`}
+                {catalogQ.isLoading ? "Loading…" : <span className="tabular-nums">{catalogQ.data?.count ?? 0} Titles Found</span>}
               </p>
             )}
           </div>
@@ -205,7 +207,7 @@ export function CatalogResults({
                     key={opt.id}
                     type="button"
                     onClick={() => setSortBy(opt.id as SortOption)}
-                    className={`flex w-full items-center gap-2 px-3 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-colors ${sortBy === opt.id ? "bg-black text-white dark:bg-white dark:text-black" : "hover:bg-muted"}`}
+                    className={`flex w-full items-center gap-2 px-3 py-2.5 font-mono text-[10px] uppercase tracking-widest transition-[color,background-color] ${sortBy === opt.id ? "bg-black text-white dark:bg-white dark:text-black" : "hover:bg-muted"}`}
                   >
                     <opt.icon className="h-3 w-3" />
                     {opt.label}
@@ -223,7 +225,7 @@ export function CatalogResults({
                 disabled={bulkScan.running}
               >
                 <Download className="h-4 w-4" />
-                {bulkScan.running ? "Scanning..." : "Download All"}
+                {bulkScan.running ? "Scanning…" : "Download All"}
               </Button>
             )}
           </div>
