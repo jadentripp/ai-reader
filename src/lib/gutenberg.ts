@@ -24,10 +24,10 @@ function slug(value: string): string {
 
 const COLLECTIONS: CatalogEntry[] = [
   {
-    key: 'collection-all',
-    label: 'All of Gutenberg',
-    description: 'Search the entire Project Gutenberg catalog.',
-    kind: 'all',
+    key: 'collection-popular',
+    label: 'Most Popular',
+    description: 'The most downloaded books on Project Gutenberg.',
+    kind: 'collection',
     catalogKey: 'all',
   },
   {
@@ -57,6 +57,20 @@ const COLLECTIONS: CatalogEntry[] = [
     description: 'Latin comedies, tragedies, and theatrical classics.',
     kind: 'collection',
     catalogKey: 'roman-drama',
+  },
+  {
+    key: 'collection-gothic',
+    label: 'Gothic Horror',
+    description: 'Spine-chilling tales of the supernatural and the sublime.',
+    kind: 'collection',
+    catalogKey: 'gothic',
+  },
+  {
+    key: 'collection-philosophy',
+    label: 'Philosophy',
+    description: 'Foundational texts on logic, ethics, and the human condition.',
+    kind: 'collection',
+    catalogKey: 'philosophy',
   },
 ]
 
@@ -193,4 +207,4 @@ export const CATALOG_BY_KEY = new Map(
   CATALOG_GROUPS.flatMap((group) => group.items).map((item) => [item.key, item]),
 )
 
-export const DEFAULT_CATALOG_KEY = 'collection-all'
+export const DEFAULT_CATALOG_KEY = 'collection-popular'
