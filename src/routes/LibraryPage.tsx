@@ -12,6 +12,7 @@ import { useLibrary } from '../hooks/useLibrary'
 export default function LibraryPage() {
   const {
     viewMode,
+    setViewMode,
     booksQ,
     catalogKey,
     setCatalogKey,
