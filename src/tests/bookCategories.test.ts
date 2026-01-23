@@ -101,7 +101,7 @@ describe('Book Categories - Configuration Validation', () => {
 
   it(`should have exactly ${collectionEntries.length} collections`, () => {
     // Document the expected number of collections
-    expect(collectionEntries.length).toBe(5)
+    expect(collectionEntries.length).toBe(7)
   })
 })
 
@@ -323,11 +323,13 @@ describe('Book Categories - API Integration (Mocked)', () => {
 
 describe('Book Categories - Collections Validation', () => {
   const expectedCollections = [
-    { key: 'collection-all', label: 'All of Gutenberg', catalogKey: 'all' },
+    { key: 'collection-popular', label: 'Most Popular', catalogKey: 'all' },
     { key: 'collection-shakespeare', label: 'Shakespeare', catalogKey: 'shakespeare' },
     { key: 'collection-greek-tragedy', label: 'Greek tragedy', catalogKey: 'greek-tragedy' },
     { key: 'collection-greek-epic', label: 'Greek epics', catalogKey: 'greek-epic' },
     { key: 'collection-roman-drama', label: 'Roman drama', catalogKey: 'roman-drama' },
+    { key: 'collection-gothic', label: 'Gothic Horror', catalogKey: 'gothic' },
+    { key: 'collection-philosophy', label: 'Philosophy', catalogKey: 'philosophy' },
   ]
 
   expectedCollections.forEach(({ key, label, catalogKey }) => {
