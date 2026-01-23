@@ -51,8 +51,10 @@ fn catalog_base_url(catalog_key: &str) -> Option<&'static str> {
     match catalog_key {
         "all" => Some("https://gutendex.com/books/"),
         "shakespeare" => Some("https://gutendex.com/books/?search=Shakespeare%2C%20William"),
-        "greek-tragedy" => Some("https://gutendex.com/books/?search=greek%20tragedy"),
-        "greek-epic" => Some("https://gutendex.com/books/?search=homer"),
+        "greek-tragedy" => {
+            Some("https://gutendex.com/books/?search=aeschylus%20sophocles%20euripides%20tragedy")
+        }
+        "greek-epic" => Some("https://gutendex.com/books/?search=homer%20hesiod%20epic%20myth"),
         "roman-drama" => Some("https://gutendex.com/books/?search=roman%20drama"),
         "mythology" => Some("https://gutendex.com/books/?search=mythology"),
         "philosophy" => Some("https://gutendex.com/books/?search=philosophy"),
@@ -150,4 +152,24 @@ pub async fn search_catalog(
     let client = reqwest::Client::new();
     let resp = client.get(url.as_ref()).send().await?.error_for_status()?;
     Ok(resp.json::<GutendexResponse>().await?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_catalog_base_urls() {
+        // Greek Epic should include broader search
+        let epic = catalog_base_url("greek-epic").unwrap();
+        assert!(epic.contains("homer%20hesiod%20epic%20myth"));
+
+        // Greek Tragedy should include major playwrights
+        let tragedy = catalog_base_url("greek-tragedy").unwrap();
+        assert!(tragedy.contains("aeschylus%20sophocles%20euripides%20tragedy"));
+
+        // New categories
+        assert!(catalog_base_url("gothic").is_some());
+        assert!(catalog_base_url("philosophy").is_some());
+    }
 }
