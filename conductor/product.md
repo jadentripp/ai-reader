@@ -16,6 +16,7 @@ AI Reader transforms the experience of reading public domain literature from a p
 - **Local Library Management:** Efficient download and storage of books for offline reading.
 - **Bauhaus-Inspired UI:** A cohesive "Modern Minimalist" experience across the Library and Reader. Featuring massive typographic headers, strictly geometric grids, sharp corners (no border-radius), and a monochromatic palette with bold accents.
 - **The Reading Room:** An immersive 3D bookshelf experience using Three.js and WebGPU, featuring tactile book meshes, reactive animations, and theme-synced ambient lighting for a premium "private library" feel.
+- **Enriched Discovery:** Curated featured collections including Gothic Horror, Philosophy, Shakespeare, and Classical Greek literature with optimized search queries and immediate "Most Popular" results for better discovery.
 - **Premium Reading Experience:** A paginated, customizable reader supporting single or two-column layouts.
 - **Rich Media Support:** Integrated inline illustration and image extraction from MOBI files, providing a more faithful and visually engaging reading experience for classic literature.
 - **Audiobook Narration:** High-quality AI-powered text-to-speech using ElevenLabs with a dedicated bottom sheet TTS panel. Users can control playback with seekable progress bar, playback speed (0.5x-2x), skip forward/backward (15s), and volume sliders. Panel features smooth slide-up animations, swipe gestures for collapse, and responsive design matching the reader aesthetic.
