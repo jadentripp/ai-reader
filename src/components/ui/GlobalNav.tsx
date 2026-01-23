@@ -17,7 +17,7 @@ export function GlobalNav() {
       {!isHome && (
         <Link
           to="/"
-          search={{ q: '', category: 'collection-popular' }}
+          search={{ q: '', category: 'collection-all' }}
           className="pointer-events-auto group flex h-10 items-center gap-2 border-2 border-black bg-background px-3 shadow-sm transition-[color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform] hover:bg-black hover:text-white dark:border-white dark:hover:bg-white dark:hover:text-black"
           title="Library"
           aria-label="Go to Library"

@@ -16,7 +16,7 @@ const indexRoute = new Route({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       q: (search.q as string) || '',
-      category: (search.category as string) || 'collection-popular',
+      category: (search.category as string) || 'collection-all',
     }
   },
 })
