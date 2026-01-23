@@ -29,9 +29,9 @@ describe('LibraryPage', () => {
     currentMockValues = {
       booksQ: { data: [], isLoading: false },
       catalogQ: { isFetching: false, data: { results: [], count: 0 } },
-      catalogKey: 'collection-all',
+      catalogKey: 'collection-popular',
       setCatalogKey: mock(),
-      activeCatalog: { kind: 'all', catalogKey: 'collection-all' },
+      activeCatalog: { kind: 'all', catalogKey: 'all', key: 'collection-popular' },
       catalogSearch: null,
       canQueryCatalog: false,
       hasQueueActivity: false,
