@@ -12,9 +12,10 @@
             { "validator": "--host" },
             { "validator": "\\d+\\.\\d+\\.\\d+\\.\\d+" },
             { "validator": "--port" },
-            { "validator": "\\d+" }
+            { "validator": "\\d+" },
+            { "validator": "--preload" }
           ],
-          "name": "binaries/qwen-tts",
+          "name": "binaries/qwen-tts-x86_64-apple-darwin/qwen-tts",
           "sidecar": true
         }
       ]
