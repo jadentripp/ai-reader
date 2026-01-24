@@ -33,5 +33,5 @@
 
 ---
 
-- [~] **Track: Qwen TTS Production Sidecar**
+- [x] **Track: Qwen TTS Production Sidecar**
 *Link: [./tracks/qwen_sidecar_20260123/](./tracks/qwen_sidecar_20260123/)*
