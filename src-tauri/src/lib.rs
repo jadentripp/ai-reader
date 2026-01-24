@@ -6,7 +6,7 @@ mod types;
 
 use anyhow::Context;
 use db::{Book, BookChatThread, BookMessage, BookPosition, Highlight, HighlightMessage};
-use qwen::SidecarState;
+use qwen::{SidecarState, SidecarStatus};
 use sqlx::{Pool, Postgres};
 use std::fs;
 use tauri::{AppHandle, Manager, State};
@@ -714,6 +714,25 @@ pub fn run() {
             qwen::start_qwen_sidecar,
             qwen::stop_qwen_sidecar,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                if window.app_handle().webview_windows().len() == 1 {
+                    stop_sidecar_on_exit(window.app_handle());
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn stop_sidecar_on_exit(app: &AppHandle) {
+    let state: State<'_, SidecarState> = app.state();
+    let mut status = state.status.lock().unwrap();
+    let mut child_guard = state.child.lock().unwrap();
+
+    if let Some(child) = child_guard.take() {
+        println!("[Sidecar] Killing qwen-tts sidecar on exit...");
+        let _ = child.kill();
+    }
+    *status = SidecarStatus::Stopped;
 }
