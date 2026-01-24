@@ -29,7 +29,7 @@ CORS(app)
 # Global model instance (loaded lazily)
 _model = None
 _model_lock = threading.Lock()
-_model_name = "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+_model_name = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
 
 # Available speakers for CustomVoice model
 SPEAKERS = {
@@ -205,6 +205,7 @@ def voices():
 
 
 def main():
+    global _model_name
     parser = argparse.ArgumentParser(description="Qwen3-TTS Server")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
     parser.add_argument("--port", type=int, default=5123, help="Port to bind to")
@@ -212,7 +213,6 @@ def main():
     parser.add_argument("--preload", action="store_true", help="Preload model on startup")
     args = parser.parse_args()
     
-    global _model_name
     _model_name = args.model
     
     if args.preload:
