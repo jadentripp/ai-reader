@@ -20,6 +20,7 @@ from typing import Optional
 
 import numpy as np
 import soundfile as sf
+import torch
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
@@ -30,6 +31,13 @@ CORS(app)
 _model = None
 _model_lock = threading.Lock()
 _model_name = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+
+# Detect best device
+# Default to CPU for now as MPS was slower in tests
+DEVICE = "cpu"
+DTYPE = torch.float32
+
+print(f"[Qwen3-TTS] Using device: {DEVICE}, dtype: {DTYPE}")
 
 # Available speakers for CustomVoice model
 SPEAKERS = {
@@ -56,7 +64,7 @@ def get_model():
                 from qwen_tts import Qwen3TTSModel
                 print(f"[Qwen3-TTS] Loading model: {_model_name}")
                 start = time.time()
-                _model = Qwen3TTSModel.from_pretrained(_model_name)
+                _model = Qwen3TTSModel.from_pretrained(_model_name, device_map=DEVICE, torch_dtype=DTYPE)
                 print(f"[Qwen3-TTS] Model loaded in {time.time() - start:.2f}s")
                 print(f"[Qwen3-TTS] Supported speakers: {_model.get_supported_speakers()}")
     return _model
@@ -120,6 +128,7 @@ def tts():
             speaker=speaker,
             language=language,
             instruct=instruct,
+            do_sample=False,
         )
         
         # wavs is a list, get the first result
@@ -168,6 +177,7 @@ def tts_stream():
                     speaker=speaker,
                     language=language,
                     instruct=instruct,
+                    do_sample=False,
                 )
                 
                 audio = wavs[0] if isinstance(wavs, list) else wavs

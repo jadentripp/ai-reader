@@ -15,7 +15,7 @@ def test_model_identifier():
 def test_model_loading_and_latency():
     import server
     
-    print(f"\n[Test] Loading model: {server._model_name}")
+    print(f"\n[Test] Loading model: {server._model_name} on {server.DEVICE} with {server.DTYPE}")
     start_load = time.time()
     model = server.get_model()
     load_time = time.time() - start_load
@@ -32,7 +32,8 @@ def test_model_loading_and_latency():
     wavs, sr = model.generate_custom_voice(
         text=text,
         speaker=speaker,
-        language="English"
+        language="English",
+        do_sample=False
     )
     gen_time = time.time() - start_gen
     
