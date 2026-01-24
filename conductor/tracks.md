@@ -4,6 +4,9 @@
 
 # Archived Tracks
 
+- [x] **Track: Qwen TTS 0.6B Model Switch**
+*Link: [./archive/qwen_06b_switch_20260123/](./archive/qwen_06b_switch_20260123/)*
+
 - [x] **Track: Library Discovery Overhaul**
 *Link: [./archive/library_discovery_overhaul_20260122/](./archive/library_discovery_overhaul_20260122/)*
 
@@ -32,8 +35,3 @@
 
 - [~] **Track: Qwen TTS Production Sidecar**
 *Link: [./tracks/qwen_sidecar_20260123/](./tracks/qwen_sidecar_20260123/)*
-
----
-
-- [x] **Track: Qwen TTS 0.6B Model Switch**
-*Link: [./tracks/qwen_06b_switch_20260123/](./tracks/qwen_06b_switch_20260123/)*
