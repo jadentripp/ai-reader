@@ -216,6 +216,9 @@ def voices():
 
 def main():
     global _model_name
+    import multiprocessing
+    multiprocessing.freeze_support()
+    
     parser = argparse.ArgumentParser(description="Qwen3-TTS Server")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
     parser.add_argument("--port", type=int, default=5123, help="Port to bind to")

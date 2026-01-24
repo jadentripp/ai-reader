@@ -42,11 +42,13 @@ def run_bundle():
         "--onefile",
         f"--name={executable_name}",
         "--clean",
-        "--hidden-import=qwen_tts",
-        "--hidden-import=soundfile",
-        "--hidden-import=numpy",
         "--hidden-import=flask",
         "--hidden-import=flask_cors",
+        "--hidden-import=scipy",
+        "--hidden-import=scipy.signal",
+        "--hidden-import=scipy.special",
+        "--hidden-import=scipy.special._cdflib",
+        "--hidden-import=qwen_tts",
         "server.py"
     ]
     
