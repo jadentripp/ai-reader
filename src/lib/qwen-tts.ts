@@ -81,6 +81,7 @@ export class QwenTTSService {
 
     await this.ensureSidecar()
 
+    const startTime = performance.now()
     const response = await fetch(`${this.baseUrl}/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,7 +99,8 @@ export class QwenTTSService {
     }
 
     const data = await response.json()
-    console.log(`[QwenTTS] Generated ${data.duration?.toFixed(2)}s audio`)
+    const endTime = performance.now()
+    console.log(`[QwenTTS] Generated ${data.duration?.toFixed(2)}s audio in ${((endTime - startTime) / 1000).toFixed(2)}s`)
     return data
   }
 
@@ -112,6 +114,7 @@ export class QwenTTSService {
 
     await this.ensureSidecar()
 
+    const startTime = performance.now()
     const response = await fetch(`${this.baseUrl}/tts/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -147,6 +150,10 @@ export class QwenTTSService {
           try {
             const data = JSON.parse(line.slice(6))
             if (data.error) throw new Error(data.error)
+            const endTime = performance.now()
+            if (data.audio_base64) {
+              console.log(`[QwenTTS] Received audio chunk in ${((endTime - startTime) / 1000).toFixed(2)}s`)
+            }
             yield data
           } catch (e) {
             if (e instanceof SyntaxError) continue
