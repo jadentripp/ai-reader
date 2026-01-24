@@ -140,6 +140,32 @@ export default function SettingsPage() {
   const [qwenLoadingPreview, setQwenLoadingPreview] = useState(false)
   const [loadingModels, setLoadingModels] = useState(false)
 
+  async function ensureSidecarRunning() {
+    try {
+      let status = await getQwenStatus()
+      if (status === 'running') return true
+      if (status === 'stopped' || status === 'errored') {
+        status = await startQwenSidecar()
+      }
+
+      setQwenServerStatus(status)
+
+      // Poll until running or timeout (30 seconds)
+      const start = Date.now()
+      while (status !== 'running' && Date.now() - start < 30000) {
+        await new Promise((r) => setTimeout(r, 1000))
+        status = await getQwenStatus()
+        setQwenServerStatus(status)
+      }
+
+      return status === 'running'
+    } catch (e) {
+      console.error('Failed to ensure sidecar is running:', e)
+      setQwenServerStatus('errored')
+      return false
+    }
+  }
+
   useEffect(() => {
     console.log('[Settings] voiceId changed:', voiceId)
   }, [voiceId])
@@ -162,18 +188,8 @@ export default function SettingsPage() {
 
   // Check Qwen server status when provider is qwen or on mount
   useEffect(() => {
-    async function checkQwenStatus() {
-      setQwenServerStatus('checking')
-      try {
-        const status = await getQwenStatus()
-        setQwenServerStatus(status || 'stopped')
-      } catch (e) {
-        console.error('Failed to get Qwen status:', e)
-        setQwenServerStatus('errored')
-      }
-    }
     if (ttsProvider === 'qwen') {
-      checkQwenStatus()
+      ensureSidecarRunning()
     }
   }, [ttsProvider])
 
@@ -240,6 +256,11 @@ export default function SettingsPage() {
 
     setQwenLoadingPreview(true)
     try {
+      const isRunning = await ensureSidecarRunning()
+      if (!isRunning) {
+        throw new Error('Could not start Qwen sidecar')
+      }
+
       const response = await qwenTTSService.textToSpeech(
         'This is a preview of the Qwen voice.',
         qwenSpeaker,
