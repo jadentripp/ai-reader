@@ -6,10 +6,26 @@ requires-python = ">=3.11"
 dependencies = [
     "flask>=3.0.0",
     "flask-cors>=4.0.0",
-    "qwen-tts>=0.1.0",
+    "qwen-tts>=0.0.5",
     "soundfile>=0.12.0",
-    "numpy>=1.24.0",
+    "torch==2.2.2",
+    "torchaudio==2.2.2",
+    "numba>=0.60.0,<0.63",
+    "llvmlite>=0.43.0,<0.46",
+    "numpy<2",
 ]
 
-[project.scripts]
-qwen-tts-server = "server:main"
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.18.0",
+    "pytest>=9.0.2",
+]
