@@ -35,5 +35,5 @@
 
 ---
 
-- [~] **Track: Qwen TTS 0.6B Model Switch**
+- [x] **Track: Qwen TTS 0.6B Model Switch**
 *Link: [./tracks/qwen_06b_switch_20260123/](./tracks/qwen_06b_switch_20260123/)*
