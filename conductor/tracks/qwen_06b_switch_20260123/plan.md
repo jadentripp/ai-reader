@@ -9,10 +9,10 @@
 - [x] Task: TDD - Verify Model Loading & Latency d1991f7
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Model Update & Server Refactor' (Protocol in workflow.md) 75f8f7b
 
-## Phase 2: Final Verification & Cleanup
-- [ ] Task: Full System Integration Test
-    - [ ] Run the AI Reader application with the updated TTS sidecar.
-    - [ ] Manually verify TTS generation in the reader interface.
-- [ ] Task: Documentation & Final Notes
-    - [ ] Update `conductor/qwen-tts/README.md` if the model identifier or requirements have changed.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Final Verification & Cleanup' (Protocol in workflow.md)
+## Phase 2: Final Verification & Cleanup [checkpoint: b03bc50]
+- [x] Task: Full System Integration Test
+    - [x] Run the AI Reader application with the updated TTS sidecar.
+    - [x] Manually verify TTS generation in the reader interface.
+- [x] Task: Documentation & Final Notes
+    - [x] Update `conductor/qwen-tts/README.md` if the model identifier or requirements have changed.
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Final Verification & Cleanup' (Protocol in workflow.md) b03bc50
