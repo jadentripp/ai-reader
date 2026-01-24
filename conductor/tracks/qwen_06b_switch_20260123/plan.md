@@ -3,13 +3,13 @@
 ## Phase 1: Model Update & Server Refactor
 - [x] Task: Update default model in `server.py` 89700c3
     - [x] Update `_model_name` variable to `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` in `conductor/qwen-tts/server.py`.
-- [ ] Task: TDD - Verify Model Loading & Latency
-    - [ ] Write tests in `conductor/qwen-tts/tests/test_server_optimization.py` to:
-        - [ ] Verify the server loads the 0.6B model successfully.
-        - [ ] Measure and log the latency for a sample TTS request.
-        - [ ] Assert that the generated audio is valid.
-    - [ ] Implement model switch if not already done.
-    - [ ] Run tests and ensure they pass.
+- [x] Task: TDD - Verify Model Loading & Latency
+    - [x] Write tests in `conductor/qwen-tts/tests/test_server_optimization.py` to:
+        - [x] Verify the server loads the 0.6B model successfully.
+        - [x] Measure and log the latency for a sample TTS request.
+        - [x] Assert that the generated audio is valid.
+    - [x] Implement model switch if not already done.
+    - [x] Run tests and ensure they pass.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Model Update & Server Refactor' (Protocol in workflow.md)
 
 ## Phase 2: Final Verification & Cleanup
