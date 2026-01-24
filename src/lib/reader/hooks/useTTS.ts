@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { audioPlayer, EndReason, type VoiceSettings, type WordTiming } from '@/lib/elevenlabs'
+import { audioPlayer, type TTSProvider, type VoiceSettings, type WordTiming } from '@/lib/elevenlabs'
 import { type CharacterMapping, getPageContent, type PageMetrics } from '@/lib/readerUtils'
 import { getSetting } from '@/lib/tauri'
 

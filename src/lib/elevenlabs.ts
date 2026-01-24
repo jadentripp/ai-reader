@@ -1,5 +1,8 @@
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js'
+import { qwenTTSService } from './qwen-tts'
 import { getSetting } from './tauri/settings'
+
+export type TTSProvider = 'elevenlabs' | 'qwen'
 
 export interface Voice {
   voice_id: string
@@ -307,9 +310,28 @@ export class AudioPlayer {
   private _lastEndReason: EndReason = 'unknown'
   private _wordTimings: WordTiming[] = []
   private _currentWordIndex: number = -1
+  private _ttsProvider: TTSProvider = 'elevenlabs'
 
   constructor() {
     // Context is lazily initialized on first play
+    // Load TTS provider preference
+    getSetting('tts_provider').then((provider) => {
+      if (provider === 'qwen' || provider === 'elevenlabs') {
+        this._ttsProvider = provider
+        console.log(`[AudioPlayer] TTS provider set to: ${provider}`)
+      }
+    })
+  }
+
+  getTTSProvider(): TTSProvider {
+    return this._ttsProvider
+  }
+
+  async setTTSProvider(provider: TTSProvider) {
+    this._ttsProvider = provider
+    const { setSetting } = await import('./tauri/settings')
+    await setSetting({ key: 'tts_provider', value: provider })
+    console.log(`[AudioPlayer] TTS provider changed to: ${provider}`)
   }
 
   private initContext() {
@@ -604,6 +626,83 @@ export class AudioPlayer {
       console.error('[AudioPlayer] playWithTimestamps error:', e)
       this._lastEndReason = 'error'
       this.setState('error')
+    }
+  }
+
+  /**
+   * Play using Qwen3-TTS local server.
+   * Falls back to this when ElevenLabs quota is exceeded or user prefers local.
+   */
+  async playWithQwen(text: string, speaker?: string, language?: string) {
+    console.log(`[AudioPlayer] playWithQwen requested for text length: ${text.length}, speaker: ${speaker ?? 'Aiden'}`)
+    const ctx = this.initContext()
+    if (ctx.state === 'suspended') {
+      console.log(`[AudioPlayer] Resuming suspended AudioContext`)
+      await ctx.resume()
+    }
+
+    this.setState('buffering')
+
+    try {
+      // Check if Qwen server is available
+      const isAvailable = await qwenTTSService.healthCheck()
+      if (!isAvailable) {
+        throw new Error('Qwen TTS server not available. Start it with: cd conductor/qwen-tts && uv run python server.py')
+      }
+
+      // Stop any current playback
+      this._lastEndReason = 'replaced'
+      this.stopInternal()
+
+      this._wordTimings = []
+      this._currentWordIndex = -1
+      this._startOffset = 0
+      this._pausedAt = 0
+
+      console.log(`[AudioPlayer] Calling Qwen TTS service`)
+      const response = await qwenTTSService.textToSpeech(text, speaker, language)
+
+      // Decode base64 WAV audio
+      const binaryString = atob(response.audio_base64)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+
+      console.log(`[AudioPlayer] Decoding Qwen audio, ${bytes.length} bytes`)
+      const audioBuffer = await ctx.decodeAudioData(bytes.buffer.slice(0))
+      console.log(`[AudioPlayer] Qwen audio decoded, duration: ${audioBuffer.duration.toFixed(2)}s`)
+
+      this.currentBuffer = audioBuffer
+      this.startPlayback(audioBuffer, 0)
+      this.setState('playing')
+
+    } catch (e: any) {
+      console.error('[AudioPlayer] playWithQwen error:', e)
+      this._lastEndReason = 'error'
+      this.setState('error')
+      throw e
+    }
+  }
+
+  /**
+   * Smart play that uses configured TTS provider.
+   * Falls back to Qwen if ElevenLabs fails with quota error.
+   */
+  async playWithProvider(text: string, voiceId?: string, settings?: VoiceSettings, qwenSpeaker?: string) {
+    if (this._ttsProvider === 'qwen') {
+      return this.playWithQwen(text, qwenSpeaker)
+    }
+
+    try {
+      return await this.playWithTimestamps(text, voiceId, settings)
+    } catch (e: any) {
+      // Auto-fallback to Qwen on quota exceeded
+      if (e.message?.includes('quota_exceeded') || e.message?.includes('quota')) {
+        console.log(`[AudioPlayer] ElevenLabs quota exceeded, falling back to Qwen TTS`)
+        return this.playWithQwen(text, qwenSpeaker)
+      }
+      throw e
     }
   }
 

@@ -1,0 +1,227 @@
+#!/usr/bin/env python3
+"""
+Local Qwen3-TTS server for the AI Reader application.
+
+Usage:
+    cd conductor/qwen-tts
+    uv sync
+    uv run python server.py
+
+The server runs on http://localhost:5123 by default.
+"""
+
+import argparse
+import base64
+import io
+import json
+import threading
+import time
+from typing import Optional
+
+import numpy as np
+import soundfile as sf
+from flask import Flask, Response, jsonify, request
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+# Global model instance (loaded lazily)
+_model = None
+_model_lock = threading.Lock()
+_model_name = "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+
+# Available speakers for CustomVoice model
+SPEAKERS = {
+    "vivian": {"id": "Vivian", "name": "Vivian", "description": "Bright, slightly edgy young female voice (Chinese native)", "language": "Chinese"},
+    "serena": {"id": "Serena", "name": "Serena", "description": "Warm, gentle young female voice (Chinese native)", "language": "Chinese"},
+    "uncle_fu": {"id": "Uncle_Fu", "name": "Uncle Fu", "description": "Seasoned male voice with a low, mellow timbre (Chinese native)", "language": "Chinese"},
+    "dylan": {"id": "Dylan", "name": "Dylan", "description": "Youthful Beijing male voice with a clear, natural timbre", "language": "Chinese"},
+    "eric": {"id": "Eric", "name": "Eric", "description": "Lively Chengdu male voice with a slightly husky brightness", "language": "Chinese"},
+    "ryan": {"id": "Ryan", "name": "Ryan", "description": "Dynamic male voice with strong rhythmic drive (English native)", "language": "English"},
+    "aiden": {"id": "Aiden", "name": "Aiden", "description": "Sunny American male voice with a clear midrange (English native)", "language": "English"},
+    "ono_anna": {"id": "Ono_Anna", "name": "Ono Anna", "description": "Playful Japanese female voice with a light, nimble timbre", "language": "Japanese"},
+    "sohee": {"id": "Sohee", "name": "Sohee", "description": "Warm Korean female voice with rich emotion (Korean native)", "language": "Korean"},
+}
+
+DEFAULT_SPEAKER = "Aiden"  # English native speaker for book reading
+
+
+def get_model():
+    """Lazily load the Qwen3-TTS model."""
+    global _model
+    if _model is None:
+        with _model_lock:
+            if _model is None:
+                from qwen_tts import Qwen3TTSModel
+                print(f"[Qwen3-TTS] Loading model: {_model_name}")
+                start = time.time()
+                _model = Qwen3TTSModel.from_pretrained(_model_name)
+                print(f"[Qwen3-TTS] Model loaded in {time.time() - start:.2f}s")
+                print(f"[Qwen3-TTS] Supported speakers: {_model.get_supported_speakers()}")
+    return _model
+
+
+def audio_to_base64(audio: np.ndarray, sample_rate: int = 24000) -> str:
+    """Convert numpy audio array to base64-encoded WAV."""
+    buffer = io.BytesIO()
+    sf.write(buffer, audio, sample_rate, format="WAV")
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode("utf-8")
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint."""
+    return jsonify({"status": "ok", "model": _model_name})
+
+
+@app.route("/tts", methods=["POST"])
+def tts():
+    """
+    Text-to-speech endpoint.
+    
+    Request body:
+    {
+        "text": "Hello world",
+        "speaker": "Aiden",  // optional, default "Aiden"
+        "language": "English",  // optional, default "auto"
+        "instruct": "Read in a calm, narrative tone"  // optional
+    }
+    
+    Response:
+    {
+        "audio_base64": "...",
+        "sample_rate": 24000,
+        "duration": 1.5
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data or "text" not in data:
+            return jsonify({"error": "Missing 'text' field"}), 400
+        
+        text = data["text"]
+        speaker = data.get("speaker", DEFAULT_SPEAKER)
+        language = data.get("language", "English")
+        instruct = data.get("instruct")
+        
+        if not text.strip():
+            return jsonify({"error": "Empty text"}), 400
+        
+        print(f"[Qwen3-TTS] Generating speech for {len(text)} chars with speaker={speaker}")
+        start = time.time()
+        
+        model = get_model()
+        
+        # Generate speech using CustomVoice model
+        wavs, sample_rate = model.generate_custom_voice(
+            text=text,
+            speaker=speaker,
+            language=language,
+            instruct=instruct,
+        )
+        
+        # wavs is a list, get the first result
+        audio = wavs[0] if isinstance(wavs, list) else wavs
+        duration = len(audio) / sample_rate
+        print(f"[Qwen3-TTS] Generated {duration:.2f}s audio in {time.time() - start:.2f}s")
+        
+        audio_base64 = audio_to_base64(audio, sample_rate)
+        
+        return jsonify({
+            "audio_base64": audio_base64,
+            "sample_rate": sample_rate,
+            "duration": duration,
+        })
+        
+    except Exception as e:
+        print(f"[Qwen3-TTS] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/tts/stream", methods=["POST"])
+def tts_stream():
+    """Streaming TTS endpoint (SSE)."""
+    try:
+        data = request.get_json()
+        if not data or "text" not in data:
+            return jsonify({"error": "Missing 'text' field"}), 400
+        
+        text = data["text"]
+        speaker = data.get("speaker", DEFAULT_SPEAKER)
+        language = data.get("language", "English")
+        instruct = data.get("instruct")
+        
+        if not text.strip():
+            return jsonify({"error": "Empty text"}), 400
+        
+        print(f"[Qwen3-TTS] Streaming speech for {len(text)} chars")
+        
+        def generate():
+            try:
+                model = get_model()
+                wavs, sample_rate = model.generate_custom_voice(
+                    text=text,
+                    speaker=speaker,
+                    language=language,
+                    instruct=instruct,
+                )
+                
+                audio = wavs[0] if isinstance(wavs, list) else wavs
+                audio_base64 = audio_to_base64(audio, sample_rate)
+                chunk = {
+                    "audio_base64": audio_base64,
+                    "sample_rate": sample_rate,
+                    "duration": len(audio) / sample_rate,
+                    "done": True,
+                }
+                yield f"data: {json.dumps(chunk)}\n\n"
+                
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        
+        return Response(
+            generate(),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+        
+    except Exception as e:
+        print(f"[Qwen3-TTS] Stream error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/voices", methods=["GET"])
+def voices():
+    """List available speakers."""
+    voices_list = [
+        {"id": v["id"], "name": v["name"], "description": v["description"], "language": v["language"]}
+        for v in SPEAKERS.values()
+    ]
+    return jsonify({"voices": voices_list})
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Qwen3-TTS Server")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
+    parser.add_argument("--port", type=int, default=5123, help="Port to bind to")
+    parser.add_argument("--model", default=_model_name, help="Model name to use")
+    parser.add_argument("--preload", action="store_true", help="Preload model on startup")
+    args = parser.parse_args()
+    
+    global _model_name
+    _model_name = args.model
+    
+    if args.preload:
+        print("[Qwen3-TTS] Preloading model...")
+        get_model()
+    
+    print(f"[Qwen3-TTS] Starting server on http://{args.host}:{args.port}")
+    app.run(host=args.host, port=args.port, threaded=True)
+
+
+if __name__ == "__main__":
+    main()
