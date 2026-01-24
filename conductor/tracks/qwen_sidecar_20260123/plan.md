@@ -14,12 +14,12 @@ This plan covers the transition of the local Qwen TTS Python server into a produ
 - [x] Task: Integrate sidecar lifecycle management in the Rust backend to ensure the process starts on demand and stops cleanly on app exit. ab9d17f
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Rust Sidecar Manager' (Protocol in workflow.md) eb83815
 
-## Phase 3: Frontend Status & Lifecycle Control
+## Phase 3: Frontend Status & Lifecycle Control [checkpoint: 92226cc]
 - [x] Task: Write unit tests for the sidecar lifecycle events in the React frontend. 1a39af9
 - [x] Task: Update the `SettingsPage` to listen for sidecar status events and show real-time status (Starting, Online, Offline, Error). 7f1d0e9
 - [x] Task: Implement "Lazy-Loading" logic in `SettingsPage`: start the sidecar when Qwen is selected or a preview is requested. 925eef5
 - [x] Task: Update `qwenTTSService` in `src/lib/qwen-tts.ts` to coordinate with the new Tauri sidecar commands instead of assuming a manual server is running. d8428c8
-- [~] Task: Conductor - User Manual Verification 'Phase 3: Frontend Status & Lifecycle Control' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Frontend Status & Lifecycle Control' (Protocol in workflow.md) 2ecb84f
 
 ## Phase 4: Verification & Polishing
 - [ ] Task: Verify end-to-end audio generation using the bundled sidecar.
