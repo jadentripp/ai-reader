@@ -292,18 +292,24 @@ export function useMobiReader(bookId: number) {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        window.requestAnimationFrame(() => pagination.lockToPage())
+        window.requestAnimationFrame(() => {
+          pagination.syncPageMetrics()
+          pagination.lockToPage()
+          pagination.updatePagination()
+        })
       }
     }
     const handleFocusChange = () => {
-      window.requestAnimationFrame(() => pagination.lockToPage())
+      window.requestAnimationFrame(() => {
+        pagination.syncPageMetrics()
+        pagination.lockToPage()
+        pagination.updatePagination()
+      })
     }
     window.addEventListener('focus', handleFocusChange)
-    window.addEventListener('blur', handleFocusChange)
     document.addEventListener('visibilitychange', handleVisibility)
     return () => {
       window.removeEventListener('focus', handleFocusChange)
-      window.removeEventListener('blur', handleFocusChange)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [])

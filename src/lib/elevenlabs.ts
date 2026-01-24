@@ -98,6 +98,7 @@ export class ElevenLabsService {
       const response = await client.textToSpeech.convertWithTimestamps(voiceId, {
         text,
         modelId: 'eleven_flash_v2_5',
+        outputFormat: 'mp3_44100_128',
         ...(settings
           ? {
             voiceSettings: {
@@ -112,6 +113,11 @@ export class ElevenLabsService {
 
       console.log(`[ElevenLabs] textToSpeechWithTimestamps successful`)
 
+      if (!response.audioBase64 || !response.audioBase64.trim()) {
+        console.error('[ElevenLabs] Missing audioBase64 in response', response)
+        throw new Error('TTS failed: ElevenLabs returned no audio payload.')
+      }
+
       // Convert character-level alignment to word-level timings
       const wordTimings = this.extractWordTimings(
         text,
@@ -121,7 +127,7 @@ export class ElevenLabsService {
       )
 
       return {
-        audioBase64: response.audioBase64 || '',
+        audioBase64: response.audioBase64,
         wordTimings,
       }
     } catch (e: any) {
@@ -135,6 +141,48 @@ export class ElevenLabsService {
       }
       console.error(`[ElevenLabs] textToSpeechWithTimestamps failed:`, e)
       throw e
+    }
+  }
+
+  async *streamWithTimestamps(
+    text: string,
+    voiceId: string,
+    settings?: VoiceSettings,
+  ): AsyncGenerator<{ audioBase64: string; wordTimings: WordTiming[] }> {
+    console.log(`[ElevenLabs] streamWithTimestamps called for text length: ${text.length}`)
+    const client = await this.getClient()
+
+    const stream = await client.textToSpeech.streamWithTimestamps(voiceId, {
+      text,
+      modelId: 'eleven_flash_v2_5',
+      outputFormat: 'mp3_44100_128',
+      ...(settings
+        ? {
+          voiceSettings: {
+            stability: settings.stability,
+            similarityBoost: settings.similarity_boost,
+            style: settings.style,
+            useSpeakerBoost: settings.use_speaker_boost,
+          },
+        }
+        : {}),
+    })
+
+    for await (const chunk of stream) {
+      if (!chunk.audioBase64 || !chunk.audioBase64.trim()) {
+        console.warn('[ElevenLabs] Received chunk with empty audioBase64, skipping')
+        continue
+      }
+      const wordTimings = this.extractWordTimings(
+        text,
+        chunk.alignment?.characters || [],
+        chunk.alignment?.characterStartTimesSeconds || [],
+        chunk.alignment?.characterEndTimesSeconds || [],
+      )
+      yield {
+        audioBase64: chunk.audioBase64,
+        wordTimings,
+      }
     }
   }
 
@@ -459,7 +507,7 @@ export class AudioPlayer {
   }
 
   async playWithTimestamps(text: string, voiceId?: string, settings?: VoiceSettings) {
-    console.log(`[AudioPlayer] playWithTimestamps requested for text length: ${text.length}`)
+    console.log(`[AudioPlayer] playWithTimestamps (streaming) requested for text length: ${text.length}`)
     const ctx = this.initContext()
     if (ctx.state === 'suspended') {
       console.log(`[AudioPlayer] Resuming suspended AudioContext`)
@@ -494,38 +542,65 @@ export class AudioPlayer {
         }
       }
 
-      console.log(`[AudioPlayer] Calling textToSpeechWithTimestamps`)
-      const result = await elevenLabsService.textToSpeechWithTimestamps(
-        text,
-        finalVoiceId,
-        finalSettings,
-      )
-
-      // Decode base64 audio
-      const binaryString = atob(result.audioBase64)
-      const bytes = new Uint8Array(binaryString.length)
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
-      }
-      const audioBuffer = await ctx.decodeAudioData(bytes.buffer)
-      console.log(
-        `[AudioPlayer] Audio decoded, duration: ${audioBuffer.duration.toFixed(2)}s, words: ${result.wordTimings.length}`,
-      )
-
-      // Stop any current playback
+      // Stop any current playback before starting stream
       this._lastEndReason = 'replaced'
       this.stopInternal()
 
-      // Store buffer and word timings
-      this.currentBuffer = audioBuffer
+      this._wordTimings = []
+      this._currentWordIndex = -1
       this._startOffset = 0
       this._pausedAt = 0
-      this._wordTimings = result.wordTimings
-      this._currentWordIndex = -1
 
-      this.startPlayback(audioBuffer, 0)
-      this.setState('playing')
-    } catch (e) {
+      console.log(`[AudioPlayer] Starting streaming playback`)
+      const stream = elevenLabsService.streamWithTimestamps(text, finalVoiceId, finalSettings)
+
+      const audioChunks: Uint8Array[] = []
+      let isFirstChunk = true
+      let streamEnded = false
+
+      for await (const chunk of stream) {
+        // Accumulate word timings
+        this._wordTimings.push(...chunk.wordTimings)
+
+        // Decode base64 audio chunk
+        const binaryString = atob(chunk.audioBase64)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        audioChunks.push(bytes)
+
+        if (isFirstChunk) {
+          isFirstChunk = false
+          console.log(`[AudioPlayer] First chunk received, starting playback immediately`)
+          // Start playback with first chunk
+          const firstBuffer = await ctx.decodeAudioData(bytes.buffer.slice(0))
+          this.currentBuffer = firstBuffer
+          this.startPlayback(firstBuffer, 0)
+          this.setState('playing')
+        }
+      }
+
+      streamEnded = true
+      console.log(`[AudioPlayer] Stream complete, total chunks: ${audioChunks.length}, words: ${this._wordTimings.length}`)
+
+      // Combine all chunks into final buffer for seeking support
+      const totalLength = audioChunks.reduce((acc, chunk) => acc + chunk.length, 0)
+      const combinedBytes = new Uint8Array(totalLength)
+      let offset = 0
+      for (const chunk of audioChunks) {
+        combinedBytes.set(chunk, offset)
+        offset += chunk.length
+      }
+
+      const fullBuffer = await ctx.decodeAudioData(combinedBytes.buffer)
+      this.currentBuffer = fullBuffer
+      console.log(`[AudioPlayer] Full buffer ready, duration: ${fullBuffer.duration.toFixed(2)}s`)
+
+    } catch (e: any) {
+      if (e.message?.includes('famous_voice_not_permitted')) {
+        console.error(`[AudioPlayer] Voice restricted by ElevenLabs`)
+      }
       console.error('[AudioPlayer] playWithTimestamps error:', e)
       this._lastEndReason = 'error'
       this.setState('error')

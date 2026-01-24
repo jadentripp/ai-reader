@@ -132,13 +132,18 @@ export function useTTS({ getDoc, getPageMetrics, currentPage, onPageTurnNeeded }
     )
     console.log(`[useTTS] Text preview (first 200 chars): "${text.substring(0, 200)}"`)
     console.log(`[useTTS] Text preview (last 200 chars): "${text.substring(text.length - 200)}"`)
-    if (text) {
+    if (!text) return
+
+    try {
       justStartedRef.current = true // Prevent double-call from currentPage effect
       setAutoNext(true)
       setCurrentPageText(text) // Store the text for precise word highlighting
       setCurrentCharMap(charMap) // Store the character-to-DOM mapping
       // Use playWithTimestamps for word-level highlighting
       await audioPlayer.playWithTimestamps(text, voiceId, voiceSettings)
+    } catch (e) {
+      setAutoNext(false)
+      console.error('[useTTS] playCurrentPage failed:', e)
     }
   }, [currentPage, getPageText, voiceId, voiceSettings])
 

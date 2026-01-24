@@ -505,16 +505,36 @@ const ThreeDLibraryPage: React.FC = () => {
   }, [])
 
   const handleReadBook = useCallback(() => {
-    if (focusedBook) {
-      setSelectedBook(focusedBook)
-      setIsZooming(true)
-      setFocusedBook(null)
+    if (!focusedBook) return
 
-      setTimeout(() => {
-        navigate({ to: `/book/${focusedBook.id}` })
-      }, 1500)
+    setSelectedBook(focusedBook)
+    setIsZooming(true)
+    setFocusedBook(null)
+
+    let bookIdToNavigate = focusedBook.id
+
+    if (focusedBook.id < 0) {
+      const gutenbergId =
+        focusedBook.gutenberg_id ?? focusedBook.gutenbergId ?? Math.abs(focusedBook.id)
+      const realBook = filteredBooks.find(
+        (b: any) =>
+          (b.gutenberg_id ?? b.gutenbergId) === gutenbergId &&
+          typeof b.id === 'number' &&
+          b.id > 0,
+      )
+      if (realBook) {
+        bookIdToNavigate = realBook.id
+      } else {
+        setIsZooming(false)
+        console.warn('Book still downloading, cannot read yet')
+        return
+      }
     }
-  }, [focusedBook, navigate])
+
+    setTimeout(() => {
+      navigate({ to: `/book/${bookIdToNavigate}` })
+    }, 1500)
+  }, [focusedBook, filteredBooks, navigate])
 
   const handleDownloadBook = useCallback(async () => {
     if (focusedBook) {
