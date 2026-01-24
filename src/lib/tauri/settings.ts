@@ -35,3 +35,17 @@ export async function getSetting(key: string): Promise<string | null> {
   }
   return null
 }
+
+export type SidecarStatus = 'stopped' | 'starting' | 'running' | 'errored'
+
+export async function startQwenSidecar(): Promise<SidecarStatus> {
+  return await invoke<SidecarStatus>('start_qwen_sidecar')
+}
+
+export async function stopQwenSidecar(): Promise<SidecarStatus> {
+  return await invoke<SidecarStatus>('stop_qwen_sidecar')
+}
+
+export async function getQwenStatus(): Promise<SidecarStatus> {
+  return await invoke<SidecarStatus>('get_qwen_status')
+}

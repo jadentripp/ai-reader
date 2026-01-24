@@ -21,7 +21,7 @@ import { audioPlayer, elevenLabsService, type TTSProvider, type Voice } from '@/
 import { listModels } from '@/lib/openai'
 import { QWEN_SPEAKERS, qwenTTSService } from '@/lib/qwen-tts'
 import { cn } from '@/lib/utils'
-import { getSetting, openAiKeyStatus, setSetting } from '../lib/tauri'
+import { getSetting, openAiKeyStatus, setSetting, getQwenStatus, startQwenSidecar, stopQwenSidecar, type SidecarStatus } from '../lib/tauri'
 
 function SettingsSection({
   icon,
@@ -132,7 +132,7 @@ export default function SettingsPage() {
 
   // TTS Provider settings
   const [ttsProvider, setTtsProvider] = useState<TTSProvider>('elevenlabs')
-  const [qwenServerStatus, setQwenServerStatus] = useState<'checking' | 'online' | 'offline'>('checking')
+  const [qwenServerStatus, setQwenServerStatus] = useState<SidecarStatus | 'checking'>('checking')
   const [qwenSpeaker, setQwenSpeaker] = useState('Aiden')
   const [qwenVoiceActingMode, setQwenVoiceActingMode] = useState(false)
   const [qwenInstructTemplate, setQwenInstructTemplate] = useState('')
@@ -164,8 +164,13 @@ export default function SettingsPage() {
   useEffect(() => {
     async function checkQwenStatus() {
       setQwenServerStatus('checking')
-      const isOnline = await qwenTTSService.healthCheck()
-      setQwenServerStatus(isOnline ? 'online' : 'offline')
+      try {
+        const status = await getQwenStatus()
+        setQwenServerStatus(status || 'stopped')
+      } catch (e) {
+        console.error('Failed to get Qwen status:', e)
+        setQwenServerStatus('errored')
+      }
     }
     if (ttsProvider === 'qwen') {
       checkQwenStatus()
@@ -748,10 +753,14 @@ export default function SettingsPage() {
                         <span className="text-sm text-muted-foreground">Server Status</span>
                         {qwenServerStatus === 'checking' ? (
                           <StatusBadge status="Checking..." type="info" />
-                        ) : qwenServerStatus === 'online' ? (
+                        ) : qwenServerStatus === 'running' ? (
                           <StatusBadge status="Online" type="success" />
+                        ) : qwenServerStatus === 'starting' ? (
+                          <StatusBadge status="Starting..." type="info" />
+                        ) : qwenServerStatus === 'errored' ? (
+                          <StatusBadge status="Error" type="error" />
                         ) : (
-                          <StatusBadge status="Offline" type="error" />
+                          <StatusBadge status="Offline" type="info" />
                         )}
                       </div>
 
@@ -785,7 +794,7 @@ export default function SettingsPage() {
                             variant="outline"
                             size="icon"
                             onClick={onPreviewQwenVoice}
-                            disabled={qwenServerStatus !== 'online'}
+                            disabled={qwenServerStatus !== 'running'}
                             className={cn((qwenPreviewing || qwenLoadingPreview) && 'text-primary')}
                             title="Preview voice"
                           >
