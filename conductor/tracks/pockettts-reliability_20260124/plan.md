@@ -11,7 +11,7 @@
     - [ ] Tauri dev: capture model load failure stack traces
     - [ ] Web dev: capture garbled output scenario
     - [ ] Add temporary instrumentation for timing and state transitions
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Investigation & Repro' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Investigation & Repro' (Protocol in workflow.md) (6681d60)
 
 ## Phase 2: Reliability Fixes (Model Load + Playback Stability)
 - [ ] Task: Write failing tests for model-load gating and voice registration
