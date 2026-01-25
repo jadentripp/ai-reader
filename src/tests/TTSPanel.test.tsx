@@ -120,4 +120,16 @@ describe('TTSPanel', () => {
       ?.closest('button')
     expect(closeButton).toBeInTheDocument()
   })
+
+  it('shows a loading indicator and disables play while buffering', () => {
+    const tts = createMockTts({
+      state: 'buffering',
+      progress: { currentTime: 0, duration: 0, isBuffering: true },
+    })
+    render(<TTSPanel tts={tts} />)
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    const playButton = screen.getByLabelText('Play')
+    expect(playButton).toBeDisabled()
+  })
 })

@@ -42,7 +42,13 @@ describe('useMobiReader hook', () => {
       } as any),
     )
 
-    spies.push(spyOn(tauri, 'getBook').mockResolvedValue({ id: 1, title: 'Test Book', gutenberg_id: 1 } as any))
+    spies.push(
+      spyOn(tauri, 'getBook').mockResolvedValue({
+        id: 1,
+        title: 'Test Book',
+        gutenberg_id: 1,
+      } as any),
+    )
     spies.push(spyOn(tauri, 'getBookHtml').mockResolvedValue('<html><body>Test</body></html>'))
     spies.push(spyOn(tauri, 'getBookImageData').mockResolvedValue(''))
     spies.push(spyOn(tauri, 'getSetting').mockResolvedValue(''))
@@ -189,5 +195,45 @@ describe('useMobiReader hook', () => {
     expect(result.current.columns).toBe(2)
 
     unmount() // Explicitly unmount
+  })
+
+  it('highlights current TTS word in the document', async () => {
+    const doc = document.implementation.createHTMLDocument('tts')
+    const p = doc.createElement('p')
+    p.textContent = 'Hello world'
+    doc.body.appendChild(p)
+    const textNode = p.firstChild as Text
+    const charMap = Array.from(p.textContent || '').map((_, idx) => ({
+      node: textNode,
+      offset: idx,
+    }))
+
+    const getDocMock = mock(() => doc)
+    ;(hooks.useIframeDocument as any).mockReturnValue({
+      iframeRef: { current: null },
+      docRef: { current: doc },
+      rootRef: { current: null },
+      containerRef: { current: null },
+      getScrollRoot: mock(),
+      getDoc: getDocMock,
+      setDocRef: mock(),
+      setRootRef: mock(),
+      setIframeReady: mock(),
+    })
+
+    ;(hooks.useTTS as any).mockReturnValue({
+      state: 'playing',
+      currentWord: { word: 'Hello', startChar: 0, endChar: 5 },
+      currentWordIndex: 0,
+      currentCharMap: charMap,
+    })
+
+    renderHook(() => useMobiReader(1), { wrapper })
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    expect(doc.querySelector('.ttsCurrentWord')).toBeTruthy()
   })
 })

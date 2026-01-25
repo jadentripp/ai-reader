@@ -216,6 +216,11 @@ export function TTSPanel({
         <div className="flex items-center justify-between px-2 pb-1 gap-4 border-t-2 border-black/10 dark:border-white/10 pt-3">
           {/* Left: Info & Voice (Conditional) */}
           <div className="flex items-center gap-3 flex-1 min-w-0 justify-start">
+            {isBuffering && (
+              <div className="px-2 py-1 border-2 border-black dark:border-white text-[10px] font-black uppercase tracking-[0.2em]">
+                Loading...
+              </div>
+            )}
             {showSettings && (
               <Popover>
                 <PopoverTrigger asChild>
