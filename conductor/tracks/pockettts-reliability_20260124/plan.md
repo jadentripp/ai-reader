@@ -29,7 +29,7 @@
 - [x] Task: Prevent overlapping PocketTTS generations in UI (7a2bcdd)
     - [ ] Block play requests while buffering/generating
     - [ ] Ensure play button reflects loading/locked state
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Reliability Fixes (Model Load + Playback Stability)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Reliability Fixes (Model Load + Playback Stability)' (Protocol in workflow.md) (3a3e7f6)
 
 ## Phase 3: UX Loading State + Word Highlighting
 - [ ] Task: Write failing tests for loading UX and highlight behavior
