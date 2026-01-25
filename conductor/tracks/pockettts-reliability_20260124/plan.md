@@ -23,7 +23,7 @@
 - [x] Task: Write failing tests for playback stability (aa1e0ed)
     - [ ] Ensure streaming assembly order and decode integrity
     - [ ] Prevent concurrent generation on shared model instance
-- [ ] Task: Implement playback stability fixes
+- [x] Task: Implement playback stability fixes (80516f1)
     - [ ] Fix streaming buffer handling / audio assembly
     - [ ] Guard concurrency and re-entrancy
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Reliability Fixes (Model Load + Playback Stability)' (Protocol in workflow.md)
