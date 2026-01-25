@@ -1,27 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test'
 import { act, renderHook } from '@testing-library/react'
-import { audioPlayer } from '@/lib/elevenlabs'
+import { audioPlayer } from '@/lib/tts'
 import * as readerUtils from '@/lib/readerUtils'
 import * as tauri from '@/lib/tauri'
 import { useTTS } from '../lib/reader/hooks/useTTS'
 
 describe('useTTS', () => {
-  const mockGetDoc = mock(() => null as unknown as Document)
-  const mockGetPageMetrics = mock(() => ({} as any))
-  const mockOnPageTurnNeeded = mock(() => { })
+  const mockGetDoc = mock(() => document)
+  const mockGetPageMetrics = mock(() => ({}) as any)
+  const mockOnPageTurnNeeded = mock(() => {})
   const spies: any[] = []
 
   beforeEach(() => {
     mock.restore()
 
-    // Setup spies - playWithTimestamps is now used instead of play
     spies.push(spyOn(audioPlayer, 'play').mockResolvedValue(undefined as any))
-    spies.push(spyOn(audioPlayer, 'playWithTimestamps').mockResolvedValue(undefined as any))
-    spies.push(spyOn(audioPlayer, 'pause').mockImplementation(() => { }))
-    spies.push(spyOn(audioPlayer, 'resume').mockImplementation(() => { }))
-    spies.push(spyOn(audioPlayer, 'stop').mockImplementation(() => { }))
+    spies.push(spyOn(audioPlayer, 'pause').mockImplementation(() => {}))
+    spies.push(spyOn(audioPlayer, 'resume').mockImplementation(() => {}))
+    spies.push(spyOn(audioPlayer, 'stop').mockImplementation(() => {}))
     spies.push(spyOn(audioPlayer, 'getState').mockReturnValue('idle'))
-    spies.push(spyOn(audioPlayer, 'subscribe').mockReturnValue(() => { }))
+    spies.push(spyOn(audioPlayer, 'subscribe').mockReturnValue(() => {}))
 
     spies.push(
       spyOn(readerUtils, 'getPageContent').mockReturnValue({
@@ -52,7 +50,7 @@ describe('useTTS', () => {
     expect(result.current.state).toBe('idle')
   })
 
-  it('should call audioPlayer.playWithTimestamps with page text', async () => {
+  it('should call audioPlayer.play with page text', async () => {
     const { result } = renderHook(() =>
       useTTS({
         getDoc: mockGetDoc,
@@ -65,11 +63,24 @@ describe('useTTS', () => {
       await result.current.playCurrentPage()
     })
 
-    // playCurrentPage now uses playWithTimestamps for word-level highlighting
-    expect(audioPlayer.playWithTimestamps).toHaveBeenCalledWith(
-      'Mocked page text',
-      undefined,
-      undefined,
+    expect(audioPlayer.play).toHaveBeenCalledWith('Mocked page text', undefined)
+  })
+
+  it('should not call audioPlayer.play while buffering', async () => {
+    const stateSpy = spyOn(audioPlayer, 'getState').mockReturnValue('buffering')
+    const { result } = renderHook(() =>
+      useTTS({
+        getDoc: mockGetDoc,
+        getPageMetrics: mockGetPageMetrics,
+        currentPage: 1,
+      }),
     )
+
+    await act(async () => {
+      await result.current.playCurrentPage()
+    })
+
+    expect(audioPlayer.play).not.toHaveBeenCalled()
+    stateSpy.mockRestore()
   })
 })

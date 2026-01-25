@@ -15,7 +15,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
-import { elevenLabsService, type Voice } from '@/lib/elevenlabs'
+import { pocketTTSService } from '@/lib/pocket-tts'
+import { type Voice } from '@/lib/tts'
 import { cn } from '@/lib/utils'
 
 interface TTSHook {
@@ -89,11 +90,17 @@ export function TTSPanel({
   const [voices, setVoices] = useState<Voice[]>([])
 
   useEffect(() => {
-    elevenLabsService
+    pocketTTSService
       .getVoices()
       .then((fetchedVoices) => {
-        setVoices(fetchedVoices)
-        const firstVoice = fetchedVoices[0]
+        const mapped = fetchedVoices.map((voice) => ({
+          voice_id: voice.id,
+          name: voice.name,
+          description: voice.description,
+          language: voice.language,
+        }))
+        setVoices(mapped)
+        const firstVoice = mapped[0]
         if (firstVoice && !voiceId) {
           changeVoice(firstVoice.voice_id)
         }
@@ -103,10 +110,12 @@ export function TTSPanel({
 
   const isPlaying = state === 'playing'
   const isPaused = state === 'paused'
+  const isBuffering = state === 'buffering'
   const currentVoice = voices.find((v) => v.voice_id === voiceId)
   const currentVoiceName = currentVoice?.name || 'Select a Voice'
 
   const handleTogglePlayPause = () => {
+    if (isBuffering) return
     if (isPlaying) {
       pause()
     } else if (isPaused) {
@@ -186,8 +195,8 @@ export function TTSPanel({
             onValueChange={handleSeek}
             aria-label="TTS Playback Position"
             className="w-full cursor-pointer py-1"
-          // Custom slider track styling via class naming or inline is difficult with Radix without wrapping
-          // but we can target it in CSS if needed. For now, we use standard slider and assume global BAUHAUS alignment
+            // Custom slider track styling via class naming or inline is difficult with Radix without wrapping
+            // but we can target it in CSS if needed. For now, we use standard slider and assume global BAUHAUS alignment
           />
           {/* Bauhaus Red Custom Progress Indicator Overlay (Simulated) */}
           <div className="h-1.5 w-full bg-black/10 dark:bg-white/10 mt-[-10px] pointer-events-none relative overflow-hidden">
@@ -271,7 +280,11 @@ export function TTSPanel({
               size="icon"
               onClick={handleTogglePlayPause}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="h-12 w-12 rounded-none bg-black text-white dark:bg-white dark:text-black hover:bg-[#E02E2E] hover:text-white transition-[color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform] shadow-xl border-2 border-black dark:border-white"
+              disabled={isBuffering}
+              className={cn(
+                'h-12 w-12 rounded-none bg-black text-white dark:bg-white dark:text-black hover:bg-[#E02E2E] hover:text-white transition-[color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform] shadow-xl border-2 border-black dark:border-white',
+                isBuffering && 'opacity-60 pointer-events-none',
+              )}
             >
               {isPlaying ? (
                 <Pause className="h-6 w-6 fill-current" />
