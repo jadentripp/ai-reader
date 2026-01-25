@@ -91,6 +91,7 @@ let stTensors = []; // Optimization: Pre-allocated s/t tensors for max LSD
 let isGenerating = false;
 let isReady = false;
 let modelBaseUrl = '';
+let loadPromise = null;
 
 function resolveModelUrl(path) {
     if (!modelBaseUrl) return path;
@@ -419,7 +420,6 @@ self.onmessage = async (e) => {
     } else if (type === 'load') {
         try {
             await loadModels();
-            postMessage({ type: 'loaded' });
         } catch (err) {
             postMessage({ type: 'error', error: err.toString() });
         }
@@ -513,9 +513,14 @@ self.onmessage = async (e) => {
 };
 
 async function loadModels() {
-    if (mimiEncoderSession) return;
+    if (isReady) return;
+    if (loadPromise) return loadPromise;
+    if (mimiEncoderSession || tokenizerProcessor || textConditionerSession || flowLmMainSession || flowLmFlowSession || mimiDecoderSession) {
+        resetModelState();
+    }
 
-    postMessage({ type: 'status', status: 'Loading ONNX Runtime...', state: 'loading' });
+    loadPromise = (async () => {
+        postMessage({ type: 'status', status: 'Loading ONNX Runtime...', state: 'loading' });
 
     // Load ONNX Runtime dynamically
     try {
@@ -664,10 +669,16 @@ async function loadModels() {
         postMessage({ type: 'status', status: 'Ready', state: 'idle' });
         postMessage({ type: 'model_status', status: 'ready', text: 'Ready' });
         postMessage({ type: 'loaded' });
+    })();
 
+    try {
+        return await loadPromise;
     } catch (err) {
         console.error('Model load failed:', err);
+        resetModelState();
         throw err;
+    } finally {
+        loadPromise = null;
     }
 }
 
@@ -680,6 +691,22 @@ function arrayBufferToBase64(buffer) {
         binary += String.fromCharCode(...chunk);
     }
     return btoa(binary);
+}
+
+function resetModelState() {
+    mimiEncoderSession = null;
+    textConditionerSession = null;
+    flowLmMainSession = null;
+    flowLmFlowSession = null;
+    mimiDecoderSession = null;
+    tokenizerProcessor = null;
+    tokenizerModelB64 = null;
+    predefinedVoices = {};
+    stTensors = [];
+    isReady = false;
+    isGenerating = false;
+    currentVoiceEmbedding = null;
+    currentVoiceName = null;
 }
 
 function parseVoicesBin(buffer) {
