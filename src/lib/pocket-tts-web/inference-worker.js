@@ -669,6 +669,10 @@ async function loadModels() {
         postMessage({ type: 'status', status: 'Ready', state: 'idle' });
         postMessage({ type: 'model_status', status: 'ready', text: 'Ready' });
         postMessage({ type: 'loaded' });
+    } catch (err) {
+        console.error('Model load failed:', err);
+        throw err;
+    }
     })();
 
     try {
