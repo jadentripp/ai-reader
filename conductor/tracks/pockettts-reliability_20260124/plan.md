@@ -13,7 +13,7 @@
     - [ ] Add temporary instrumentation for timing and state transitions
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Investigation & Repro' (Protocol in workflow.md) (6681d60)
 
-## Phase 2: Reliability Fixes (Model Load + Playback Stability)
+## Phase 2: Reliability Fixes (Model Load + Playback Stability) [checkpoint: 840039a]
 - [x] Task: Write failing tests for model-load gating and voice registration (59dfdf4)
     - [ ] Add unit tests for state machine (load -> ready -> register -> play)
     - [ ] Add tests for retry/error propagation
