@@ -26,6 +26,9 @@
 - [x] Task: Implement playback stability fixes (80516f1)
     - [ ] Fix streaming buffer handling / audio assembly
     - [ ] Guard concurrency and re-entrancy
+- [x] Task: Prevent overlapping PocketTTS generations in UI (7a2bcdd)
+    - [ ] Block play requests while buffering/generating
+    - [ ] Ensure play button reflects loading/locked state
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Reliability Fixes (Model Load + Playback Stability)' (Protocol in workflow.md)
 
 ## Phase 3: UX Loading State + Word Highlighting
