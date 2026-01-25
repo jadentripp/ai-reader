@@ -17,7 +17,7 @@
 - [x] Task: Write failing tests for model-load gating and voice registration (59dfdf4)
     - [ ] Add unit tests for state machine (load -> ready -> register -> play)
     - [ ] Add tests for retry/error propagation
-- [ ] Task: Implement reliable model load/ready gating
+- [x] Task: Implement reliable model load/ready gating (e8615f2)
     - [ ] Ensure single load, stable ready signal, and safe retries
     - [ ] Block voice registration/playback before ready
 - [ ] Task: Write failing tests for playback stability
