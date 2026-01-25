@@ -16,6 +16,35 @@ export interface WordTiming {
   endChar: number
 }
 
+export function estimateWordTimings(text: string, duration: number): WordTiming[] {
+  if (!text || duration <= 0) return []
+  const wordRegex = /\b[\w']+\b/g
+  const words: { word: string; startChar: number; endChar: number }[] = []
+  let match: RegExpExecArray | null
+  while ((match = wordRegex.exec(text)) !== null) {
+    const word = match[0]
+    const startChar = match.index
+    const endChar = startChar + word.length
+    words.push({ word, startChar, endChar })
+  }
+  if (!words.length) return []
+
+  const totalChars = words.reduce((sum, w) => sum + (w.endChar - w.startChar), 0)
+  if (totalChars <= 0) return []
+
+  let cursor = 0
+  const timings = words.map((w) => {
+    const wordChars = w.endChar - w.startChar
+    const start = cursor
+    const end = cursor + (duration * wordChars) / totalChars
+    cursor = end
+    return { ...w, start, end }
+  })
+
+  timings[timings.length - 1].end = duration
+  return timings
+}
+
 export type PlaybackState = 'idle' | 'playing' | 'paused' | 'buffering' | 'error'
 export type EndReason = 'ended' | 'stopped' | 'replaced' | 'error' | 'unknown'
 
@@ -204,7 +233,7 @@ export class AudioPlayer {
       this.currentBuffer = audioBuffer
       this._startOffset = 0
       this._pausedAt = 0
-      this._wordTimings = []
+      this._wordTimings = estimateWordTimings(text, audioBuffer.duration)
       this._currentWordIndex = -1
       this.startPlayback(audioBuffer, 0)
       this.setState('playing')
